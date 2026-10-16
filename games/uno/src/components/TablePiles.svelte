@@ -7,10 +7,12 @@
     drawCount: number;
     canDraw: boolean;
     direction: 1 | -1;
+    dropActive: boolean;
+    dropHover: boolean;
     onDraw: () => void;
   }
 
-  let { view, drawCount, canDraw, direction, onDraw }: Props = $props();
+  let { view, drawCount, canDraw, direction, dropActive, dropHover, onDraw }: Props = $props();
 
   const tilt = $derived(view.discardTop === null ? 0 : ((view.discardTop * 47) % 21) - 10);
 </script>
@@ -34,13 +36,20 @@
   </div>
 
   <div class="mid">
-    <svg class="ring" class:flip={direction === -1} viewBox="0 0 100 100" aria-hidden="true">
-      <path d="M50 8 A 42 42 0 0 1 92 50" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="6" stroke-linecap="round" />
-      <path d="M50 92 A 42 42 0 0 1 8 50" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="6" stroke-linecap="round" />
-      <path d="M88 36 L94 53 L77 51 Z" fill="rgba(255,255,255,0.8)" />
-      <path d="M12 64 L6 47 L23 49 Z" fill="rgba(255,255,255,0.8)" />
-    </svg>
-    <div class="discard">
+    <span class="ring-wrap" class:flip={direction === -1} aria-hidden="true">
+      <svg class="turn-ring" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M50 8 A 42 42 0 0 1 92 50" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="6" stroke-linecap="round" />
+        <path d="M50 92 A 42 42 0 0 1 8 50" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="6" stroke-linecap="round" />
+        <path d="M88 36 L94 53 L77 51 Z" fill="rgba(255,255,255,0.8)" />
+        <path d="M12 64 L6 47 L23 49 Z" fill="rgba(255,255,255,0.8)" />
+      </svg>
+    </span>
+    <div
+      class="discard"
+      class:armed={dropActive}
+      class:hovered={dropHover}
+      data-drop-zone
+    >
       {#if view.discardTop === null}
         <div class="empty" style:--w="92px"></div>
       {:else}
@@ -79,6 +88,8 @@
 
   .stack {
     position: relative;
+    width: 92px;
+    height: calc(92px * 1.525);
     appearance: none;
     border: 0;
     padding: 0;
@@ -125,6 +136,15 @@
     z-index: 3;
   }
 
+  .stack:not(:disabled) .top-back {
+    animation: uno-invite 1.5s ease-in-out infinite;
+  }
+
+  @keyframes uno-invite {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.16); }
+  }
+
   .stack:not(:disabled):hover .top-back {
     transform: translateY(-4px);
   }
@@ -148,15 +168,29 @@
     place-items: center;
   }
 
-  .ring {
+  .ring-wrap {
     position: absolute;
+    display: block;
     width: clamp(150px, 30vw, 210px);
     height: clamp(150px, 30vw, 210px);
+    pointer-events: none;
     transition: transform 0.35s ease;
   }
 
-  .ring.flip {
+  .ring-wrap.flip {
     transform: scaleX(-1);
+  }
+
+  .turn-ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: uno-ring-spin 30s linear infinite;
+  }
+
+  @keyframes uno-ring-spin {
+    to { transform: rotate(360deg); }
   }
 
   .discard {
@@ -165,6 +199,17 @@
     height: calc(92px * 1.525);
     display: grid;
     place-items: center;
+    border-radius: calc(92px * 0.12);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .discard.armed {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+
+  .discard.hovered {
+    box-shadow: 0 0 0 3px var(--color-gold), 0 0 22px rgba(255, 206, 74, 0.45);
+    transform: scale(1.06);
   }
 
   .empty {
@@ -176,7 +221,7 @@
   }
 
   .drop {
-    animation: var(--animate-pop-in);
+    animation: var(--animate-drop);
     transform: rotate(var(--tilt));
   }
 

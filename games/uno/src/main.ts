@@ -3,6 +3,7 @@ import { createMultiplayerMenu, parseMultiplayer } from '@playground-exe/game-ki
 import { mount, unmount } from 'svelte';
 import UnoApp from './UnoApp.svelte';
 import type { UnoActionPayloads, UnoView } from './rules/engine';
+import { sound } from './sound';
 import metadata from '../game.json';
 import './styles.css';
 
@@ -28,6 +29,9 @@ const game = createGame('uno', {
   pause() {},
   resume() {},
   restart() {},
+  mute(muted) {
+    sound.setEnabled(!muted);
+  },
   destroy() {
     const release = teardown;
     teardown = undefined;

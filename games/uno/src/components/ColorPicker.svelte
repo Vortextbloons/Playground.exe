@@ -5,10 +5,19 @@
     title: string;
     current?: Color | null;
     onPick: (color: Color) => void;
+    onCancel?: () => void;
   }
 
-  let { title, current = null, onPick }: Props = $props();
+  let { title, current = null, onPick, onCancel }: Props = $props();
+
+  function onWindowClick(event: MouseEvent): void {
+    if (!onCancel) return;
+    if (!(event.target instanceof Element) || !event.target.classList.contains('veil')) return;
+    onCancel();
+  }
 </script>
+
+<svelte:window onclick={onWindowClick} />
 
 <div class="veil" role="presentation"></div>
 <div class="picker" role="dialog" aria-label={title}>

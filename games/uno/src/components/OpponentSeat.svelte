@@ -25,7 +25,7 @@
   <div class="fan" aria-hidden="true">
     {#each backs as i (i)}
       <div class="fan-card" style:--i={i} style:--n={backs.length}>
-        <Card width={44} />
+        <span class="fan-in"><Card width={44} /></span>
       </div>
     {/each}
   </div>
@@ -56,10 +56,13 @@
 
   .seat.active {
     background: rgba(112, 8, 20, 0.75);
-    box-shadow:
-      inset 0 0 0 2px var(--color-gold),
-      0 0 18px rgba(255, 206, 74, 0.35);
     transform: translateY(1px) scale(1.03);
+    animation: uno-seat-glow 1.8s ease-in-out infinite;
+  }
+
+  @keyframes uno-seat-glow {
+    0%, 100% { box-shadow: inset 0 0 0 2px var(--color-gold), 0 0 14px rgba(255, 206, 74, 0.3); }
+    50% { box-shadow: inset 0 0 0 2px var(--color-gold), 0 0 26px rgba(255, 206, 74, 0.6); }
   }
 
   .fan {
@@ -73,6 +76,12 @@
     position: absolute;
     transform-origin: 50% 130%;
     transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 11deg));
+  }
+
+  .fan-in {
+    display: block;
+    animation: var(--animate-pop-in);
+    animation-delay: calc(var(--i) * 55ms);
   }
 
   .fan-card :global(.card) {

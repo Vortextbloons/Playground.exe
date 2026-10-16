@@ -14,7 +14,8 @@
   } from './rules/engine';
   import { mulberry32 } from './rules/rng';
   import { botMove } from './bots/bots';
-  import { createSound } from './sound';
+  import { sound } from './sound';
+  import Card from './components/Card.svelte';
   import ColorPicker from './components/ColorPicker.svelte';
   import OpponentSeat from './components/OpponentSeat.svelte';
   import PlayerHand from './components/PlayerHand.svelte';
@@ -35,7 +36,6 @@
 
   // ------------------------------------------------------------------ settings
 
-  const sound = createSound();
   let soundOn = $state(true);
   let speed = $state<Speed>('normal');
   let showSettings = $state(false);
@@ -62,7 +62,7 @@
   let lobbyHost = $state<HTMLElement | null>(null);
 
   $effect(() => {
-    if (session || !menuElement) return;
+    if (!menuElement) return;
     const host = lobbyHost;
     if (host && menuElement.parentElement !== host) host.append(menuElement);
   });
@@ -90,8 +90,8 @@
 
   // ------------------------------------------------------------------ rendered view
 
-  const inMatch = $derived(session ? mpInMatch : local !== null);
-  const view = $derived(session ? mpView : local === null ? null : toView(local, 'you'));
+  const inMatch = $derived(local !== null || mpInMatch);
+  const view = $derived(mpInMatch ? mpView : local === null ? null : toView(local, 'you'));
   const isSpectator = $derived(view !== null && view.you === null);
   const myTurn = $derived(view !== null && view.you !== null && view.turn === view.you);
 
@@ -103,12 +103,12 @@
 
   function dispatch(action: UnoAction, actor = 'you'): void {
     sound.unlock();
-    if (session) {
-      session.send(action.type, payloadOf(action));
+    if (mpInMatch) {
+      session?.send(action.type, payloadOf(action));
       return;
     }
     if (!local) return;
-    const next = applyAction(local, actor, action, soloRng);
+    const next = applyAction($state.snapshot(local), actor, action, soloRng);
     observe(toView(local, 'you'), toView(next, 'you'));
     if (action.type === 'play-card' && action.callUno) sound.play('uno');
     local = next;
@@ -135,19 +135,19 @@
   function scheduleBot(): void {
     clearTimeout(botTimer);
     botTimer = undefined;
-    if (session || !local || local.phase === 'results') return;
+    if (mpInMatch || !local || local.phase === 'results') return;
     const actor = actorFor(local);
     if (actor === 'you') return;
     const thinking = (620 + Math.random() * 700) * speedFactor + (local.missedUno ? 1600 * speedFactor : 0);
     botTimer = setTimeout(() => {
-      if (!local || session) return;
+      if (!local || mpInMatch) return;
       if (actorFor(local) !== actor) return;
       dispatch(botMove(local, actor, difficulty, soloRng), actor);
     }, thinking);
   }
 
   $effect(() => {
-    if (!session && local) scheduleBot();
+    if (local && !mpInMatch) scheduleBot();
     return () => clearTimeout(botTimer);
   });
 
@@ -238,6 +238,25 @@
     return Math.max(48, Math.min(92, Math.floor((windowWidth - 48) / spread)));
   });
 
+  // ------------------------------------------------------------------ confetti
+
+  const CONFETTI_COLORS = ['var(--color-red)', 'var(--color-sun)', 'var(--color-grass)', 'var(--color-royal)', 'var(--color-gold)'];
+  const confettiSeed = $derived(
+    view?.phase === 'results' && view.winner !== null ? `${view.round}:${view.winner}` : null,
+  );
+  const confetti = $derived(
+    confettiSeed === null
+      ? []
+      : Array.from({ length: 42 }, () => ({
+          x: Math.round((Math.random() * 2 - 1) * 170),
+          y: Math.round(90 + Math.random() * 230),
+          r: Math.round((Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 420)),
+          c: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)] ?? CONFETTI_COLORS[0]!,
+          d: +(Math.random() * 0.45).toFixed(2),
+          t: +(1.3 + Math.random() * 1.1).toFixed(2),
+        })),
+  );
+
   // ------------------------------------------------------------------ handlers
 
   function playCard(cardId: number): void {
@@ -247,6 +266,13 @@
       return;
     }
     dispatch({ type: 'play-card', card: cardId });
+  }
+
+  let drag = $state({ active: false, over: false });
+
+  function onDrag(active: boolean, over: boolean): void {
+    drag.active = active;
+    drag.over = over;
   }
 
   function pickColor(color: Color): void {
@@ -330,7 +356,7 @@
       </div>
 
       <div class="center">
-        <TablePiles {view} drawCount={view.drawPile} {canDraw} direction={view.direction} onDraw={() => dispatch({ type: 'draw-card' })} />
+        <TablePiles {view} drawCount={view.drawPile} {canDraw} direction={view.direction} dropActive={drag.active} dropHover={drag.over} onDraw={() => dispatch({ type: 'draw-card' })} />
       </div>
 
       <p class="status" data-active={String(myTurn)}>{statusLine}</p>
@@ -342,7 +368,7 @@
       {/if}
 
       {#if !isSpectator && view.you}
-        <PlayerHand {view} width={handWidth} onPlay={playCard} />
+        <PlayerHand {view} width={handWidth} onDrag={onDrag} onPlay={playCard} />
         <div class="actions">
           {#if canPass}
             <button type="button" class="ghost-btn" onclick={() => dispatch({ type: 'pass-turn' })}>Pass</button>
@@ -362,13 +388,16 @@
     </section>
 
     {#if picking !== null}
-      <ColorPicker title="Wild color" onPick={pickColor} />
+      <ColorPicker title="Wild color" onPick={pickColor} onCancel={() => (picking = null)} />
     {:else if needColor}
       <ColorPicker title="Choose a color" onPick={pickColor} />
     {:else if wildFourForMe && view.wildFour}
       <div class="veil"></div>
       <div class="panel" role="dialog" aria-label="Wild Draw Four">
-        <h2>{nameOf(view.wildFour.by)} played Wild Draw Four</h2>
+        <div class="wild-intro">
+          <div class="wild-card"><Card id={view.discardTop} width={62} label="Wild Draw Four" /></div>
+          <h2>{nameOf(view.wildFour.by)} played Wild Draw Four</h2>
+        </div>
         <p>Challenge their play — if they had a {view.activeColor} card they draw 6 instead. Otherwise you draw 6.</p>
         <div class="pair">
           <button type="button" class="danger" onclick={() => dispatch({ type: 'challenge-draw-four' })}>Challenge!</button>
@@ -398,7 +427,7 @@
           </tbody>
         </table>
         {#if view.matchWinner}
-          {#if !session}
+          {#if !mpInMatch}
             <div class="pair">
               <button type="button" class="danger" onclick={startSolo}>New match</button>
               <button type="button" onclick={backToMenu}>Menu</button>
@@ -406,10 +435,27 @@
           {:else}
             <div class="lobby-inline" bind:this={lobbyHost}></div>
           {/if}
-        {:else}
+        {:else if !isSpectator}
           <button type="button" class="danger" onclick={() => dispatch({ type: 'next-round' })}>Next round</button>
         {/if}
       </div>
+    {/if}
+
+    {#if confettiSeed !== null}
+      {#key confettiSeed}
+        <div class="confetti" aria-hidden="true">
+          {#each confetti as piece, i (i)}
+            <span
+              style:--x="{piece.x}px"
+              style:--y="{piece.y}px"
+              style:--r="{piece.r}deg"
+              style:--c={piece.c}
+              style:--d="{piece.d}s"
+              style:--t="{piece.t}s"
+            ></span>
+          {/each}
+        </div>
+      {/key}
     {/if}
 
     {#if showSettings}
@@ -461,6 +507,12 @@
       inset 0 0 0 4px #fff,
       0 14px 40px rgba(40, 4, 8, 0.6);
     transform: rotate(-3deg);
+    animation: uno-float 4.5s ease-in-out infinite;
+  }
+
+  @keyframes uno-float {
+    0%, 100% { transform: rotate(-3deg) translateY(0); }
+    50% { transform: rotate(-2deg) translateY(-7px); }
   }
 
   .logo-uno {
@@ -801,11 +853,12 @@
     padding: 8px 22px;
     border-radius: 999px;
     background: rgba(40, 3, 8, 0.82);
-    box-shadow: inset 0 0 0 2px var(--color-gold);
+    box-shadow: inset 0 0 0 2px var(--color-gold), 0 0 26px rgba(255, 206, 74, 0.35);
     font-family: var(--font-display);
     font-weight: 800;
     font-size: clamp(16px, 4vw, 24px);
     color: var(--color-gold);
+    text-shadow: 0 0 16px rgba(255, 206, 74, 0.45);
     pointer-events: none;
     animation: var(--animate-banner);
   }
@@ -898,6 +951,50 @@
     margin: 0;
     font-family: var(--font-display);
     font-size: 21px;
+  }
+
+  .wild-intro {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .wild-card {
+    flex: none;
+    transform: rotate(-9deg);
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
+    animation: uno-wobble 2.6s ease-in-out infinite;
+  }
+
+  @keyframes uno-wobble {
+    0%, 100% { transform: rotate(-10deg) translateY(0); }
+    50% { transform: rotate(-4deg) translateY(-4px); }
+  }
+
+  .confetti {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .confetti span {
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    width: 9px;
+    height: 15px;
+    border-radius: 2px;
+    background: var(--c);
+    opacity: 0;
+    animation: uno-confetti var(--t) cubic-bezier(0.2, 0.65, 0.45, 1) var(--d) both;
+  }
+
+  @keyframes uno-confetti {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.5); }
+    10% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0.85); }
   }
 
   .panel p {

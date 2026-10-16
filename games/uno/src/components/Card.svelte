@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cardFromId, cardLabel } from '../rules/cards';
+  import { cardFromId } from '../rules/cards';
 
   interface Props {
     id?: number | null;
@@ -23,7 +23,7 @@
   };
   const solid = $derived(card ? colorVar[card.color] ?? 'var(--color-red)' : 'var(--color-red)');
   const isWild = $derived(card?.color === 'wild');
-  const text = $derived(card ? cardLabel(card) : '');
+  const isFour = $derived(card?.kind === 'wild-four');
 </script>
 
 <button
@@ -32,6 +32,7 @@
   class:back={card === null}
   class:playable
   class:dim
+  class:four={isFour}
   style:--w="{width}px"
   style:--c={solid}
   onclick={playable ? onclick : undefined}
@@ -40,8 +41,6 @@
   <div class="face">
     {#if card}
       <div class="ellipse" class:wild={isWild} style:--c={solid}></div>
-      <span class="corner tl">{text}</span>
-      <span class="corner br">{text}</span>
       <div class="emblem">
         {#if card.kind === 'number'}
           <span class="numeral">{card.value}</span>
@@ -59,7 +58,12 @@
         {:else if card.kind === 'wild'}
           <svg viewBox="0 0 64 64" aria-hidden="true" class="icon on-wild"><circle cx="32" cy="32" r="19" fill="none" stroke="#fff" stroke-width="7" /><path d="M19 45 L45 19" stroke="#fff" stroke-width="7" stroke-linecap="round" /></svg>
         {:else}
-          <span class="numeral plus">+4</span>
+          <svg viewBox="0 0 64 64" aria-hidden="true" class="fan">
+            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-royal)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(-18 32 56)" />
+            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-grass)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(-6 32 56)" />
+            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-sun)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(6 32 56)" />
+            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-red)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(18 32 56)" />
+          </svg>
         {/if}
       </div>
     {:else}
@@ -111,6 +115,34 @@
 
   .ellipse.wild {
     background: conic-gradient(from 0deg, var(--color-red) 0 25%, var(--color-sun) 0 50%, var(--color-grass) 0 75%, var(--color-royal) 0);
+  }
+
+  .card.four {
+    background: #1f1f26;
+  }
+
+  .card.four .ellipse {
+    background: #fff;
+  }
+
+  .card.four .face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.38) 50%, transparent 68%);
+    transform: translateX(-130%);
+    animation: uno-shine 3.4s ease-in-out infinite;
+  }
+
+  @keyframes uno-shine {
+    0%, 55% { transform: translateX(-130%); }
+    90%, 100% { transform: translateX(130%); }
+  }
+
+  .emblem .fan {
+    width: 86%;
+    height: 86%;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
   }
 
   .back-mark {

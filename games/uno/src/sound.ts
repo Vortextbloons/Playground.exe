@@ -116,3 +116,6 @@ export function createSound(): SoundKit {
     },
   };
 }
+
+/** One synth per page; both the app UI and the host player's mute button drive it. */
+export const sound = createSound();
