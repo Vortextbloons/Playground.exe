@@ -8,6 +8,6 @@
   "durable_objects": { "bindings": [{ "name": "PARTIES", "class_name": "PartyRoom" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PartyRoom"] }],
   "ratelimits": [{ "name": "PARTY_REQUESTS", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }],
-  "vars": { "ALLOWED_ORIGINS": "http://localhost:4321,http://127.0.0.1:4321" },
+  "vars": { "ALLOWED_ORIGINS": "http://localhost:4321,http://127.0.0.1:4321,https://vortextbloons.github.io" },
   "observability": { "enabled": true, "head_sampling_rate": 0.1 }
 }
