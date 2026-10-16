@@ -1,11 +1,12 @@
-import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { resolve } from 'node:path';
-
-// Generate games before Astro snapshots public/, including on a fresh checkout.
-for (const script of ['build:multiplayer', 'build:games']) {
-  const result = spawnSync(process.execPath, [process.env.npm_execpath!, 'run', script], { stdio: 'inherit' });
-  if (result.status !== 0) process.exit(result.status ?? 1);
-}
+import { buildGames, watchGames } from './build-games.ts';
+import { buildMultiplayerRegistry } from './build-multiplayer.ts';
+await buildMultiplayerRegistry();
+// Build games before Astro snapshots public/, including on a fresh checkout,
+// then keep rebuilding them as game code changes while the dev server runs.
+const games = await buildGames();
+watchGames(games);
 
 const children: ChildProcess[] = [];
 let stopping = false;

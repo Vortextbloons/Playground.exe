@@ -70,7 +70,19 @@
     });
     client.initialize();
     const timeout = window.setTimeout(() => { if (!ready) error = 'Still loading. Check the game build, or reload the player.'; }, 15000);
-    return () => { clearTimeout(timeout); unsubscribe(); };
+    // Dev only: game rebuilds swap the bundle under the same URL; refresh the player when it changes.
+    let bundle: string | undefined;
+    const poll = import.meta.env.DEV ? window.setInterval(async () => {
+      try {
+        const response = await fetch(src, { cache: 'no-store' });
+        if (!response.ok) return;
+        const html = await response.text();
+        const changed = bundle !== undefined ? html !== bundle : !ready;
+        bundle = html;
+        if (changed) { ready = false; error = ''; frame.src = src; }
+      } catch { /* Dev server may be restarting. */ }
+    }, 1000) : undefined;
+    return () => { clearTimeout(timeout); if (poll) window.clearInterval(poll); unsubscribe(); };
   });
 </script>
 <svelte:window onmessage={receive}/><svelte:document onvisibilitychange={visibility}/>

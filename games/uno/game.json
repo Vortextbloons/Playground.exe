@@ -1,0 +1,27 @@
+{
+  "id": "uno",
+  "title": "UNO",
+  "description": "The classic shedding card game. Match colors and numbers, unleash Skips, Reverses and Draw Twos, call UNO before you get caught, and empty your hand against crafty bots.",
+  "genre": "Cards",
+  "tags": ["cards", "family", "classic", "touch", "multiplayer"],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-16",
+  "controls": "Click or tap a highlighted card to play it, the draw pile to draw, and the UNO button when you are down to one card.",
+  "solo": true,
+  "multiplayer": {
+    "modes": [
+      {
+        "id": "classic",
+        "label": "Classic UNO",
+        "minPlayers": 2,
+        "maxPlayers": 10,
+        "preset": "turn-based",
+        "spectators": true,
+        "lateJoin": "spectate",
+        "disconnect": "reserve"
+      }
+    ]
+  },
+  "cover": "cover.svg"
+}
