@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import 'tailwindcss';
+
+/* Landscape phones get a side-by-side stage. */
+@custom-variant short {
+  @media (orientation: landscape) and (max-height: 620px) {
+    @slot;
+  }
+}
+
+@theme {
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+
+  --color-ink: #131118;
+  --color-panel: #1b1922;
+  --color-edge: #2c2937;
+  --color-cell: #232030;
+  --color-cellhi: #2b2739;
+  --color-fog: #f0edf7;
+  --color-muted: #9d97ad;
+  --color-accent: #b9a3f7;
+  --color-accent-ink: #1c1727;
+  --color-bad: #f2716f;
+
+  --color-t1: #b9a3f7; /* lavender */
+  --color-t2: #8fd6b8; /* mint */
+  --color-t3: #7cc3f2; /* sky */
+  --color-t4: #f5c76b; /* amber */
+  --color-t5: #f2866c; /* coral */
+  --color-t6: #ef8fc4; /* rose */
+  --color-t7: #6fe3d6; /* teal */
+
+  --animate-pop: bp-pop 0.16s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-clear: bp-clear 0.21s ease-in both;
+  --animate-rise: bp-rise 0.85s ease-out both;
+  --animate-score: bp-pulse 0.3s ease-out;
+  --animate-chip: bp-chip 0.22s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-veil: bp-veil 0.2s ease-out both;
+  --animate-panel: bp-panel 0.24s cubic-bezier(0.2, 1.1, 0.4, 1) both;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-ink);
+    color: var(--color-fog);
+    font: 500 16px/1.45 var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #game {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  #game:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -3px;
+  }
+}
+
+/* Motion — placement, clears, refills, overlays. All under 250 ms. */
+@keyframes bp-pop {
+  0% { transform: scale(0.45); opacity: 0.35; }
+  60% { transform: scale(1.07); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes bp-clear {
+  0% { transform: scale(1); filter: brightness(1.5); }
+  55% { transform: scale(1.1); filter: brightness(2.5); }
+  100% { transform: scale(0.3); opacity: 0; filter: brightness(2.8); }
+}
+
+@keyframes bp-rise {
+  0% { opacity: 0; transform: translate(-50%, -20%) scale(0.7); }
+  16% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -230%) scale(1.05); }
+}
+
+@keyframes bp-drop {
+  0% { opacity: 0; transform: translateY(-12px) scale(0.55); }
+  70% { opacity: 1; transform: translateY(1px) scale(1.04); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes bp-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes bp-chip {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bp-veil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bp-panel {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes bp-lift {
+  from { transform: scale(var(--lift, 0.5)); }
+  to { transform: scale(1); }
+}
+
+@keyframes bp-return {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.35); }
+}
+
+@layer components {
+  /* Board + tray share one cell anatomy: a square with an inset visual layer.
+     The drag ghost reuses it, so previews line up with settled tiles exactly. */
+  .cell {
+    position: relative;
+  }
+
+  .cell .slot,
+  .cell .tile,
+  .cell .hint {
+    position: absolute;
+    inset: 7%;
+    border-radius: 26%;
+  }
+
+  .cell .slot {
+    background: radial-gradient(circle at 50% 40%, var(--color-cellhi), var(--color-cell) 82%);
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.38);
+  }
+
+  .cell .tile {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.04) 42%, rgba(0, 0, 0, 0.12)),
+      var(--tile);
+    box-shadow:
+      inset 0 -3px 0 rgba(0, 0, 0, 0.16),
+      0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .cell .tile.t1 { --tile: var(--color-t1); }
+  .cell .tile.t2 { --tile: var(--color-t2); }
+  .cell .tile.t3 { --tile: var(--color-t3); }
+  .cell .tile.t4 { --tile: var(--color-t4); }
+  .cell .tile.t5 { --tile: var(--color-t5); }
+  .cell .tile.t6 { --tile: var(--color-t6); }
+  .cell .tile.t7 { --tile: var(--color-t7); }
+
+  .cell .hint {
+    pointer-events: none;
+  }
+
+  .cell .hint.ok {
+    background: rgba(185, 163, 247, 0.3);
+    box-shadow: inset 0 0 0 2px rgba(185, 163, 247, 0.72);
+  }
+
+  .cell .hint.bad {
+    background: rgba(242, 113, 111, 0.26);
+    box-shadow: inset 0 0 0 2px rgba(242, 113, 111, 0.72);
+  }
+
+  .cell .hint.line {
+    inset: 4%;
+    background: rgba(240, 237, 247, 0.16);
+    box-shadow: inset 0 0 0 2px rgba(240, 237, 247, 0.34);
+  }
+
+  /* Tray slot: base look and drag states live together so they can't fight
+     with utilities (utilities always win over @layer components). */
+  .slot {
+    border: 1px solid var(--color-edge);
+    background: rgba(35, 32, 48, 0.5);
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .slot.picked {
+    background: rgba(185, 163, 247, 0.1);
+    border-color: rgba(185, 163, 247, 0.75);
+    box-shadow: 0 0 0 2px rgba(185, 163, 247, 0.22);
+  }
+
+  .slot.taken {
+    border-color: rgba(185, 163, 247, 0.4);
+    background: rgba(35, 32, 48, 0.24);
+  }
+
+  .holder {
+    animation: bp-drop 0.24s cubic-bezier(0.2, 1.2, 0.4, 1);
+    transition:
+      opacity 0.16s ease,
+      transform 0.16s ease;
+  }
+
+  .slot.taken .holder {
+    opacity: 0.18;
+    transform: scale(0.78);
+  }
+
+  .slot.shaking .holder {
+    animation: bp-shake 0.3s ease-in-out;
+  }
+
+  /* Drag ghost — lifted at pickup, shrinks back on an invalid drop. */
+  .ghost-inner {
+    animation: bp-lift 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+    filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.5));
+  }
+
+  .ghost.returning .ghost-inner {
+    animation: bp-return 0.16s ease-in both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

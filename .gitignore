@@ -6,3 +6,7 @@ games/*/dist/
 .env
 .env.*
 !.env.example
+opencode.json
+.wrangler/
+.dev.vars
+.dev.vars.*

@@ -1,0 +1,24 @@
+services:
+  party:
+    build: .
+    ports:
+      - "8787:8787"
+    volumes:
+      - party-state:/app/.wrangler
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/', {signal: AbortSignal.timeout(4000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+  test:
+    build: .
+    profiles: ["test"]
+    depends_on:
+      party:
+        condition: service_healthy
+    environment:
+      PARTY_TEST_URL: http://party:8787
+    command: ["node", "--import", "tsx", "tests/party.integration.ts"]
+volumes:
+  party-state:

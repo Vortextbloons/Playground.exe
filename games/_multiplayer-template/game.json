@@ -1,0 +1,13 @@
+{
+  "id": "__GAME_ID__", "title": "__GAME_TITLE__",
+  "description": "Practice on your own, then race your party. Try turns, a shared challenge, or live movement.",
+  "genre": "Party", "tags": ["multiplayer", "party", "solo"], "author": "You",
+  "version": "0.1.0", "date": "__DATE__",
+  "controls": "Click Advance or press Space. Practice three times, then ready up for the shared round. Use Left/Right in live mode.",
+  "solo": true,
+  "multiplayer": { "modes": [
+    { "id": "turns", "label": "Take turns", "minPlayers": 2, "maxPlayers": 4, "preset": "turn-based", "spectators": true },
+    { "id": "challenge", "label": "Shared sprint", "minPlayers": 2, "maxPlayers": 8, "preset": "shared-challenge", "spectators": true },
+    { "id": "live", "label": "Live movement", "minPlayers": 2, "maxPlayers": 4, "preset": "live", "spectators": true }
+  ] }
+}

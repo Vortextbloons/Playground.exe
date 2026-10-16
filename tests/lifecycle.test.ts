@@ -7,7 +7,7 @@ test('lifecycle is ordered, single-start, host-scoped and releases listeners', a
   const events = new EventTarget(); const doc = Object.assign(new EventTarget(), { hidden: false });
   const messages: unknown[] = []; const parent = { postMessage: (message: unknown) => messages.push(message) };
   const win = Object.assign(events, { parent });
-  const origin = 'https://arcade.test';
+  const origin = 'https://playground.test';
   Object.defineProperty(globalThis, 'window', { configurable: true, value: win });
   Object.defineProperty(globalThis, 'document', { configurable: true, value: doc });
   Object.defineProperty(globalThis, 'location', { configurable: true, value: { origin } });
@@ -15,7 +15,7 @@ test('lifecycle is ordered, single-start, host-scoped and releases listeners', a
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) } });
   const calls: string[] = [];
   const emit = (type: string, source: unknown = parent, eventOrigin = origin, muted = false) => {
-    const event = new Event('message'); Object.assign(event, { data: { channel: 'personal-arcade', type, muted }, source, origin: eventOrigin }); events.dispatchEvent(event);
+    const event = new Event('message'); Object.assign(event, { data: { channel: 'playground-exe', type, muted }, source, origin: eventOrigin }); events.dispatchEvent(event);
   };
   try {
     const game = createGame('test', { initialize() { calls.push('initialize'); }, start() { calls.push('start'); }, pause() { calls.push('pause'); }, resume() { calls.push('resume'); }, restart() { calls.push('restart'); }, destroy() { calls.push('destroy'); }, mute(value) { calls.push(`mute:${value}`); } });

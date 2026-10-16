@@ -1,0 +1,13 @@
+{
+  "id": "flappy-bird",
+  "title": "Flappy Bird",
+  "description": "A tiny flap-and-dodge arcade game. Tap, click, or press Space to flap through the pipes and chase your best score.",
+  "genre": "Arcade",
+  "tags": ["flappy", "arcade", "endless", "mouse", "touch", "keyboard"],
+  "author": "You",
+  "version": "0.1.0",
+  "date": "2026-10-16",
+  "controls": "Press Space, ArrowUp, or W — or click / tap — to flap. Press R to restart after a crash.",
+  "solo": true,
+  "cover": "cover.svg"
+}

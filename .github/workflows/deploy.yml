@@ -1,4 +1,4 @@
-name: Deploy arcade to GitHub Pages
+name: Deploy Playground.exe to GitHub Pages
 on:
   push:
     branches: [main]
@@ -29,6 +29,7 @@ jobs:
         env:
           SITE_URL: ${{ steps.pages.outputs.origin }}
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          PUBLIC_PARTY_API_URL: ${{ vars.PUBLIC_PARTY_API_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

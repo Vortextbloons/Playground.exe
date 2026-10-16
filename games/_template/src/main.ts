@@ -1,4 +1,4 @@
-import { createGame, createInput, fitCanvas } from '@arcade/game-kit';
+import { createGame, createInput, fitCanvas } from '@playground-exe/game-kit';
 import './style.css';
 const container = document.querySelector<HTMLElement>('#game')!;
 const canvas = container.querySelector('canvas')!;

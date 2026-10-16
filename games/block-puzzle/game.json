@@ -1,0 +1,12 @@
+{
+  "id": "block-puzzle",
+  "title": "Blockwave",
+  "description": "An endless block puzzle. Drag three shapes onto the 8×8 board, fill rows and columns to clear them, and keep the streak going for bigger scores.",
+  "genre": "Puzzle",
+  "tags": ["blocks", "endless", "mouse", "touch"],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-16",
+  "controls": "Drag a block from the tray onto the board, or tap a block and then tap a cell. Fill entire rows or columns to clear them.",
+  "cover": "cover.svg"
+}

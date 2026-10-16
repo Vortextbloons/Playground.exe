@@ -1,8 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { parseMultiplayer, type MultiplayerConfig } from '../../packages/game-kit/src/multiplayer/protocol';
 export interface GameMetadata {
   id: string; title: string; description: string; genre: string; tags: string[];
   author: string; version: string; date: string; controls: string; cover?: string;
+  solo?: boolean; multiplayer?: MultiplayerConfig;
 }
 export const validId = (id: string): boolean => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
 export function parseMetadata(value: unknown, directory: string): GameMetadata {
@@ -16,6 +18,9 @@ export function parseMetadata(value: unknown, directory: string): GameMetadata {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date as string) || !Number.isFinite(Date.parse(data.date as string))) throw new Error(`${directory}: invalid date (YYYY-MM-DD)`);
   if (new Date(data.date as string).toISOString().slice(0, 10) !== data.date) throw new Error(`${directory}: date must be a real calendar date`);
   if (data.cover !== undefined && (typeof data.cover !== 'string' || !/^(?!.*\.\.)[a-zA-Z0-9_/-]+\.(png|jpg|jpeg|webp|svg)$/.test(data.cover))) throw new Error(`${directory}: cover must be a relative image path`);
+  if (data.solo !== undefined && typeof data.solo !== 'boolean') throw new Error(`${directory}: solo must be boolean`);
+  if (data.multiplayer !== undefined) parseMultiplayer(data.multiplayer);
+  if (data.solo === false && data.multiplayer === undefined) throw new Error(`${directory}: multiplayer-only games need multiplayer modes`);
   return data as unknown as GameMetadata;
 }
 export async function discoverGames(root = resolve('games')): Promise<GameMetadata[]> {

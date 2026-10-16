@@ -1,0 +1,15 @@
+node_modules
+.git
+.astro
+.wrangler
+.codex
+.agents
+.aws
+CourtForge
+dist
+public/games/*/
+games/*/dist
+.env
+.env.*
+.dev.vars*
+*.log

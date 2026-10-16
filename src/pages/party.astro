@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PartyPanel from '../components/PartyPanel.svelte';
+import { discoverGames } from '../data/games';
+import { withBase } from '../lib/paths';
+const games = await discoverGames();
+---
+<Layout title="Party · Playground.exe" active="party">
+  <header class="party-intro"><p>THE MULTIPLAYER LOBBY</p><h1>Your people.<br/><span>Your next game.</span></h1><div>Make a party. Share the code. Keep the group together,<br class="desktop-break"/> from the first round to the next favorite.</div></header>
+  <PartyPanel {games} base={withBase()} client:load />
+</Layout>
+<style>
+  .party-intro{padding:49px 0 34px}.party-intro>p{font:9px monospace;letter-spacing:1.8px;color:var(--mint);margin-bottom:19px}.party-intro h1{font-size:clamp(36px,4.5vw,54px);letter-spacing:-2px}.party-intro>div{font-size:13px;line-height:1.8;color:var(--muted);margin-top:18px}@media(max-width:760px){.party-intro{padding-top:35px}.party-intro>div{font-size:12px}}@media(max-width:500px){.party-intro{padding:30px 0}.party-intro h1{font-size:39px;letter-spacing:-1.6px}.desktop-break{display:none}}
+</style>

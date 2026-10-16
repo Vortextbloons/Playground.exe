@@ -9,7 +9,7 @@ import { isCommand } from '../packages/game-kit/src/bridge.ts';
 
 const metadata = { id: 'test-game', title: 'Test', description: 'Test fixture', genre: 'Other', tags: [], author: 'Test', version: '1', date: '2026-10-16', controls: 'None' };
 test('discovery excludes templates, validates metadata, and fails on missing manifests', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'arcade-test-'));
+  const root = await mkdtemp(join(tmpdir(), 'playground-test-'));
   try {
     await mkdir(join(root, '_template')); await mkdir(join(root, '.hidden'));
     assert.deepEqual(await discoverGames(root), []);
@@ -31,14 +31,14 @@ test('storage isolates game scores and tolerates blocked or corrupt storage', ()
   try {
     const a = createStorage('a'); const b = createStorage('b');
     assert.equal(a.highScore(20), 20); assert.equal(a.highScore(10), 20); assert.equal(b.highScore(5), 5);
-    values.set('arcade:game:a:high-score', '"bad"'); assert.equal(a.highScore(30), 30);
-    values.set('arcade:game:a:settings', '{bad'); assert.deepEqual(a.get('settings', {}), {});
+    values.set('playground-exe:game:a:high-score', '"bad"'); assert.equal(a.highScore(30), 30);
+    values.set('playground-exe:game:a:settings', '{bad'); assert.deepEqual(a.get('settings', {}), {});
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('blocked'); } });
     assert.equal(a.highScore(9), 9); assert.equal(a.set('x', 2), false);
   } finally { if (original) Object.defineProperty(globalThis, 'localStorage', original); else Reflect.deleteProperty(globalThis, 'localStorage'); }
 });
 test('bridge accepts only known commands and typed mute payloads', () => {
-  assert.equal(isCommand({ channel: 'personal-arcade', type: 'pause' }), true);
-  assert.equal(isCommand({ channel: 'personal-arcade', type: 'mute', muted: true }), true);
-  for (const input of [null, {}, { channel: 'other', type: 'pause' }, { channel: 'personal-arcade', type: 'mute', muted: 'yes' }, { channel: 'personal-arcade', type: 'destroy' }]) assert.equal(isCommand(input), false);
+  assert.equal(isCommand({ channel: 'playground-exe', type: 'pause' }), true);
+  assert.equal(isCommand({ channel: 'playground-exe', type: 'mute', muted: true }), true);
+  for (const input of [null, {}, { channel: 'other', type: 'pause' }, { channel: 'playground-exe', type: 'mute', muted: 'yes' }, { channel: 'playground-exe', type: 'destroy' }]) assert.equal(isCommand(input), false);
 });
