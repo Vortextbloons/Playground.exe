@@ -13,6 +13,7 @@ export class PartyClient {
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private heartbeat: ReturnType<typeof setInterval> | undefined;
   private retries = 0;
+  private rejoinAttempted = false;
   private initialized = false;
   private sequence = 0;
   constructor(private endpoint: string) {
@@ -72,8 +73,10 @@ export class PartyClient {
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     this.update({ busy: true });
     const socket = new WebSocket(url, [WEBSOCKET_PROTOCOL, this.session.token]); this.socket = socket;
+    let opened = false;
     const timeout = setTimeout(() => { if (!this.state.connected) socket.close(); }, 10_000);
     socket.onopen = () => {
+      opened = true; this.rejoinAttempted = false;
       clearTimeout(timeout); this.retries = 0;
       this.update({ connected: true, busy: false, error: '' });
       this.heartbeat = setInterval(() => { if (socket.readyState === WebSocket.OPEN) socket.send('ping'); }, 30_000);
@@ -98,6 +101,12 @@ export class PartyClient {
       this.update({ connected: false, busy: false });
       if (event.code === 4004) { this.forget(); this.update({ party: null, playerId: null, error: 'This party expired. Create or join another party.' }); return; }
       if (event.code === 4001) { this.update({ error: 'Your party is open in another tab. Reconnect here to move it back.' }); return; }
+      if (!opened && this.session && !this.rejoinAttempted) {
+        // A socket that never opened usually means the seat was released; re-joining restores it.
+        this.rejoinAttempted = true;
+        void this.join(this.session.code, this.session.nickname);
+        return;
+      }
       if (++this.retries > 6) { this.update({ error: 'Connection lost. Reconnect, or rejoin with the party code if your seat expired.' }); return; }
       this.update({ error: 'Connection lost. Reconnecting…' });
       this.retryTimer = setTimeout(() => this.connect(), Math.min(1000 * 2 ** (this.retries - 1), 10_000));

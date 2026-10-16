@@ -2,11 +2,16 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { resolve } from 'node:path';
 import { buildGames, watchGames } from './build-games.ts';
 import { buildMultiplayerRegistry } from './build-multiplayer.ts';
+const nodeEnv = process.env.NODE_ENV;
 await buildMultiplayerRegistry();
 // Build games before Astro snapshots public/, including on a fresh checkout,
 // then keep rebuilding them as game code changes while the dev server runs.
 const games = await buildGames();
 watchGames(games);
+// Vite's build() sets NODE_ENV=production in this process, which would otherwise
+// make the dev servers below skip their development-mode behaviour.
+if (nodeEnv === undefined) delete process.env.NODE_ENV;
+else process.env.NODE_ENV = nodeEnv;
 
 const children: ChildProcess[] = [];
 let stopping = false;
