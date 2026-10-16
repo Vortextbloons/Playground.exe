@@ -1,0 +1,1 @@
+html,body{margin:0;width:100%;height:100%;background:#171620;color:#dcd8e9;font:16px system-ui}#game{width:100%;height:100%;display:grid;place-items:center;position:relative;overflow:hidden;touch-action:none}canvas{grid-area:1/1}p{grid-area:1/1;pointer-events:none}#game:focus-visible{outline:2px solid #b9a0ff;outline-offset:-3px}

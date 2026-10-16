@@ -1,0 +1,13 @@
+---
+import '../styles/global.css';
+import { withBase } from '../lib/paths';
+interface Props { title?: string; active?: 'library' | 'guide' }
+const { title = 'Personal Arcade', active = 'library' } = Astro.props;
+---
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="A personal collection of small browser games. Open a game and make yourself at home."/><link rel="icon" href={withBase('favicon.svg')}/><title>{title}</title></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="site-header"><div class="header-inner"><a class="brand" href={withBase()}><span class="brand-mark" aria-hidden="true">p<span>▧</span></span>personal<span class="brand-light">arcade</span><span class="beta">VOL. 001</span></a><nav aria-label="Main navigation"><a href={withBase()} aria-current={active === 'library' ? 'page' : undefined}>Library</a><a href={withBase('guide/')} aria-current={active === 'guide' ? 'page' : undefined}>Developer guide <span aria-hidden="true">↗</span></a></nav></div></header>
+<main id="main"><slot/></main>
+<footer class="site-footer"><span class="footer-brand">A little space for a lot of play.</span><span>Independent games. Right in your browser.</span><a href={withBase('guide/')}>Built to be built on <span aria-hidden="true">↗</span></a></footer>
+</body></html>

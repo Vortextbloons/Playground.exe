@@ -1,0 +1,5 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { withBase } from '../lib/paths';
+---
+<Layout title="Not found · Personal Arcade"><section class="empty-state"><p class="eyebrow">404 / OUT OF BOUNDS</p><h1>This spot is empty.</h1><p>Head back to the library to find your next game.</p><a class="button primary" href={withBase()}>Back to library</a></section></Layout>

@@ -1,0 +1,37 @@
+{
+  "name": "personal-arcade",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "games/*"
+  ],
+  "scripts": {
+    "dev": "astro dev",
+    "new:game": "tsx scripts/new-game.ts",
+    "dev:game": "tsx scripts/dev-game.ts",
+    "build:games": "tsx scripts/build-games.ts",
+    "build": "npm run build:games && astro build",
+    "preview": "astro preview",
+    "check": "astro check && tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@arcade/game-kit": "file:packages/game-kit",
+    "@astrojs/svelte": "^9.1.0",
+    "astro": "^7.4.0",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@types/node": "^22.0.0",
+    "svelte-check": "^4.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  }
+}

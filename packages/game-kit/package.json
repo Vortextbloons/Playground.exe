@@ -1,0 +1,1 @@
+{ "name": "@arcade/game-kit", "version": "0.1.0", "private": true, "type": "module", "exports": { ".": "./src/index.ts", "./phaser": "./src/phaser.ts" }, "peerDependencies": { "phaser": "^3.90.0" }, "peerDependenciesMeta": { "phaser": { "optional": true } } }

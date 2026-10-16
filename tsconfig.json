@@ -1,0 +1,5 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": { "strict": true, "noUncheckedIndexedAccess": true, "types": ["node", "vite/client"], "allowImportingTsExtensions": true },
+  "include": [".astro/types.d.ts", "**/*"], "exclude": ["dist", "node_modules", "public/games"]
+}

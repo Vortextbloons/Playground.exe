@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Developer guide · Personal Arcade" active="guide"><article class="guide"><p class="eyebrow">FROM IDEA TO IFRAME</p><h1>Your next game<br/><span>starts here.</span></h1><p class="intro-copy">A small toolkit. Your choice of engine. A place to publish.</p><section><h2>01 / Make a space</h2><p>From the project root, create a game and install its workspace dependencies.</p><pre><code>npm run new:game my-game
+npm install
+npm run dev:game my-game</code></pre><p>The template contains a blank canvas and lifecycle hooks. No game mechanics are included. Your game lives in <code>games/my-game/</code> and has its own Vite development server.</p></section><section><h2>02 / Make it yours</h2><p>Edit <code>game.json</code> with a title, description, genre, author, version, publish date, tags, and controls. The ID must match the folder name. An optional <code>cover</code> points to an image in the game's <code>public/</code> directory, such as <code>cover.webp</code>.</p><p>Import utilities from <code>@arcade/game-kit</code>: lifecycle hooks, pointer and keyboard input, canvas scaling, audio, asset loading, namespaced storage, and a website message bridge. Use Canvas, DOM, or your preferred engine.</p><pre><code>const game = createGame('my-game', lifecycle);
+await game.boot();
+game.score(100);
+game.requestPause();</code></pre></section><section><h2>03 / Build and publish</h2><pre><code>npm run check
+npm test
+npm run build
+npm run preview</code></pre><p>The build discovers game metadata, bundles each game, and creates static game pages. Restart the website development server after adding a game; rebuild games to update embedded players.</p><p>Push to <code>main</code> and select <strong>GitHub Actions</strong> in your repository's Pages settings. The deployment workflow configures your repository's base path automatically. See the repository README for custom domains and optional Phaser setup.</p></section><aside class="guide-note">Each game runs in its own iframe. Scores and preferences stay in this browser. No accounts, servers, or downloads required.</aside></article></Layout>

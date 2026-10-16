@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+public/games/*/
+games/*/dist/
+.env
+.env.*
+!.env.example
