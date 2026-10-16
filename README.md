@@ -6,7 +6,7 @@ Each game has its own page, and you can browse the collection by title or genre.
 
 ## Play
 
-Open Playground.exe in your browser and choose a game from the library. Scores and preferences are saved in your browser, so they stay on your device.
+Play at **[vortextbloons.github.io/Playground.exe](https://vortextbloons.github.io/Playground.exe/)** and choose a game from the library. Scores and preferences are saved in your browser, so they stay on your device.
 
 ## Make a game
 
