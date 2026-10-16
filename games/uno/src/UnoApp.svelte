@@ -117,7 +117,12 @@
 
   function payloadOf(action: UnoAction): UnoActionPayloads[keyof UnoActionPayloads] {
     switch (action.type) {
-      case 'play-card': return { card: action.card, color: action.color, callUno: action.callUno };
+      case 'play-card': {
+        const payload: UnoActionPayloads['play-card'] = { card: action.card };
+        if (action.color) payload.color = action.color;
+        if (action.callUno) payload.callUno = true;
+        return payload;
+      }
       case 'catch-uno': return { target: action.target };
       case 'choose-color': return { color: action.color };
       default: return null;

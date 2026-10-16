@@ -24,16 +24,19 @@
     const proposedGame = new URLSearchParams(location.search).get('game');
     let proposedFor: string | null = null;
     let previousParty: { code: string; hostId: string } | null = null;
+    let previousSelection: string | undefined;
     const unsubscribe = client.subscribe(value => {
       clientState = value;
       const current = value.party;
-      if (!current) { previousParty = null; return; }
+      if (!current) { previousParty = null; previousSelection = undefined; return; }
       if (previousParty?.code === current.code && previousParty.hostId !== current.hostId) {
         const newHost = current.players.find(player => player.id === current.hostId);
         notice = `${newHost?.nickname ?? 'Another player'} is now the host.`;
       }
       previousParty = { code: current.code, hostId: current.hostId };
-      if (value.connected && current.selection) window.location.assign(`${base}play/${current.selection.gameId}/`);
+      const selection = current.selection?.gameId;
+      if (previousSelection !== undefined && value.connected && selection && selection !== previousSelection) window.location.assign(`${base}play/${selection}/`);
+      previousSelection = selection;
       if (proposedGame && current.hostId === value.playerId && !current.selection && !current.match && proposedFor !== current.code) {
         proposedFor = current.code;
         selectGame(proposedGame);
@@ -57,6 +60,7 @@
     code = normalizePartyCode(pasted);
   }
   function selectGame(gameId: string) {
+    if (party?.selection?.gameId === gameId) { window.location.assign(`${base}play/${gameId}/`); return; }
     const firstMode = games.find(game => game.id === gameId)?.multiplayer?.modes[0];
     if (firstMode) send({ type: 'select', gameId, modeId: firstMode.id });
   }
@@ -114,7 +118,7 @@
       </aside>
       <div class="lobby-main">
           <section class="game-choice" aria-labelledby="game-choice-title"><div class="section-heading"><div><span class="eyebrow">PICK YOUR NEXT ROUND</span><h2 id="game-choice-title">{isHost ? 'What are we playing?' : selectedGame ? 'Here’s what’s next.' : 'Your host is picking a game.'}</h2></div>{#if isHost}<span class="host-tag">Host controls</span>{/if}</div>
-            {#if isHost}<div class="game-grid">{#each availableGames as game (game.id)}<button class={['game-option', { selected: selectedGame?.id === game.id }]} disabled={!clientState?.connected} aria-pressed={selectedGame?.id === game.id} onclick={() => selectGame(game.id)}><span class="game-icon" aria-hidden="true">{game.title.slice(0, 1)}</span><span><strong>{game.title}</strong><small>{Math.min(...game.multiplayer!.modes.map(item => item.minPlayers))}–{Math.max(...game.multiplayer!.modes.map(item => item.maxPlayers))} players</small></span><span class="choice-mark" aria-hidden="true">{selectedGame?.id === game.id ? '✓' : '+'}</span></button>{/each}</div>{:else if selectedGame}<div class="chosen-game"><span class="game-icon" aria-hidden="true">{selectedGame.title.slice(0, 1)}</span><div><h3>{selectedGame.title}</h3><p>{selectedGame.description}</p></div></div>{:else}<p class="hint">You’re in. Share the code while the host gets a round ready.</p>{/if}
+            {#if isHost}<div class="game-grid">{#each availableGames as game (game.id)}<button class={['game-option', { selected: selectedGame?.id === game.id }]} disabled={!clientState?.connected} aria-pressed={selectedGame?.id === game.id} onclick={() => selectGame(game.id)}><span class="game-icon" aria-hidden="true">{game.title.slice(0, 1)}</span><span><strong>{game.title}</strong><small>{Math.min(...game.multiplayer!.modes.map(item => item.minPlayers))}–{Math.max(...game.multiplayer!.modes.map(item => item.maxPlayers))} players</small></span><span class="choice-mark" aria-hidden="true">{selectedGame?.id === game.id ? '✓' : '+'}</span></button>{/each}</div>{:else if selectedGame}<div class="chosen-game"><span class="game-icon" aria-hidden="true">{selectedGame.title.slice(0, 1)}</span><div><h3><a href={`${base}play/${selectedGame.id}/`}>{selectedGame.title}</a></h3><p>{selectedGame.description}</p></div></div>{:else}<p class="hint">You’re in. Share the code while the host gets a round ready.</p>{/if}
             {#if availableGames.length === 0}<p class="hint">No multiplayer games are available yet. Keep the party together and check back when one is added.</p>{/if}
             <p class="hint">Choose a game to load it for everyone. Pick your mode and ready up inside the game.</p>
           </section>

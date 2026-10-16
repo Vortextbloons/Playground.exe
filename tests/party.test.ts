@@ -4,7 +4,7 @@ import { createRoom, joinRoom, connectPlayer, disconnectPlayer, expireDisconnect
 import definition from '../games/pocket-circuit/src/multiplayer';
 import { parseMultiplayer, RECONNECT_GRACE_MS } from '../packages/game-kit/src/multiplayer/protocol';
 const multiplayer = parseMultiplayer({ modes: [{ id: 'turns', label: 'Turns', minPlayers: 2, maxPlayers: 2, preset: 'turn-based', spectators: true }] });
-const games: Registry = { circuit: { id: 'circuit', title: 'Circuit', multiplayer, definition } };
+const games: Registry = { circuit: { id: 'circuit', title: 'Circuit', multiplayer, definition }, alt: { id: 'alt', title: 'Alt', multiplayer, definition } };
 function fixture() {
   const room = createRoom('0042', 1000);
   const host = joinRoom(room, 'host-token', 'Host', 1000); connectPlayer(room, host, 1000);
@@ -52,7 +52,10 @@ test('game menu keeps the selection for replay and changing games returns the pa
   assert.equal(room.selection?.gameId, 'circuit');
   assert.ok(room.players.every(player => !player.ready));
   start(room, host, guest);
-  applyCommand(room, host, parseCommand({ type: 'browse' }), games, 1005);
+  applyCommand(room, host, { type: 'select', gameId: 'alt', modeId: 'turns' }, games, 1005);
+  assert.equal(room.selection?.gameId, 'alt');
+  assert.equal(room.match, null);
+  applyCommand(room, host, parseCommand({ type: 'browse' }), games, 1006);
   assert.equal(room.match, null);
   assert.equal(room.selection, null);
   assert.ok(room.players.every(player => !player.ready));

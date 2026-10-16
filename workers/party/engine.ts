@@ -85,7 +85,6 @@ export function applyCommand(room: RoomState, id: string, command: PartyCommand,
   switch (command.type) {
     case 'select': {
       requireHost(room, id);
-      if (active) throw new Error('Return to the lobby before changing games.');
       const next = games[command.gameId]?.multiplayer?.modes.find(item => item.id === command.modeId);
       if (!next) throw new Error('That multiplayer mode is unavailable.');
       room.selection = { gameId: command.gameId, modeId: command.modeId }; room.match = null;

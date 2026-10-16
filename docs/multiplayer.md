@@ -58,7 +58,7 @@ Declare optional `multiplayer.modes` in `game.json`:
 }
 ```
 
-`solo` defaults to true; set it to false for a multiplayer-only game. `minPlayers`/`maxPlayers` must be 1–16. The host picks a game on the Party page, which immediately opens it for everyone, including spectators and late arrivals. Players choose the mode, take seats and ready up inside the game; then the host starts. Returning to the game menu keeps the selected game loaded. Change game returns the whole party to game selection. Changing the selection clears readiness. Excess party members watch or sit out. Default late arrivals wait for the next round; `lateJoin: "join"` permits taking an open seat mid-round. Games opting in must initialize new players through `playersChanged()` or their action handler.
+`solo` defaults to true; set it to false for a multiplayer-only game. `minPlayers`/`maxPlayers` must be 1–16. The host picks a game on the Party page, which immediately opens it for everyone, including spectators and late arrivals. Players choose the mode, take seats and ready up inside the game; then the host starts. Returning to the game menu keeps the selected game loaded. Change game returns the whole party to game selection; the host can also switch games directly on the Party page, which ends the round. Changing the selection clears readiness. Excess party members watch or sit out. Default late arrivals wait for the next round; `lateJoin: "join"` permits taking an open seat mid-round. Games opting in must initialize new players through `playersChanged()` or their action handler.
 
 ## Client helpers
 
