@@ -27,6 +27,48 @@
   /** Cell ring for keyboard play; cleared as soon as a pointer moves. */
   let cursor = $state<number | null>(null);
 
+  const SPARK_COLORS = ['', '#b9a3f7', '#8fd6b8', '#7cc3f2', '#f5c76b', '#f2866c', '#ef8fc4', '#6fe3d6'];
+
+  interface Spark {
+    index: number;
+    left: number;
+    top: number;
+    dx: number;
+    dy: number;
+    color: string;
+    delay: number;
+  }
+
+  const sparks = $derived.by<Spark[]>(() => {
+    if (clearing.size === 0) return [];
+    const list: Spark[] = [];
+    for (const index of clearing) {
+      const r = Math.floor(index / BOARD_SIZE);
+      const c = index % BOARD_SIZE;
+      const wave = ((r + c) % 4) * 30;
+      const color = SPARK_COLORS[board[r]?.[c] ?? 0] ?? '#ffffff';
+      for (let k = 0; k < 2; k++) {
+        const h = ((index * 2654435761 + k * 40503) >>> 0) % 1000 / 1000;
+        const angle = h * Math.PI * 2 + k * Math.PI;
+        const dist = 20 + ((index * 31 + k * 17) % 18);
+        list.push({
+          index: index * 2 + k,
+          left: ((c + 0.5) / BOARD_SIZE) * 100,
+          top: ((r + 0.5) / BOARD_SIZE) * 100,
+          dx: Math.round(Math.cos(angle) * dist),
+          dy: Math.round(Math.sin(angle) * dist),
+          color: k === 0 ? '#ffffff' : color,
+          delay: 80 + wave + k * 40,
+        });
+      }
+    }
+    return list;
+  });
+
+  const waveDelay = (r: number, c: number) => ((r + c) % 4) * 30;
+
+  const armed = $derived(previewLine.size > 0);
+
   function locate(event: PointerEvent): number | null {
     if (!grid) return null;
     return cellAt(readGridMetrics(grid), event.clientX, event.clientY);
@@ -64,9 +106,9 @@
   }
 </script>
 
-<div class="bg-panel border border-edge rounded-[22px] p-[clamp(7px,2.2%,13px)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.45),0_26px_50px_-32px_rgba(0,0,0,0.9)]">
+<div class="board-shell bg-panel border border-edge rounded-[22px] p-[clamp(7px,2.2%,13px)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.45),0_26px_50px_-32px_rgba(0,0,0,0.9)]" class:armed>
   <div
-    class="grid grid-cols-8 grid-rows-8 aspect-square rounded-[14px] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+    class="relative grid grid-cols-8 grid-rows-8 aspect-square rounded-[14px] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
     bind:this={grid}
     role="grid"
     tabindex="0"
@@ -79,9 +121,15 @@
     {#each board as row, r (r)}
       {#each row as value, c (c)}
         {@const index = r * BOARD_SIZE + c}
+        {@const isClearing = clearing.has(index)}
         <div class="cell" role="gridcell" aria-label={`Row ${r + 1}, column ${c + 1}: ${value ? 'block' : 'empty'}`}>
           {#if value}
-            <div class="tile t{value}" class:pop={pop.has(index)} class:clearing={clearing.has(index)}></div>
+            <div
+              class="tile t{value}"
+              class:pop={pop.has(index)}
+              class:clearing={isClearing}
+              style={isClearing ? `animation-delay: ${waveDelay(r, c)}ms` : undefined}
+            ></div>
           {:else}
             <div class="slot"></div>
           {/if}
@@ -97,5 +145,15 @@
         </div>
       {/each}
     {/each}
+    {#if sparks.length > 0}
+      <div class="pointer-events-none absolute inset-0 z-[2]">
+        {#each sparks as spark (spark.index)}
+          <div
+            class="spark"
+            style="left: {spark.left}%; top: {spark.top}%; --dx: {spark.dx}px; --dy: {spark.dy}px; --spark: {spark.color}; animation-delay: {spark.delay}ms"
+          ></div>
+        {/each}
+      </div>
+    {/if}
   </div>
 </div>

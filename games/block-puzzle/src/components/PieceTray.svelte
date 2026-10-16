@@ -10,6 +10,7 @@
     hidden = -1,
     shake = -1,
     disabled = false,
+    playable = [true, true, true],
     onpickup,
     onactivate,
   }: {
@@ -18,6 +19,7 @@
     hidden?: number;
     shake?: number;
     disabled?: boolean;
+    playable?: readonly boolean[];
     onpickup?: (index: number, detail: PickupDetail) => void;
     onactivate?: (index: number) => void;
   } = $props();
@@ -63,6 +65,7 @@
       class:picked={selected === index}
       class:taken={hidden === index}
       class:shaking={shake === index}
+      class:dim={!!piece && playable[index] === false}
       disabled={disabled || !piece}
       aria-pressed={selected === index}
       aria-label={piece ? label(piece, index) : `Slot ${index + 1}, empty`}
@@ -74,7 +77,11 @@
         {@const shape = SHAPE_BY_ID.get(piece.shapeId)}
         {#if shape}
           {#key piece}
-            <div class="holder grid place-items-center" bind:this={holders[index]}>
+            <div
+              class="holder grid place-items-center"
+              style="animation-delay: {index * 60}ms"
+              bind:this={holders[index]}
+            >
               <BlockPiece {shape} color={piece.color} cell={pieceCell} />
             </div>
           {/key}

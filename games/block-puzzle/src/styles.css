@@ -32,8 +32,11 @@
   --color-t7: #6fe3d6; /* teal */
 
   --animate-pop: bp-pop 0.16s cubic-bezier(0.2, 1.4, 0.4, 1) both;
-  --animate-clear: bp-clear 0.21s ease-in both;
+  --animate-clear: bp-clear 0.26s ease-in both;
   --animate-rise: bp-rise 0.85s ease-out both;
+  --animate-banner: bp-banner 0.95s cubic-bezier(0.2, 1.3, 0.35, 1) both;
+  --animate-shake: bp-board-shake 0.32s ease-in-out;
+  --animate-spark: bp-spark 0.55s cubic-bezier(0.15, 0.7, 0.4, 1) both;
   --animate-score: bp-pulse 0.3s ease-out;
   --animate-chip: bp-chip 0.22s cubic-bezier(0.2, 1.4, 0.4, 1) both;
   --animate-veil: bp-veil 0.2s ease-out both;
@@ -80,9 +83,9 @@
 }
 
 @keyframes bp-clear {
-  0% { transform: scale(1); filter: brightness(1.5); }
-  55% { transform: scale(1.1); filter: brightness(2.5); }
-  100% { transform: scale(0.3); opacity: 0; filter: brightness(2.8); }
+  0% { transform: scale(1); filter: brightness(1.4); }
+  35% { transform: scale(1.14); filter: brightness(3) saturate(0.4); }
+  100% { transform: scale(0.2); opacity: 0; filter: brightness(3.2); }
 }
 
 @keyframes bp-rise {
@@ -122,6 +125,32 @@
   to { opacity: 1; }
 }
 
+@keyframes bp-banner {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+  32% { transform: translate(-50%, -50%) scale(1); }
+  75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -62%) scale(1.04); }
+}
+
+@keyframes bp-board-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-5px, 2px) rotate(-0.4deg); }
+  40% { transform: translate(5px, -3px) rotate(0.4deg); }
+  60% { transform: translate(-3px, -2px); }
+  80% { transform: translate(3px, 2px); }
+}
+
+@keyframes bp-spark {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -22px))) scale(0.25); }
+}
+
+@keyframes bp-line-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0.45; }
+}
+
 @keyframes bp-panel {
   from { opacity: 0; transform: translateY(12px) scale(0.97); }
   to { opacity: 1; transform: none; }
@@ -158,12 +187,26 @@
   }
 
   .cell .tile {
+    overflow: hidden;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.04) 42%, rgba(0, 0, 0, 0.12)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.05) 46%, rgba(0, 0, 0, 0.18)),
       var(--tile);
     box-shadow:
-      inset 0 -3px 0 rgba(0, 0, 0, 0.16),
-      0 1px 2px rgba(0, 0, 0, 0.35);
+      inset 0 2px 2px rgba(255, 255, 255, 0.38),
+      inset 0 -4px 6px rgba(0, 0, 0, 0.24),
+      0 2px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .cell .tile::after {
+    content: '';
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    top: 8%;
+    height: 30%;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0));
+    pointer-events: none;
   }
 
   .cell .tile.t1 { --tile: var(--color-t1); }
@@ -173,6 +216,14 @@
   .cell .tile.t5 { --tile: var(--color-t5); }
   .cell .tile.t6 { --tile: var(--color-t6); }
   .cell .tile.t7 { --tile: var(--color-t7); }
+
+  .cell .tile.pop {
+    animation: bp-pop 0.16s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .cell .tile.clearing {
+    animation: bp-clear 0.26s ease-in both;
+  }
 
   .cell .hint {
     pointer-events: none;
@@ -192,6 +243,74 @@
     inset: 4%;
     background: rgba(240, 237, 247, 0.16);
     box-shadow: inset 0 0 0 2px rgba(240, 237, 247, 0.34);
+    animation: bp-line-pulse 0.7s ease-in-out infinite;
+  }
+
+  .board-shell {
+    transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+
+  .board-shell.armed {
+    border-color: rgba(240, 237, 247, 0.5);
+    box-shadow:
+      inset 0 2px 10px rgba(0, 0, 0, 0.45),
+      0 0 0 2px rgba(240, 237, 247, 0.14),
+      0 0 28px rgba(185, 163, 247, 0.28);
+  }
+
+  .board-shaker.shaking {
+    animation: bp-board-shake 0.32s ease-in-out;
+  }
+
+  .banner {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    z-index: 4;
+    display: grid;
+    justify-items: center;
+    pointer-events: none;
+    animation: bp-banner 0.95s cubic-bezier(0.2, 1.3, 0.35, 1) both;
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
+  }
+
+  .banner strong {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 9vw, 44px);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .banner.cool strong {
+    text-shadow: 0 0 18px rgba(185, 163, 247, 0.8);
+  }
+
+  .banner.hot strong {
+    background: linear-gradient(180deg, #fff7d6, #f5c76b 55%, #f2866c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 26px rgba(245, 199, 107, 0.45);
+  }
+
+  .banner span {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-fog);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  .spark {
+    position: absolute;
+    width: 22%;
+    aspect-ratio: 1;
+    border-radius: 30%;
+    background: var(--spark, #fff);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    animation: bp-spark 0.55s cubic-bezier(0.15, 0.7, 0.4, 1) both;
+    pointer-events: none;
   }
 
   /* Tray slot: base look and drag states live together so they can't fight
@@ -228,6 +347,11 @@
     transform: scale(0.78);
   }
 
+  .slot.dim .holder {
+    opacity: 0.32;
+    filter: grayscale(0.85) brightness(0.7);
+  }
+
   .slot.shaking .holder {
     animation: bp-shake 0.3s ease-in-out;
   }
@@ -236,6 +360,17 @@
   .ghost-inner {
     animation: bp-lift 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
     filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.5));
+    transition: opacity 0.12s ease, filter 0.12s ease;
+  }
+
+  .ghost.valid .ghost-inner {
+    opacity: 0.96;
+    filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(185, 163, 247, 0.35));
+  }
+
+  .ghost.invalid .ghost-inner {
+    opacity: 0.62;
+    filter: grayscale(0.4) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.5));
   }
 
   .ghost.returning .ghost-inner {

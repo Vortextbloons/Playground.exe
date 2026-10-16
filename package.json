@@ -11,7 +11,8 @@
     "games/*"
   ],
   "scripts": {
-    "dev": "astro dev",
+    "dev": "tsx scripts/dev.ts",
+    "dev:web": "npm run build:games && astro dev",
     "new:game": "tsx scripts/new-game.ts",
     "dev:game": "tsx scripts/dev-game.ts",
     "build:games": "tsx scripts/build-games.ts",
@@ -19,6 +20,7 @@
     "preview": "astro preview",
     "check": "astro check && tsc --noEmit && svelte-check --tsconfig ./tsconfig.json && npm run check:party",
     "test": "tsx --test tests/*.test.ts",
+    "test:games": "tsx tests/games.integration.ts",
     "build:multiplayer": "tsx scripts/build-multiplayer.ts",
     "dev:party": "npm run build:multiplayer && wrangler dev --port 8787",
     "types:party": "wrangler types workers/party/worker-configuration.d.ts --include-runtime false",

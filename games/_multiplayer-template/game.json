@@ -1,7 +1,7 @@
 {
   "id": "__GAME_ID__", "title": "__GAME_TITLE__",
   "description": "Practice on your own, then race your party. Try turns, a shared challenge, or live movement.",
-  "genre": "Party", "tags": ["multiplayer", "party", "solo"], "author": "You",
+  "genre": "Party", "tags": ["multiplayer", "party", "solo"], "author": "Isaac",
   "version": "0.1.0", "date": "__DATE__",
   "controls": "Click Advance or press Space. Practice three times, then ready up for the shared round. Use Left/Right in live mode.",
   "solo": true,

@@ -5,7 +5,7 @@
   import BlockPiece from './components/BlockPiece.svelte';
   import { SHAPE_BY_ID } from './engine/shapes';
   import { applyMove, createEmptyState, deserialize, hasMovesLeft, serialize, startGame } from './engine/gameState';
-  import { canPlace, lineClear, place, resolveTapAnchor } from './engine/placement';
+  import { canPlace, hasAnyPlacement, lineClear, place, resolveTapAnchor } from './engine/placement';
   import { comboMultiplier } from './engine/scoring';
   import {
     BOARD_SIZE, TRAY_SIZE,
@@ -24,8 +24,8 @@
 
   const SAVE_KEY = 'save';
   const SOUND_KEY = 'sound';
-  const POP_MS = 150; /* placed tiles snap in, then lines flash */
-  const CLEAR_MS = 210;
+  const POP_MS = 160; /* placed tiles snap in, then lines flash in a wave */
+  const CLEAR_MS = 340;
 
   const sound = createSound();
   const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -62,6 +62,13 @@
     sub: string;
   }
 
+  interface Banner {
+    id: number;
+    text: string;
+    sub: string;
+    tone: 'cool' | 'hot';
+  }
+
   // Engine state is the source of truth; board/tray mirror it except while a
   // move animates.
   const initial = createEmptyState();
@@ -88,6 +95,8 @@
   let shakeIndex = $state(-1);
   let drag = $state<Drag | null>(null);
   let popup = $state<Popup | null>(null);
+  let banner = $state<Banner | null>(null);
+  let shaking = $state(false);
   let confirmRestart = $state(false);
 
   let soundOn = $state(true);
@@ -378,11 +387,25 @@
       clearing = new Set(result.clear.cells.map(keyOf));
       showClearPopup(result);
       sound.play(result.points.lines >= 2 || result.combo >= 2 ? 'multi' : 'clear', Math.max(result.points.lines, result.combo));
+      if (result.points.lines >= 2 && !reduceMotion) {
+        shaking = true;
+        later(340, () => {
+          shaking = false;
+        });
+      }
       if (reduceMotion) settle();
       else later(CLEAR_MS, settle);
     };
     if (reduceMotion) beginClear();
     else later(POP_MS, beginClear);
+  }
+
+  function praiseFor(lines: number, comboCount: number): { text: string; tone: 'cool' | 'hot' } | null {
+    if (lines >= 4 || comboCount >= 5) return { text: 'Amazing!', tone: 'hot' };
+    if (lines === 3 || comboCount === 4) return { text: 'Excellent!', tone: 'hot' };
+    if (lines === 2 || comboCount === 3) return { text: 'Great!', tone: 'hot' };
+    if (comboCount === 2) return { text: 'Nice!', tone: 'cool' };
+    return null;
   }
 
   function showClearPopup(result: MoveResult) {
@@ -401,6 +424,15 @@
       text: `+${result.points.clear}`,
       sub,
     };
+    const praise = praiseFor(result.points.lines, result.combo);
+    if (praise && !reduceMotion) {
+      const id = popup.id;
+      const comboSub = result.combo > 1 ? `Combo ${multiplierLabel(result.combo)} · ` : '';
+      banner = { id, text: praise.text, sub: `${comboSub}+${result.points.clear}`, tone: praise.tone };
+      later(950, () => {
+        if (banner?.id === id) banner = null;
+      });
+    }
   }
 
   function finishGame() {
@@ -443,6 +475,8 @@
     previewLine = new Set();
     drag = null;
     popup = null;
+    banner = null;
+    shaking = false;
     confirmRestart = false;
     sound.unlock();
     sound.play('start');
@@ -498,6 +532,14 @@
   }
 
   const canInteract = $derived(!busy && !paused && phase === 'playing');
+
+  const playable = $derived(
+    tray.map(piece => {
+      if (!piece) return true;
+      const shape = SHAPE_BY_ID.get(piece.shapeId);
+      return shape ? hasAnyPlacement(engine.board, shape) : true;
+    }),
+  );
 
   // Shared utility stacks for the markup below.
   const ICON_BTN = 'grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-[11px] border border-edge bg-[rgba(35,32,48,0.6)] p-0 text-muted transition-colors hover:border-[rgba(185,163,247,0.5)] hover:text-fog focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px] [&_svg]:h-[21px] [&_svg]:w-[21px]';
@@ -564,22 +606,32 @@
     </div>
 
     <div class="relative short:[grid-area:board] short:w-[min(100%,68vh)] short:justify-self-center short:self-center">
-      <Board
-        bind:grid={gridEl}
-        {board}
-        {pop}
-        {clearing}
-        {preview}
-        {previewLine}
-        {previewValid}
-        onhover={onBoardHover}
-        ontap={onBoardTap}
-      />
+      <div class="board-shaker" class:shaking>
+        <Board
+          bind:grid={gridEl}
+          {board}
+          {pop}
+          {clearing}
+          {preview}
+          {previewLine}
+          {previewValid}
+          onhover={onBoardHover}
+          ontap={onBoardTap}
+        />
+      </div>
+      {#if banner}
+        {#key banner.id}
+          <div class="banner" class:cool={banner.tone === 'cool'} class:hot={banner.tone === 'hot'}>
+            <strong>{banner.text}</strong>
+            {#if banner.sub}<span>{banner.sub}</span>{/if}
+          </div>
+        {/key}
+      {/if}
       {#if popup}
         {#key popup.id}
           <div class="pointer-events-none absolute z-[3] grid animate-rise justify-items-center" style="left: {popup.x}%; top: {popup.y}%">
             <strong class="font-display text-[21px] font-semibold [text-shadow:0_2px_10px_rgba(0,0,0,0.65)]">{popup.text}</strong>
-            {#if popup.sub}<span class="font-display text-[11px] font-semibold text-accent">{popup.sub}</span>{/if}
+            {#if popup.sub && !banner}<span class="font-display text-[11px] font-semibold text-accent">{popup.sub}</span>{/if}
           </div>
         {/key}
       {/if}
@@ -589,6 +641,7 @@
       <PieceTray
         {tray}
         {selected}
+        {playable}
         hidden={drag?.moving ? drag.index : -1}
         shake={shakeIndex}
         disabled={!canInteract}
@@ -663,7 +716,13 @@
   {/if}
 
   {#if drag?.moving}
-    <div class="ghost pointer-events-none fixed left-0 top-0 z-[40]" class:returning={drag.returning} style="transform: translate3d({drag.gx}px, {drag.gy}px, 0)">
+    <div
+      class="ghost pointer-events-none fixed left-0 top-0 z-[40]"
+      class:returning={drag.returning}
+      class:valid={drag.valid}
+      class:invalid={!drag.valid}
+      style="transform: translate3d({drag.gx}px, {drag.gy}px, 0)"
+    >
       <div class="ghost-inner" style="--lift: {drag.liftFrom}">
         <BlockPiece shape={drag.shape} color={drag.piece.color} cell={drag.pitch} />
       </div>

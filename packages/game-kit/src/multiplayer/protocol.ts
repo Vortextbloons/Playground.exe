@@ -37,12 +37,14 @@ export type PartyCommand =
   | { type: 'ready'; ready: boolean }
   | { type: 'start' }
   | { type: 'return' }
+  | { type: 'browse' }
   | { type: 'leave' }
   | { type: 'action'; matchId: string; action: string; payload: Json; sequence: number };
 export type ServerMessage =
   | { type: 'snapshot'; party: PartySnapshot; playerId: string }
   | { type: 'error'; message: string };
 export interface MultiplayerUpdate { party: PartySnapshot | null; playerId: string | null; connected: boolean }
+export type GameMenuCommand = Exclude<PartyCommand, { type: 'action' | 'leave' | 'select' }> | { type: 'mode'; modeId: string };
 export const PARTY_CHANNEL = 'playground-exe-party';
 export const WEBSOCKET_PROTOCOL = 'playground-exe-v1';
 export const MAX_MESSAGE_BYTES = 8192;

@@ -58,7 +58,7 @@ Declare optional `multiplayer.modes` in `game.json`:
 }
 ```
 
-`solo` defaults to true; set it to false for a multiplayer-only game. `minPlayers`/`maxPlayers` must be 1–16. The host picks the game and mode, people take seats and ready up, then the host starts. Changing the selection clears readiness. Excess party members watch or sit out. Default late arrivals wait for the next round; `lateJoin: "join"` permits taking an open seat mid-round. Games opting in must initialize new players through `playersChanged()` or their action handler.
+`solo` defaults to true; set it to false for a multiplayer-only game. `minPlayers`/`maxPlayers` must be 1–16. The host picks a game on the Party page, which immediately opens it for everyone, including spectators and late arrivals. Players choose the mode, take seats and ready up inside the game; then the host starts. Returning to the game menu keeps the selected game loaded. Change game returns the whole party to game selection. Changing the selection clears readiness. Excess party members watch or sit out. Default late arrivals wait for the next round; `lateJoin: "join"` permits taking an open seat mid-round. Games opting in must initialize new players through `playersChanged()` or their action handler.
 
 ## Client helpers
 
@@ -72,10 +72,14 @@ session.onState((state, view) => render(state, view.isPlayer));
 session.onPlayers(players => renderPlayers(players));
 session.onError(message => showError(message));
 session.subscribe(view => showConnection(view.connected));
+session.command({ type: 'mode', modeId: 'duel' });
+session.command({ type: 'ready', ready: true });
 session.send('place-piece', { pieceId: 'square', x: 2, y: 3 });
 ```
 
 `MyState` must be JSON-compatible; `MyActions` maps action names to JSON payload types. `session.current` contains the party, current match, player ID, connection and participation state. `send()` returns false when disconnected, observing, finished or its bounded queue is full. It returns true when queued, not when accepted by the server. Render accepted game state from `onState`. Each subscription returns an unsubscribe function. `game.destroy()` cleans up sessions automatically. The standalone `createMultiplayer()` helper is also exported from `@playground-exe/game-kit/multiplayer`; destroy it when your game stops.
+
+`createMultiplayerMenu(session, gameId, config)` from `@playground-exe/game-kit/multiplayer` creates a shared menu element that inherits the game's styling. Mount `menu.element` in the game and call `menu.destroy()` when destroying it. Pocket Circuit and the multiplayer scaffold demonstrate mode selection, seats, readiness, start, returning to the game menu and changing games. Custom menus can use `session.command()` with `mode`, `seat`, `ready`, `start`, `return` or `browse`; the parent scopes these commands to the loaded game and the server enforces host permissions.
 
 Games receive no guest credentials. The parent checks iframe source, origin, game ID and active match before forwarding actions. Solo play should remain local; do not send individual frame rendering, unrelated solo progress or private information through general broadcasts.
 

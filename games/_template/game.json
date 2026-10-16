@@ -1,4 +1,4 @@
 {
   "id": "__GAME_ID__", "title": "__GAME_TITLE__", "description": "A new game. Add a description before publishing.",
-  "genre": "Other", "tags": [], "author": "You", "version": "0.1.0", "date": "__DATE__", "controls": "Add your controls here."
+  "genre": "Other", "tags": [], "author": "Isaac", "version": "0.1.0", "date": "__DATE__", "controls": "Add your controls here."
 }

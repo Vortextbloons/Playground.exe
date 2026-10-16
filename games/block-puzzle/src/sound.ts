@@ -55,19 +55,23 @@ export function createSound(): SoundKit {
         blip(context, 640, t, 0.06, 0.045, 'sine');
         break;
       case 'place':
-        blip(context, 340, t, 0.09, 0.085, 'triangle', 220);
-        blip(context, 170, t + 0.015, 0.1, 0.05, 'sine');
+        blip(context, 320, t, 0.08, 0.09, 'triangle', 180);
+        blip(context, 160, t + 0.01, 0.1, 0.06, 'sine', 110);
+        blip(context, 1350, t, 0.025, 0.02, 'square');
         break;
       case 'clear': {
-        const base = 430 + Math.min(level, 6) * 36;
-        blip(context, base, t, 0.11, 0.07, 'triangle');
-        blip(context, base * 1.5, t + 0.06, 0.13, 0.07, 'triangle');
-        blip(context, base * 2, t + 0.115, 0.16, 0.055, 'sine');
+        const base = 520 + Math.min(level, 6) * 32;
+        blip(context, base, t, 0.1, 0.07, 'triangle');
+        blip(context, base * 1.25, t + 0.055, 0.12, 0.07, 'triangle');
+        blip(context, base * 1.5, t + 0.11, 0.14, 0.065, 'triangle');
+        blip(context, base * 2, t + 0.165, 0.18, 0.05, 'sine');
         break;
       }
       case 'multi': {
-        const base = 360 + Math.min(level, 8) * 40;
-        for (let i = 0; i < 4; i++) blip(context, base * (1 + i * 0.26), t + i * 0.055, 0.11, 0.06, 'triangle');
+        const base = 380 + Math.min(level, 8) * 38;
+        blip(context, 110, t, 0.22, 0.09, 'sine', 55);
+        for (let i = 0; i < 5; i++) blip(context, base * (1 + i * 0.22), t + i * 0.05, 0.11, 0.06, 'triangle');
+        blip(context, base * 2.4, t + 0.25, 0.2, 0.045, 'sine');
         break;
       }
       case 'invalid':

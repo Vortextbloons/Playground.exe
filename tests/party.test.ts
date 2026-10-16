@@ -42,6 +42,22 @@ test('server rules validate turns, spectators, stale matches and duplicate actio
   act(turn, 'advance', 1);
   assert.equal(room.match?.revision, 3);
 });
+
+test('game menu keeps the selection for replay and changing games returns the party to selection', () => {
+  const { room, host, guest } = fixture(); start(room, host, guest);
+  assert.throws(() => applyCommand(room, guest, { type: 'browse' }, games, 1003), /host/);
+  assert.equal(room.match?.status, 'playing');
+  applyCommand(room, host, { type: 'return' }, games, 1004);
+  assert.equal(room.match, null);
+  assert.equal(room.selection?.gameId, 'circuit');
+  assert.ok(room.players.every(player => !player.ready));
+  start(room, host, guest);
+  applyCommand(room, host, parseCommand({ type: 'browse' }), games, 1005);
+  assert.equal(room.match, null);
+  assert.equal(room.selection, null);
+  assert.ok(room.players.every(player => !player.ready));
+  assert.equal(room.players.length, 3);
+});
 test('readiness resets on mode changes and disconnect, reconnect retains identity, host transfers', () => {
   const { room, host, guest } = fixture();
   applyCommand(room, host, { type: 'select', gameId: 'circuit', modeId: 'turns' }, games, 1001);

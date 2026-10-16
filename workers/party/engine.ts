@@ -71,7 +71,7 @@ export function parseCommand(value: unknown): PartyCommand {
     case 'select': if (typeof value.gameId === 'string' && typeof value.modeId === 'string') return { type: 'select', gameId: value.gameId, modeId: value.modeId }; break;
     case 'seat': if (typeof value.playing === 'boolean') return { type: 'seat', playing: value.playing }; break;
     case 'ready': if (typeof value.ready === 'boolean') return { type: 'ready', ready: value.ready }; break;
-    case 'start': case 'return': case 'leave': return { type: value.type };
+    case 'start': case 'return': case 'browse': case 'leave': return { type: value.type };
     case 'action': if (typeof value.matchId === 'string' && typeof value.action === 'string' && value.action.length <= 64 && isJson(value.payload) && Number.isSafeInteger(value.sequence) && Number(value.sequence) >= 0) return { type: 'action', matchId: value.matchId, action: value.action, payload: value.payload, sequence: Number(value.sequence) }; break;
   }
   throw new Error('Invalid party command.');
@@ -118,8 +118,10 @@ export function applyCommand(room: RoomState, id: string, command: PartyCommand,
       room.match.state = initial.state; room.match.phase = initial.phase ?? 'shared';
       break;
     }
+    case 'browse':
     case 'return':
       requireHost(room, id); room.match = null; room.sequences = {};
+      if (command.type === 'browse') room.selection = null;
       for (const member of room.players) member.ready = false;
       break;
     case 'leave': removePlayer(room, id); break;

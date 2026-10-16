@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { readLocal, writeLocal } from '../lib/storage';
   import type { Command } from '../../packages/game-kit/src/bridge';
-  import { PARTY_CHANNEL, isRecord, isJson, type PartyCommand, type MultiplayerUpdate } from '../../packages/game-kit/src/multiplayer/protocol';
+  import { PARTY_CHANNEL, isRecord, isJson, type MultiplayerConfig, type PartyCommand, type MultiplayerUpdate } from '../../packages/game-kit/src/multiplayer/protocol';
   import { getPartyClient } from '../lib/party';
   let partyUpdate: MultiplayerUpdate = { party: null, playerId: null, connected: false };
   let partyClient: ReturnType<typeof getPartyClient> | undefined;
@@ -12,7 +12,7 @@
     const update = { ...partyUpdate, party: partyUpdate.party ? { ...partyUpdate.party, match: partyUpdate.party.match?.gameId === id ? partyUpdate.party.match : null } : null };
     frame?.contentWindow?.postMessage({ channel: PARTY_CHANNEL, type: 'update', update }, location.origin);
   }
-  let { id, title, src }: { id: string; title: string; src: string } = $props();
+  let { id, title, src, config, base }: { id: string; title: string; src: string; config?: MultiplayerConfig; base: string } = $props();
   let frame: HTMLIFrameElement; let player: HTMLDivElement;
   // Mount the game after host listeners and saved preferences are ready.
   let activeSrc = $state<string | undefined>(undefined);
@@ -29,6 +29,13 @@
         subscribedToParty = true;
         partyClient ??= getPartyClient();
         updateGame();
+      }
+      if (data.type === 'menu' && isRecord(data.command) && partyUpdate.party?.selection?.gameId === id) {
+        const command = data.command;
+        if (command.type === 'mode' && config?.modes.some(mode => mode.id === command.modeId)) partyClient?.send({ type: 'select', gameId: id, modeId: String(command.modeId) });
+        if (command.type === 'seat' && typeof command.playing === 'boolean') partyClient?.send({ type: 'seat', playing: command.playing });
+        if (command.type === 'ready' && typeof command.ready === 'boolean') partyClient?.send({ type: 'ready', ready: command.ready });
+        if (command.type === 'start' || command.type === 'return' || command.type === 'browse') partyClient?.send({ type: command.type });
       }
       if (data.type === 'actions' && typeof data.matchId === 'string' && partyUpdate.party?.match?.id === data.matchId && partyUpdate.party.match.gameId === id && Array.isArray(data.commands) && data.commands.length > 0 && data.commands.length <= 8) {
         const commands: PartyCommand[] = [];
@@ -54,9 +61,14 @@
     activeSrc = src;
     const client = getPartyClient();
     const unsubscribe = client.subscribe(value => {
+      const previousGame = partyUpdate.party?.selection?.gameId;
       partyUpdate = { party: value.party, playerId: value.playerId, connected: value.connected }; updateGame();
+      const selectedGame = value.party?.selection?.gameId;
+      if (value.connected && config && selectedGame && selectedGame !== id) window.location.assign(`${base}play/${selectedGame}/`);
+      if (value.connected && config && value.party && previousGame === id && !selectedGame) window.location.assign(`${base}party/`);
       if (value.error) frame?.contentWindow?.postMessage({ channel: PARTY_CHANNEL, type: 'error', message: value.error }, location.origin);
     });
+    client.initialize();
     const timeout = window.setTimeout(() => { if (!ready) error = 'Still loading. Check the game build, or reload the player.'; }, 15000);
     return () => { clearTimeout(timeout); unsubscribe(); };
   });
@@ -65,3 +77,17 @@
 <div class="player [border:1px_solid_var(--line)] rounded-[10px] overflow-hidden [background:#111] flex flex-col [&_iframe]:w-full [&_iframe]:[aspect-ratio:16/9] [&_iframe]:border-0 [&_iframe]:block [&_iframe]:flex-1 [&_iframe]:min-h-[0] [&:fullscreen]:rounded-[0]" bind:this={player}><iframe bind:this={frame} src={activeSrc} {title} allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin" referrerpolicy="same-origin"></iframe><div class="player-controls flex items-center justify-between p-[12px_16px] bg-surface gap-[15px] [&>div]:flex [&>div]:gap-[8px] [&>div]:flex-wrap [&_button]:p-[8px_11px] [&_button]:text-[11px] max-[760px]:flex-wrap max-[760px]:[&>div]:gap-[6px] max-[500px]:[&_button]:p-[8px] max-[500px]:[&_button]:text-[10px]"><span class="player-status text-[11px] text-muted"><span class="status-dot inline-block w-[6px] h-[6px] bg-mint rounded-[50%] [vertical-align:middle] mr-[7px]"></span>{!ready ? 'Loading' : paused ? 'Paused' : 'Ready to play'}</span><div><button disabled={!ready} onclick={togglePause}>{paused ? 'Resume' : 'Pause'}</button><button disabled={!ready} onclick={() => { send('restart'); paused = false; }}>↻ Restart</button><button aria-pressed={muted} onclick={toggleMute}>{muted ? 'Unmute' : 'Mute'}</button><button onclick={fullscreen}>⛶ Fullscreen</button></div></div></div>
 <div class="player-details flex justify-between items-center m-[20px_0] text-[12px] text-muted [&_strong]:text-accent [&_strong]:ml-[10px] max-[500px]:gap-[12px]"><span>Personal best <strong>{best.toLocaleString()}</strong></span><button class="text-link [&:hover]:text-accent text-[12px] font-semibold inline-flex gap-[15px] items-center [background:none] border-0 p-[0]" onclick={() => { ready = false; error = ''; frame.src = src; }}>Reload player ↻</button></div>
 {#if error}<p role="status">{error}</p>{/if}
+
+<style>
+  @media (max-width:760px) {
+    .player iframe { aspect-ratio:auto; height:75svh; min-height:480px; flex:auto; }
+    .player-controls { gap:12px; }
+    .player-controls>div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+    .player-controls button { min-height:44px; font-size:12px; }
+    .player-details { flex-wrap:wrap; gap:12px; }
+    .player-details button { min-height:44px; }
+  }
+  @media (max-height:500px) and (orientation:landscape) {
+    .player iframe { height:85svh; min-height:300px; aspect-ratio:auto; }
+  }
+</style>

@@ -40,6 +40,8 @@ npm run dev
 
 Open the local address printed in the terminal. To publish the playground, push the project to GitHub and enable GitHub Pages with GitHub Actions.
 
+`npm run dev` builds every game before starting Astro and the local party backend on port 8787. Restart it after adding a game so Astro picks up the new generated files. Use `npm run dev:web` to run only the frontend when the party backend is already running separately.
+
 ## Multiplayer parties
 
 The Party page has a dedicated create/join → game selection → seats and readiness → launch flow. Guests join with a four-digit code, stay together across games, and watch or sit out when a game's seats are full. The host selects a mode, participating players ready up, and a new round launches for those players. Solo pages keep a compact party link instead of the full lobby.
@@ -51,7 +53,7 @@ npm run build:cloudflare
 npm run dev:party
 ```
 
-Open http://localhost:8787/party/. Use separate browser profiles for separate guests. Run `npm run dev` in another terminal for frontend development. Test the backend with `npm run test:party` while the local server runs.
+Open http://localhost:8787/party/. Use separate browser profiles for separate guests. Run `npm run dev:web` in another terminal for frontend development. Test the backend with `npm run test:party` while the local server runs.
 
 Docker is optional:
 

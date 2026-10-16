@@ -1,13 +1,45 @@
 {
-  "id": "pocket-circuit", "title": "Pocket Circuit",
-  "description": "Practice on your own, then race your party. Try turns, a shared challenge, or live movement.",
-  "genre": "Party", "tags": ["multiplayer", "party", "solo"], "author": "You",
-  "version": "0.1.0", "date": "2026-10-16",
-  "controls": "Click Advance or press Space. Practice three times, then ready up for the shared round. Use Left/Right in live mode.",
+  "id": "pocket-circuit",
+  "title": "Pocket Circuit",
+  "description": "Tiny cars, three laps, one winner. Race a top-down circuit solo or with your party.",
+  "genre": "Racing",
+  "tags": [
+    "racing",
+    "multiplayer",
+    "solo"
+  ],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-16",
+  "controls": "Hold Up or W to accelerate, Left/Right or A/D to steer, and Down or S to brake. Touch controls are available. Drive three warm-up checkpoints, then ready up. In Take turns mode, tap Accelerate to drive your next checkpoint.",
   "solo": true,
-  "multiplayer": { "modes": [
-    { "id": "turns", "label": "Take turns", "minPlayers": 2, "maxPlayers": 4, "preset": "turn-based", "spectators": true },
-    { "id": "challenge", "label": "Shared sprint", "minPlayers": 2, "maxPlayers": 8, "preset": "shared-challenge", "spectators": true },
-    { "id": "live", "label": "Live movement", "minPlayers": 2, "maxPlayers": 4, "preset": "live", "spectators": true }
-  ] }
+  "multiplayer": {
+    "modes": [
+      {
+        "id": "turns",
+        "label": "Take turns",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "preset": "turn-based",
+        "spectators": true
+      },
+      {
+        "id": "challenge",
+        "label": "Shared sprint",
+        "minPlayers": 2,
+        "maxPlayers": 8,
+        "preset": "shared-challenge",
+        "spectators": true
+      },
+      {
+        "id": "live",
+        "label": "Live movement",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "preset": "live",
+        "spectators": true
+      }
+    ]
+  },
+  "cover": "cover.png"
 }

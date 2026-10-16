@@ -10,3 +10,4 @@ opencode.json
 .wrangler/
 .dev.vars
 .dev.vars.*
+AGENTS.md

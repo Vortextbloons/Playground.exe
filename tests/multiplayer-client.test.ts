@@ -24,8 +24,14 @@ test('game helpers scope messages, batch inputs, reject spectator/disconnected p
   try {
     assert.equal(messages[0]?.type, 'subscribe');
     assert.equal(session.send('move', 1), false);
+    assert.equal(session.command({ type: 'ready', ready: true }), false);
     emit(update, {}); emit(update, parent, 'https://other.example');
     assert.equal(session.current.match, null);
+    emit(update);
+    assert.equal(session.command({ type: 'mode', modeId: 'live' }), true);
+    assert.deepEqual(messages.find(message => message.type === 'menu'), { channel: PARTY_CHANNEL, gameId: 'test-game', type: 'menu', command: { type: 'mode', modeId: 'live' } });
+    emit({ ...update, party: { ...update.party!, selection: { gameId: 'another-game', modeId: 'live' } } });
+    assert.equal(session.command({ type: 'browse' }), false);
     emit(update);
     let renders = 0; session.onState(() => { renders++; });
     assert.equal(session.send('move', 1), true); assert.equal(session.send('move', -1), true);
@@ -39,6 +45,7 @@ test('game helpers scope messages, batch inputs, reject spectator/disconnected p
     assert.equal(session.current.match, null);
     const before = renders; session.destroy(); emit(update);
     assert.equal(renders, before); assert.equal(session.send('move', 1), false);
+    assert.equal(session.command({ type: 'start' }), false);
   } finally {
     session.destroy(); for (const [key, descriptor] of originals) { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key); }
   }

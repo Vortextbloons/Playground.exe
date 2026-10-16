@@ -10,7 +10,7 @@ export default defineMultiplayer({
     return { phase: 'solo', state: {
       round: 'practice', scores: Object.fromEntries(playerIds.map(id => [id, 0])),
       warm: Object.fromEntries(playerIds.map(id => [id, false])),
-      turn: playerIds[seed % playerIds.length]!, winner: null, target: 10,
+      turn: playerIds[seed % playerIds.length]!, winner: null, target: 24,
     } };
   },
   action(raw, action, payload, { playerId, playerIds, mode }) {

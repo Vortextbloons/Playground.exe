@@ -1,5 +1,6 @@
-import { PARTY_CHANNEL, isRecord, NETWORK_PRESETS, type Json, type MultiplayerUpdate, type PartyPlayer, type PartyMatch, type PartySnapshot } from './protocol';
+import { PARTY_CHANNEL, isRecord, NETWORK_PRESETS, type GameMenuCommand, type Json, type MultiplayerUpdate, type PartyPlayer, type PartyMatch, type PartySnapshot } from './protocol';
 export * from './protocol';
+export { createMultiplayerMenu } from './menu';
 
 export interface SessionView<State extends Json> extends MultiplayerUpdate { match: (Omit<PartyMatch, 'state'> & { state: State }) | null; isPlayer: boolean }
 /** No sockets or credentials in game iframes. The playground owns the party connection. */
@@ -42,6 +43,11 @@ export function createMultiplayer<State extends Json = Json, Actions extends Rec
     onState(listener: (state: State, session: SessionView<State>) => void) { stateListeners.add(listener); if (current.match) listener(current.match.state, current); return () => { stateListeners.delete(listener); }; },
     onPlayers(listener: (players: PartyPlayer[]) => void) { playerListeners.add(listener); listener(current.party?.players ?? []); return () => { playerListeners.delete(listener); }; },
     onError(listener: (message: string) => void) { errorListeners.add(listener); return () => { errorListeners.delete(listener); }; },
+    command(command: GameMenuCommand) {
+      if (destroyed || !current.connected || current.party?.selection?.gameId !== gameId) return false;
+      post({ type: 'menu', command });
+      return true;
+    },
     send<K extends Extract<keyof Actions, string>>(action: K, payload: Actions[K]) {
       if (destroyed || !current.connected || !current.match || current.match.status !== 'playing' || !current.isPlayer) return false;
       const mode = current.party?.selection;
