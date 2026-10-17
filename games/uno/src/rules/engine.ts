@@ -5,7 +5,7 @@
  * live here and nowhere else.
  */
 
-import { COLORS, DECK_SIZE, cardFromId, isColor, type Card, type Color } from './cards';
+import { DECK_SIZE, cardFromId, isColor, type Card, type Color } from './cards';
 import type { Rng } from './rng';
 
 export type Phase = 'playing' | 'color' | 'wild-four' | 'results';
@@ -489,7 +489,7 @@ export function applyAction(raw: UnoState, playerId: string, action: UnoAction, 
 // ------------------------------------------------------------ players leaving
 
 /** Remove a permanently-gone player; their cards leave the game with them. */
-export function removePlayerFromMatch(raw: UnoState, playerId: string, rng: Rng): UnoState {
+export function removePlayerFromMatch(raw: UnoState, playerId: string, _rng: Rng): UnoState {
   if (!raw.players.includes(playerId)) return raw;
   const state = structuredClone(raw);
   const removedIndex = state.players.indexOf(playerId);

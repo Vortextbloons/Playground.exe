@@ -1,4 +1,4 @@
-import { isRecord, normalizePartyCode, MAX_MESSAGE_BYTES, PARTY_CHANNEL, WEBSOCKET_PROTOCOL, type PartyCommand, type PartySnapshot, type MultiplayerUpdate } from '../../packages/game-kit/src/multiplayer/protocol';
+import { isRecord, normalizePartyCode, MAX_MESSAGE_BYTES, WEBSOCKET_PROTOCOL, type PartyCommand, type PartySnapshot, type MultiplayerUpdate } from '../../packages/game-kit/src/multiplayer/protocol';
 
 export interface PartyClientState extends MultiplayerUpdate { busy: boolean; error: string; configured: boolean }
 interface SavedSession { code: string; token: string; nickname: string }
@@ -26,7 +26,6 @@ export class PartyClient {
   private update(change: Partial<PartyClientState>) {
     this.state = { ...this.state, ...change };
     for (const listener of this.listeners) listener(this.state);
-    window.dispatchEvent(new CustomEvent(PARTY_CHANNEL, { detail: this.getUpdate() }));
   }
   getUpdate(): MultiplayerUpdate {
     return { party: this.state.party, playerId: this.state.playerId, connected: this.state.connected };

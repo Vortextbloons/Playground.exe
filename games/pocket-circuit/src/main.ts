@@ -26,10 +26,10 @@ let previousMatch = ''; let previousRound = '';
 const displayed = new Map<string, number>();
 const game = createGame('pocket-circuit', {
   initialize() {}, start() { animation = requestAnimationFrame(tick); },
-  pause() { paused = true; keys.clear(); }, resume() { paused = false; },
+  pause() { paused = true; keys.clear(); cancelAnimationFrame(animation); }, resume() { paused = false; animation = requestAnimationFrame(tick); },
   restart() {
     if (session.current.party?.match?.status === 'playing') { status.textContent = 'The host can use Back to game menu to restart the party race.'; return; }
-    playingSolo = true; reset(); paused = false; render();
+    playingSolo = true; reset(); paused = false; cancelAnimationFrame(animation); animation = requestAnimationFrame(tick); render();
   },
   destroy() { cancelAnimationFrame(animation); partyMenu.destroy(); window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', release); },
 });

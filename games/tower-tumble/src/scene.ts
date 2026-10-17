@@ -130,7 +130,6 @@ export function createScene(canvas: HTMLCanvasElement, quality: Quality): Scene3
 
   const dummy = new THREE.Object3D();
   const tint = new THREE.Color();
-  let highlightIndex = -1;
 
   const orbit = { theta: 0.78, phi: 1.18, radius: 3.6, targetTheta: 0.78, targetPhi: 1.18, targetRadius: 3.6 };
   const focus = new THREE.Vector3(0, LEVEL_COUNT * BLOCK_HEIGHT * 0.52, 0);

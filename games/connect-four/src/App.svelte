@@ -252,7 +252,7 @@
               type="button"
               class="column"
               class:hover={hoverCol === col}
-              disabled={!canDrop}
+              disabled={!canDrop || landingRow(game.board, col) === -1}
               aria-label={`Drop a disc in column ${col + 1}`}
               onpointerenter={() => (hoverCol = col)}
               onpointerleave={() => (hoverCol === col && (hoverCol = null))}

@@ -77,9 +77,11 @@
       const nextView = next.match?.state ?? null;
       observe(mpView, nextView);
       mpView = nextView;
-      const roster: Record<string, string> = {};
-      for (const player of next.party?.players ?? []) roster[player.id] = player.nickname;
-      names = roster;
+      if (next.match) {
+        const roster: Record<string, string> = {};
+        for (const player of next.party?.players ?? []) roster[player.id] = player.nickname;
+        names = roster;
+      }
     });
     const offError = session.onError(message => {
       showBanner(message);
@@ -103,6 +105,7 @@
 
   function dispatch(action: UnoAction, actor = 'you'): void {
     sound.unlock();
+    if (action.type === 'play-card' && action.callUno) sound.play('uno');
     if (mpInMatch) {
       session?.send(action.type, payloadOf(action));
       return;
@@ -110,7 +113,6 @@
     if (!local) return;
     const next = applyAction($state.snapshot(local), actor, action, soloRng);
     observe(toView(local, 'you'), toView(next, 'you'));
-    if (action.type === 'play-card' && action.callUno) sound.play('uno');
     local = next;
     scheduleBot();
   }

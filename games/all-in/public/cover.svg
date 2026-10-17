@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="ALL IN! neon casino">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#181e32"/>
+      <stop offset="100%" stop-color="#090d17"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe9a8"/>
+      <stop offset="100%" stop-color="#f4c95d"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="270" fill="url(#glow)"/>
+  <g opacity="0.5" stroke="#23e0be" stroke-width="1" fill="none">
+    <path d="M24 46 h60 M24 58 h36"/>
+    <path d="M456 224 h-60 M456 236 h-36"/>
+  </g>
+  <g transform="translate(240 118)">
+    <circle r="52" fill="none" stroke="#ff395b" stroke-width="3" opacity="0.85"/>
+    <circle r="40" fill="none" stroke="#ff395b" stroke-width="1" opacity="0.5"/>
+    <g fill="#f4c95d">
+      <circle cx="0" cy="-46" r="3"/><circle cx="46" cy="0" r="3"/><circle cx="0" cy="46" r="3"/><circle cx="-46" cy="0" r="3"/>
+    </g>
+  </g>
+  <g font-family="'Bebas Neue','Arial Narrow',sans-serif" text-anchor="middle">
+    <text x="240" y="128" font-size="64" fill="url(#gold)" letter-spacing="6">ALL IN!</text>
+    <text x="240" y="160" font-size="15" fill="#a8b0c4" font-family="Inter,Arial,sans-serif" letter-spacing="3">10-MINUTE NEON CASINO</text>
+  </g>
+  <g transform="translate(120 214)">
+    <circle r="13" fill="#ff395b"/><circle r="6" fill="#090d17"/>
+  </g>
+  <g transform="translate(240 216)">
+    <circle r="13" fill="#f4c95d"/><circle r="6" fill="#090d17"/>
+  </g>
+  <g transform="translate(360 214)">
+    <circle r="13" fill="#23e0be"/><circle r="6" fill="#090d17"/>
+  </g>
+</svg>

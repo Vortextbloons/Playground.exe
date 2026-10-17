@@ -1,0 +1,12 @@
+{
+  "id": "all-in", "title": "ALL IN!",
+  "description": "Ten minutes, five neon casino tables, one bankroll. Turn $1,000 into a fortune — alone or with the whole party.",
+  "genre": "Casino", "tags": ["casino", "multiplayer", "party", "solo"], "author": "Isaac",
+  "version": "0.1.0", "date": "2026-10-17",
+  "controls": "Click tables on the casino floor to play. Bet with the on-screen chips and buttons. One shared ten-minute run.",
+  "cover": "cover.svg",
+  "solo": true,
+  "multiplayer": { "modes": [
+    { "id": "casino", "label": "10-minute casino", "minPlayers": 1, "maxPlayers": 16, "preset": "turn-based", "spectators": true, "lateJoin": "join" }
+  ] }
+}

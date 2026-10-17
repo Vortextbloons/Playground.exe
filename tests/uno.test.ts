@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { COLORS, DECK_SIZE, cardFromId, cardLabel, type Color } from '../games/uno/src/rules/cards.ts';
 import { mulberry32, type Rng } from '../games/uno/src/rules/rng.ts';
 import {
-  applyAction, canPlayCard, dealRound, DEFAULT_MATCH_TARGET, handOf, handPoints, newMatch, nextRound,
+  applyAction, canPlayCard, dealRound, DEFAULT_MATCH_TARGET, handOf, handPoints, newMatch,
   playableCards, removePlayerFromMatch, toView, type UnoState,
 } from '../games/uno/src/rules/engine.ts';
 import { botMove } from '../games/uno/src/bots/bots.ts';

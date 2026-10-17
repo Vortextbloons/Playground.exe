@@ -1,0 +1,11 @@
+{
+  "id": "monopoly", "title": "Monopoly",
+  "description": "Buy, build and bankrupt your way across a classic city board — solo against bots or with up to eight friends in a party.",
+  "genre": "Board", "tags": ["board", "multiplayer", "party", "solo", "classic"], "author": "Isaac",
+  "version": "0.1.0", "date": "2026-10-16",
+  "controls": "Roll the dice, buy streets, build houses, trade and auction. Reach $5,000 net worth or bankrupt everyone else.",
+  "solo": true,
+  "multiplayer": { "modes": [
+    { "id": "classic", "label": "Classic board", "minPlayers": 2, "maxPlayers": 8, "preset": "turn-based", "spectators": true, "lateJoin": "spectate" }
+  ] }
+}

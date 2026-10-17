@@ -27,7 +27,7 @@
     "check:party": "npm run build:multiplayer && tsc --noEmit -p workers/party/tsconfig.json",
     "build:cloudflare": "tsx scripts/build-cloudflare.ts",
     "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy",
-    "test:party": "tsx tests/party.integration.ts"
+    "test:party": "tsx tests/party.integration.ts && tsx tests/all-in.party.integration.ts"
   },
   "dependencies": {
     "@astrojs/svelte": "^9.1.0",

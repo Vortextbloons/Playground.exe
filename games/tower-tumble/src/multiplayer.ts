@@ -145,6 +145,8 @@ export default defineMultiplayer({
         return { state };
       }
       case 'timer': {
+        if (state.phase !== 'playing') throw new Error('This round is over.');
+        if (!playerIds.includes(playerId)) throw new Error('Only players in the round can change the timer.');
         const enabled = (payload as TowerActions['timer'])?.enabled;
         if (typeof enabled !== 'boolean') throw new Error('Invalid timer setting.');
         state.timerEnabled = enabled;
