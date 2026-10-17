@@ -10,9 +10,9 @@
   } = $props();
 </script>
 
-<section class="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)]">
+<section class="table-shell grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)]">
   <div class="grid content-start gap-2">
-    <header class="flex flex-wrap items-center gap-2 px-3 pt-3">
+    <header class="table-header flex flex-wrap items-center gap-2 px-3 pt-3">
       <button type="button" class="btn" onclick={onback}>← Casino floor</button>
       <h2 class="m-0 font-display text-[clamp(22px,5vw,30px)] leading-none tracking-[0.05em] text-fog">{title}</h2>
       {#if reconnecting}
@@ -31,7 +31,7 @@
       </p>
     {/if}
   </div>
-  <div class="safe-bottom grid min-h-0 px-3" class:pointer-events-none={reconnecting} class:opacity-60={reconnecting}>
+  <div class="table-content safe-bottom grid min-h-0 px-3" class:pointer-events-none={reconnecting} class:opacity-60={reconnecting}>
     {@render children()}
   </div>
 </section>

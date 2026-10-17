@@ -7,7 +7,7 @@
 import { defineMultiplayer } from '@playground-exe/game-kit/multiplayer/server';
 import type { Json } from '@playground-exe/game-kit/multiplayer/protocol';
 import { TURN_MS } from './rules/board';
-import { applyAction, newMatch, removePlayer, toView, type MonoAction, type MonoState } from './rules/engine';
+import { applyAction, newMatch, removePlayer, toView, type EndConditions, type MonoAction, type MonoState } from './rules/engine';
 import { mulberry32, type Rng } from './rules/rng';
 
 export type MpState = {
@@ -32,6 +32,8 @@ function spaceOf(body: Record<string, unknown>): number {
 function parseAction(action: string, payload: Json): MonoAction {
   const body = (payload ?? {}) as Record<string, unknown>;
   switch (action) {
+    case 'configure': return { type: 'configure', conditions: body as EndConditions };
+    case 'finish-time': return { type: 'finish-time' };
     case 'roll': return { type: 'roll' };
     case 'jail-fine': return { type: 'jail-fine' };
     case 'jail-card': return { type: 'jail-card' };
@@ -45,7 +47,10 @@ function parseAction(action: string, payload: Json): MonoAction {
     }
     case 'pass-bid': return { type: 'pass-bid' };
     case 'build': return { type: 'build', space: spaceOf(body) };
-    case 'sell': return { type: 'sell', space: spaceOf(body) };
+    case 'sell': {
+      if (body.all !== undefined && typeof body.all !== 'boolean') throw new Error('Invalid building sale.');
+      return { type: 'sell', space: spaceOf(body), all: body.all === true };
+    }
     case 'mortgage': return { type: 'mortgage', space: spaceOf(body) };
     case 'unmortgage': return { type: 'unmortgage', space: spaceOf(body) };
     case 'propose-trade': {
@@ -72,18 +77,18 @@ function parseAction(action: string, payload: Json): MonoAction {
 
 export default defineMultiplayer({
   setup({ playerIds, seed, now }) {
-    const game = newMatch(playerIds, seed >>> 0);
+    const game = newMatch(playerIds, seed >>> 0, { setup: true });
     game.turnStartedAt = now;
     return { state: { game, seed: (seed + SEED_STEP) >>> 0 } as Json, phase: game.phase };
   },
 
   action(raw, action, payload, { playerId, now }) {
     const state = structuredClone(raw) as MpState;
-    if (action === 'timeout') {
+    if (action === 'timeout' && (state.game.endsAt === null || now < state.game.endsAt)) {
       if (now - state.game.turnStartedAt < TURN_MS) throw new Error('There is still time to act.');
-      state.game = applyAction(state.game, playerId, { type: 'timeout' }, rngOf(state));
+      state.game = applyAction(state.game, playerId, { type: 'timeout' }, rngOf(state), now);
     } else {
-      state.game = applyAction(state.game, playerId, parseAction(action, payload), rngOf(state));
+      state.game = applyAction(state.game, playerId, action === 'timeout' ? { type: 'finish-time' } : parseAction(action, payload), rngOf(state), now);
     }
     state.game.turnStartedAt = now;
     return { state: state as Json, finished: state.game.phase === 'results', phase: state.game.phase };
@@ -95,9 +100,11 @@ export default defineMultiplayer({
 
   playersChanged(raw, { playerIds, now }) {
     const state = structuredClone(raw) as MpState;
+    const choosingConditions = state.game.phase === 'setup';
     for (const id of Object.keys(state.game.players)) {
       if (!playerIds.includes(id)) state.game = removePlayer(state.game, id);
     }
+    if (choosingConditions && state.game.phase !== 'results') state.game.phase = 'setup';
     state.game.turnStartedAt = now;
     return { state: state as Json, finished: state.game.phase === 'results', phase: state.game.phase };
   },

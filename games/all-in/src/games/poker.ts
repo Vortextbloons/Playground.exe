@@ -14,7 +14,7 @@ export const POKER_MAX_RAISES = 3;
 export const POKER_TURN_MS = 30_000;
 export const POKER_RESULTS_MS = 6_000;
 
-const POKER_COINS = 5;
+export const POKER_COINS = 1000;
 
 export type PokerVideo = { cards: number[]; coins: number; deck: number[] };
 

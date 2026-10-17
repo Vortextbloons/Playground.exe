@@ -9,7 +9,6 @@ import {
   SPACES,
   START_CASH,
   UTILITY_IDS,
-  WEALTH_TARGET,
   cardById,
   mortgageInterestOf,
   nearestOf,
@@ -46,6 +45,7 @@ export type TradeOffer = {
 };
 
 export type DebtState = {
+  payer: string;
   amount: number;
   creditor: string | null;
   spreadTo: string[] | null;
@@ -53,8 +53,14 @@ export type DebtState = {
 
 export type LogEntry = { actor: string | null; text: string };
 
+export type EndConditions = {
+  bankruptcy: boolean;
+  target: number | null;
+  timeLimitMs: number | null;
+};
+
 export type MonoState = {
-  phase: 'preroll' | 'buy-decision' | 'auction' | 'postroll' | 'debt' | 'results';
+  phase: 'setup' | 'preroll' | 'buy-decision' | 'auction' | 'postroll' | 'debt' | 'results';
   players: Record<string, PlayerState>;
   order: string[];
   turn: string;
@@ -65,6 +71,9 @@ export type MonoState = {
   doubles: number;
   lastRoll: [number, number] | null;
   auction: AuctionState | null;
+  auctionQueue: number[];
+  auctionResume: 'preroll' | 'postroll' | 'debt';
+  collection: { remaining: string[]; creditor: string; amount: number } | null;
   trade: TradeOffer | null;
   debt: DebtState | null;
   pendingMove: number | null;
@@ -74,10 +83,15 @@ export type MonoState = {
   drawnCard: { deck: 'chance' | 'chest'; id: number } | null;
   log: LogEntry[];
   winners: string[];
-  target: number;
+  bankruptcy: boolean;
+  target: number | null;
+  timeLimitMs: number | null;
+  endsAt: number | null;
 };
 
 export type MonoAction =
+  | { type: 'configure'; conditions: EndConditions }
+  | { type: 'finish-time' }
   | { type: 'roll' }
   | { type: 'jail-fine' }
   | { type: 'jail-card' }
@@ -87,7 +101,7 @@ export type MonoAction =
   | { type: 'bid'; amount: number }
   | { type: 'pass-bid' }
   | { type: 'build'; space: number }
-  | { type: 'sell'; space: number }
+  | { type: 'sell'; space: number; all?: boolean }
   | { type: 'mortgage'; space: number }
   | { type: 'unmortgage'; space: number }
   | { type: 'propose-trade'; to: string; cash: number; properties: number[]; wantCash: number; wantProperties: number[] }
@@ -102,6 +116,8 @@ export type MonoView = MonoState & { you: string | null };
 
 /** Wire format for each action name sent over the party socket. */
 export type MonoActionPayloads = {
+  configure: EndConditions;
+  'finish-time': null;
   roll: null;
   'jail-fine': null;
   'jail-card': null;
@@ -111,7 +127,7 @@ export type MonoActionPayloads = {
   bid: { amount: number };
   'pass-bid': null;
   build: { space: number };
-  sell: { space: number };
+  sell: { space: number; all?: boolean };
   mortgage: { space: number };
   unmortgage: { space: number };
   'propose-trade': { to: string; cash: number; properties: number[]; wantCash: number; wantProperties: number[] };
@@ -208,9 +224,9 @@ function groupStreets(group: Group): number[] {
   return GROUP_SPACES[group].filter(id => SPACES[id]!.kind === 'street');
 }
 
-function housesInPlay(state: MonoState): number {
+export function housesInPlay(state: MonoState): number {
   let total = 0;
-  for (const id of Object.keys(state.houses)) total += Math.min(state.houses[id]!, 4);
+  for (const count of Object.values(state.houses)) if (count < 5) total += count;
   return total;
 }
 
@@ -247,7 +263,7 @@ function charge(state: MonoState, payerId: string, amount: number, creditor: str
     log(state, payerId, text);
     return true;
   }
-  state.debt = { amount, creditor, spreadTo };
+  state.debt = { payer: payerId, amount, creditor, spreadTo };
   state.resume = state.doubles > 0 ? 'preroll' : 'postroll';
   state.phase = 'debt';
   log(state, payerId, `${text} — ${money(amount)} is owed.`);
@@ -387,17 +403,8 @@ function applyCard(state: MonoState, actor: string, cardId: number, diceTotal: n
       return;
     }
     case 'collect-each': {
-      const others = solvent(state).filter(id => id !== actor);
-      let total = 0;
-      for (const id of others) {
-        const other = state.players[id]!;
-        const paid = Math.min(effect.amount, other.cash);
-        other.cash -= paid;
-        total += paid;
-      }
-      player.cash += total;
-      log(state, actor, `collects ${money(total)} from the other players.`);
-      settlePhase(state);
+      state.collection = { remaining: solvent(state).filter(id => id !== actor), creditor: actor, amount: effect.amount };
+      collectEach(state);
       return;
     }
     case 'pay-each': {
@@ -425,13 +432,20 @@ function applyCard(state: MonoState, actor: string, cardId: number, diceTotal: n
   }
 }
 
+function collectEach(state: MonoState): void {
+  const collection = state.collection!;
+  while (collection.remaining.length) {
+    const payer = collection.remaining.shift()!;
+    if (state.players[payer]!.bankrupt) continue;
+    if (!charge(state, payer, collection.amount, collection.creditor, null, `pays ${money(collection.amount)} to ${collection.creditor}.`)) return;
+  }
+  state.collection = null;
+  state.phase = state.doubles > 0 ? 'preroll' : 'postroll';
+}
+
 function startAuction(state: MonoState, spaceId: number): void {
   const participants = solvent(state);
-  if (participants.length < 2) {
-    log(state, null, `No other bidders — ${SPACES[spaceId]!.name} stays with the bank.`);
-    settlePhase(state);
-    return;
-  }
+  state.auctionResume = state.phase === 'auction' ? state.auctionResume : state.phase === 'debt' ? 'debt' : state.phase === 'preroll' ? 'preroll' : state.doubles > 0 ? 'preroll' : 'postroll';
   const startIndex = participants.indexOf(state.turn);
   const order = [...participants.slice(startIndex), ...participants.slice(0, startIndex)];
   state.auction = { space: spaceId, highBid: 0, highBidder: null, passed: [], order, turn: order[0]! };
@@ -461,7 +475,9 @@ function closeAuction(state: MonoState): void {
     log(state, null, `No bids — ${space.name} stays with the bank.`);
   }
   state.auction = null;
-  state.phase = state.doubles > 0 ? 'preroll' : 'postroll';
+  state.phase = state.auctionResume;
+  const next = state.auctionQueue.shift();
+  if (next !== undefined) startAuction(state, next);
 }
 
 function endTurn(state: MonoState): void {
@@ -470,9 +486,19 @@ function endTurn(state: MonoState): void {
   state.doubles = 0;
   state.lastRoll = null;
   const alive = solvent(state);
-  if (alive.length <= 1) return;
-  const current = alive.indexOf(state.turn);
-  state.turn = alive[(current + 1) % alive.length]!;
+  if (alive.length <= 1) {
+    if (alive[0]) state.turn = alive[0];
+    state.phase = 'preroll';
+    return;
+  }
+  const current = state.order.indexOf(state.turn);
+  for (let step = 1; step <= state.order.length; step++) {
+    const next = state.order[(current + step) % state.order.length]!;
+    if (!state.players[next]!.bankrupt) {
+      state.turn = next;
+      break;
+    }
+  }
   state.phase = 'preroll';
 }
 
@@ -509,6 +535,8 @@ function declareBankrupt(state: MonoState, playerId: string, creditor: string | 
   liquidateBuildings(state, playerId, creditorAlive);
   if (creditorAlive) {
     state.players[creditor!]!.cash += player.cash;
+    state.players[creditor!]!.heldCards.push(...player.heldCards);
+    player.heldCards = [];
     for (const id of Object.keys(state.owners)) {
       if (state.owners[id] !== playerId) continue;
       state.owners[id] = creditor;
@@ -523,52 +551,86 @@ function declareBankrupt(state: MonoState, playerId: string, creditor: string | 
       if (state.owners[id] !== playerId) continue;
       state.owners[id] = null;
       state.mortgages[id] = false;
+      state.auctionQueue.push(Number(id));
     }
   }
   player.cash = 0;
   player.bankrupt = true;
   returnJailCards(state, playerId);
   state.trade = null;
-  state.debt = null;
-  state.pendingMove = null;
+  const wasDebtor = state.debt?.payer === playerId;
+  if (wasDebtor) state.debt = null;
+  if (state.turn === playerId) state.pendingMove = null;
   log(state, playerId, creditorAlive ? 'went bankrupt — their assets go to the creditor.' : 'went bankrupt — their properties return to the bank.');
+  if (state.auction?.highBidder === playerId) {
+    state.auction.highBidder = null;
+    state.auction.highBid = 0;
+  }
+  if (state.turn === playerId) {
+    endTurn(state);
+    if (state.auction) {
+      state.auctionResume = 'preroll';
+      state.phase = 'auction';
+    }
+  }
+  else if (wasDebtor && state.collection) collectEach(state);
   if (state.auction) auctionAdvance(state);
-  if (state.turn === playerId) endTurn(state);
   checkEnd(state);
+  if (state.phase !== 'results' && !state.auction && state.auctionQueue.length) startAuction(state, state.auctionQueue.shift()!);
 }
 
-function checkEnd(state: MonoState): void {
+function checkEnd(state: MonoState, now = 0): void {
   const alive = solvent(state);
-  if (alive.length <= 1) {
+  if (alive.length === 0 || (state.bankruptcy && alive.length === 1)) {
     state.winners = [...alive];
     state.phase = 'results';
     return;
   }
   let top = 0;
   for (const id of alive) top = Math.max(top, netWorth(state, id));
-  if (top >= state.target) {
+  if (state.target !== null && top >= state.target) {
     state.winners = alive.filter(id => netWorth(state, id) === top);
     state.phase = 'results';
     log(state, null, `The wealth target of ${money(state.target)} is reached.`);
+  } else if (state.endsAt !== null && now >= state.endsAt) {
+    state.winners = alive.filter(id => netWorth(state, id) === top);
+    state.phase = 'results';
+    log(state, null, 'Time is up. The highest net worth wins.');
   }
 }
 
-function settleDebt(state: MonoState): void {
+function setEndConditions(state: MonoState, conditions: EndConditions, now: number): void {
+  if (typeof conditions.bankruptcy !== 'boolean') throw new Error('Choose whether bankruptcy ends the match.');
+  if (conditions.target !== null && (!Number.isSafeInteger(conditions.target) || conditions.target <= START_CASH)) throw new Error(`Wealth target must be greater than ${money(START_CASH)}.`);
+  if (conditions.timeLimitMs !== null && (!Number.isSafeInteger(conditions.timeLimitMs) || conditions.timeLimitMs < 60_000)) throw new Error('Time limit must be at least one minute.');
+  if (!conditions.bankruptcy && conditions.target === null && conditions.timeLimitMs === null) throw new Error('Enable at least one end condition.');
+  state.bankruptcy = conditions.bankruptcy;
+  state.target = conditions.target;
+  state.timeLimitMs = conditions.timeLimitMs;
+  state.endsAt = conditions.timeLimitMs === null ? null : now + conditions.timeLimitMs;
+}
+
+function settleDebt(state: MonoState, rng: Rng): void {
   const debt = state.debt!;
   state.debt = null;
-  payOut(state, state.turn, debt.amount, debt.creditor, debt.spreadTo);
+  payOut(state, debt.payer, debt.amount, debt.creditor, debt.spreadTo);
+  state.phase = state.resume;
+  if (state.collection) {
+    collectEach(state);
+    return;
+  }
   if (state.pendingMove !== null) {
     const steps = state.pendingMove;
     state.pendingMove = null;
     advance(state, state.turn, steps);
-    land(state, state.turn, state.lastRoll ? state.lastRoll[0]! + state.lastRoll[1]! : 7, () => 0.5);
+    land(state, state.turn, state.lastRoll ? state.lastRoll[0]! + state.lastRoll[1]! : 7, rng);
     return;
   }
   state.phase = state.resume;
 }
 
 function requireTurn(state: MonoState, actor: string): void {
-  if (actor !== state.turn) throw new Error('It is not your turn.');
+  if (actor !== (state.phase === 'debt' ? state.debt!.payer : state.turn)) throw new Error('It is not your turn.');
 }
 
 function requirePhase(state: MonoState, phases: MonoState['phase'][]): void {
@@ -589,8 +651,10 @@ function executeTrade(state: MonoState): void {
     .reduce((sum, id) => sum + transferInterestOf(SPACES[id]!.price ?? 0), 0);
   const toInterest = interest(trade.properties);
   const fromInterest = interest(trade.wantProperties);
-  if (to.cash - toInterest < 0) throw new Error(`You need ${money(toInterest)} in cash to cover interest on mortgaged properties.`);
-  if (from.cash - fromInterest < 0) throw new Error('The offerer can no longer cover the interest.');
+  for (const [owner, properties] of [[trade.from, trade.properties], [trade.to, trade.wantProperties]] as const) {
+    if (state.players[owner]!.bankrupt || properties.some(id => state.owners[String(id)] !== owner || groupHasBuildings(state, id))) throw new Error('The offered properties are no longer available to trade.');
+  }
+  if (to.cash + trade.cash - trade.wantCash - toInterest < 0 || from.cash + trade.wantCash - trade.cash - fromInterest < 0) throw new Error('The players can no longer cover the trade and mortgage interest.');
   from.cash -= trade.cash + fromInterest;
   to.cash += trade.cash - toInterest;
   from.cash += trade.wantCash;
@@ -602,7 +666,7 @@ function executeTrade(state: MonoState): void {
   checkEnd(state);
 }
 
-export function newMatch(playerIds: readonly string[], seed: number, opts: { target?: number } = {}): MonoState {
+export function newMatch(playerIds: readonly string[], seed: number, opts: Partial<EndConditions> & { now?: number; setup?: boolean } = {}): MonoState {
   if (playerIds.length < 2) throw new Error('Monopoly needs at least two players.');
   const rng = mulberry32(seed);
   const order = shuffle(playerIds, rng);
@@ -620,8 +684,8 @@ export function newMatch(playerIds: readonly string[], seed: number, opts: { tar
       mortgages[String(space.id)] = false;
     }
   }
-  return {
-    phase: 'preroll',
+  const state: MonoState = {
+    phase: opts.setup ? 'setup' : 'preroll',
     players,
     order,
     turn: order[0]!,
@@ -632,6 +696,9 @@ export function newMatch(playerIds: readonly string[], seed: number, opts: { tar
     doubles: 0,
     lastRoll: null,
     auction: null,
+    auctionQueue: [],
+    auctionResume: 'postroll',
+    collection: null,
     trade: null,
     debt: null,
     pendingMove: null,
@@ -639,10 +706,15 @@ export function newMatch(playerIds: readonly string[], seed: number, opts: { tar
     chanceDeck: shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], rng),
     chestDeck: shuffle([16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], rng),
     drawnCard: null,
-    log: [{ actor: null, text: `${order[0]} goes first. Reach ${money(opts.target ?? WEALTH_TARGET)} net worth to win.` }],
+    log: [{ actor: null, text: opts.setup ? `${order[0]} chooses the end conditions.` : `${order[0]} goes first.` }],
     winners: [],
-    target: opts.target ?? WEALTH_TARGET,
+    bankruptcy: true,
+    target: null,
+    timeLimitMs: null,
+    endsAt: null,
   };
+  setEndConditions(state, { bankruptcy: opts.bankruptcy ?? true, target: opts.target ?? null, timeLimitMs: opts.timeLimitMs ?? null }, opts.now ?? 0);
+  return state;
 }
 
 function rollAndMove(state: MonoState, actor: string, rng: Rng): void {
@@ -658,19 +730,34 @@ function rollAndMove(state: MonoState, actor: string, rng: Rng): void {
     }
     log(state, actor, `rolls ${a} + ${b} — doubles!`);
   } else {
+    state.doubles = 0;
     log(state, actor, `rolls ${a} + ${b}.`);
   }
   advance(state, actor, total);
   land(state, actor, total, rng);
 }
 
-export function applyAction(raw: MonoState, actor: string, action: MonoAction, rng: Rng): MonoState {
+export function applyAction(raw: MonoState, actor: string, action: MonoAction, rng: Rng, now = 0): MonoState {
   const state = structuredClone(raw);
   if (state.phase === 'results') throw new Error('The match is over.');
   const player = state.players[actor];
   if (!player) throw new Error('You are not part of this match.');
+  if (state.phase !== 'setup' && state.endsAt !== null && now >= state.endsAt) {
+    checkEnd(state, now);
+    return state;
+  }
+  if (state.phase === 'setup' && action.type !== 'configure') throw new Error('Choose the end conditions first.');
   if (player.bankrupt && action.type !== 'timeout') throw new Error('You are out of the match.');
   switch (action.type) {
+    case 'configure': {
+      requireTurn(state, actor);
+      requirePhase(state, ['setup']);
+      setEndConditions(state, action.conditions, now);
+      state.phase = 'preroll';
+      log(state, actor, 'sets the end conditions. The match begins.');
+      return state;
+    }
+    case 'finish-time': throw new Error('There is still time left in the match.');
     case 'roll': {
       requireTurn(state, actor);
       requirePhase(state, ['preroll']);
@@ -785,7 +872,6 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       return state;
     }
     case 'build': {
-      requireTurn(state, actor);
       requirePhase(state, ['preroll', 'postroll']);
       ownOrThrow(state, actor, action.space);
       const space = SPACES[action.space]!;
@@ -808,7 +894,6 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       return state;
     }
     case 'sell': {
-      requireTurn(state, actor);
       requirePhase(state, ['preroll', 'postroll', 'debt']);
       ownOrThrow(state, actor, action.space);
       const space = SPACES[action.space]!;
@@ -817,6 +902,15 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       const max = Math.max(...counts);
       if ((state.houses[String(action.space)] ?? 0) !== max) throw new Error('Sell evenly across the group.');
       if (max === 0) throw new Error('There is nothing to sell here.');
+      if (action.all) {
+        for (const id of groupStreets(space.group!)) {
+          player.cash += (state.houses[String(id)] ?? 0) * space.houseCost! / 2;
+          state.houses[String(id)] = 0;
+        }
+        log(state, actor, `sells all buildings in the ${space.group} group.`);
+        return state;
+      }
+      if (max === 5 && HOUSE_STOCK - housesInPlay(state) < 4) throw new Error('The bank needs four houses to replace a hotel. Sell all buildings in the group instead.');
       state.houses[String(action.space)] = max - 1;
       const refund = Math.floor(space.houseCost! / 2);
       player.cash += refund;
@@ -824,7 +918,6 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       return state;
     }
     case 'mortgage': {
-      requireTurn(state, actor);
       requirePhase(state, ['preroll', 'postroll', 'debt']);
       ownOrThrow(state, actor, action.space);
       if (state.mortgages[String(action.space)]) throw new Error('Already mortgaged.');
@@ -837,7 +930,6 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       return state;
     }
     case 'unmortgage': {
-      requireTurn(state, actor);
       requirePhase(state, ['preroll', 'postroll', 'debt']);
       ownOrThrow(state, actor, action.space);
       if (!state.mortgages[String(action.space)]) throw new Error('That property is not mortgaged.');
@@ -851,7 +943,7 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
     }
     case 'propose-trade': {
       requireTurn(state, actor);
-      requirePhase(state, ['preroll', 'postroll']);
+      requirePhase(state, ['preroll', 'postroll', 'debt']);
       if (state.trade) throw new Error('A trade is already on the table.');
       const to = action.to;
       if (to === actor) throw new Error('Trade with another player.');
@@ -874,7 +966,7 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       return state;
     }
     case 'accept-trade': {
-      requirePhase(state, ['preroll', 'postroll']);
+      requirePhase(state, ['preroll', 'postroll', 'debt']);
       const trade = state.trade;
       if (!trade) throw new Error('There is no trade to accept.');
       if (actor !== trade.to) throw new Error('Only the offered player can accept.');
@@ -882,7 +974,7 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       return state;
     }
     case 'reject-trade': {
-      requirePhase(state, ['preroll', 'postroll']);
+      requirePhase(state, ['preroll', 'postroll', 'debt']);
       const trade = state.trade;
       if (!trade) throw new Error('There is no trade to reject.');
       if (actor !== trade.to && actor !== trade.from) throw new Error('Only the players in the trade can respond.');
@@ -902,7 +994,7 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
       const debt = state.debt;
       if (state.phase !== 'debt' || !debt) throw new Error('There is no debt to settle.');
       if (player.cash < debt.amount) throw new Error(`Raise ${money(debt.amount - player.cash)} more first — mortgage or sell.`);
-      settleDebt(state);
+      settleDebt(state, rng);
       checkEnd(state);
       return state;
     }
@@ -919,7 +1011,7 @@ export function applyAction(raw: MonoState, actor: string, action: MonoAction, r
         auctionAdvance(state);
         return state;
       }
-      if (actor !== state.turn) return state;
+      if (actor !== (state.phase === 'debt' ? state.debt!.payer : state.turn)) return state;
       if (state.phase === 'buy-decision') {
         startAuction(state, player.position);
         return state;

@@ -265,7 +265,7 @@ type Generated = { action: string; payload: Json };
 const BOGUS: Record<TableId, readonly Generated[]> = {
   blackjack: [
     { action: 'bet', payload: { amount: 0 } },
-    { action: 'bet', payload: { amount: 501 } },
+    { action: 'bet', payload: { amount: 10_001 } },
     { action: 'bet', payload: { amount: 2.5 } },
     { action: 'bet', payload: { amount: '10' } },
     { action: 'bet', payload: {} },
@@ -294,7 +294,7 @@ const BOGUS: Record<TableId, readonly Generated[]> = {
   ],
   plinko: [
     { action: 'drop', payload: { bet: 0, risk: 'low' } },
-    { action: 'drop', payload: { bet: 101, risk: 'low' } },
+    { action: 'drop', payload: { bet: 10_001, risk: 'low' } },
     { action: 'drop', payload: { bet: 1, risk: 'extreme' } },
     { action: 'drop', payload: { bet: 1 } },
     { action: 'drop', payload: null },
@@ -302,7 +302,7 @@ const BOGUS: Record<TableId, readonly Generated[]> = {
   ],
   poker: [
     { action: 'deal', payload: { coins: 0 } },
-    { action: 'deal', payload: { coins: 6 } },
+    { action: 'deal', payload: { coins: 1001 } },
     { action: 'deal', payload: {} },
     { action: 'draw', payload: { holds: [true] } },
     { action: 'draw', payload: { holds: [1, 0, 0, 0, 0] } },
@@ -691,3 +691,34 @@ test('real engines only offer a bailout when nothing is pending and freeze a bus
 });
 
 
+
+
+test('higher table stakes debit the wager and still reject overspending', () => {
+  const cases: { at: TableId; action: string; payload: Json; amount: number }[] = [
+    { at: 'blackjack', action: 'bet', payload: { amount: 10_000 }, amount: 10_000 },
+    { at: 'roulette', action: 'bet', payload: { kind: 'straight', numbers: [17], amount: 1000 }, amount: 1000 },
+    { at: 'slots', action: 'spin', payload: { bet: 1000 }, amount: 1000 },
+    { at: 'plinko', action: 'drop', payload: { bet: 10_000, risk: 'low' }, amount: 10_000 },
+    { at: 'poker', action: 'deal', payload: { coins: 1000 }, amount: 1000 },
+  ];
+  for (const { at, action, payload, amount } of cases) {
+    const clock = { now: T0, entropy: lcg(42) };
+    let state = createCasino(engines, ['a'], clock);
+    state.players.a!.bankroll = amount;
+    state = applyCasino(engines, state, 'a', 'sit', { at }, clock).state;
+    const poor = structuredClone(state);
+    poor.players.a!.bankroll = amount - 1;
+    assert.throws(() => applyCasino(engines, poor, 'a', action, payload, clock), /Not enough chips/, at);
+    assert.equal(poor.players.a!.bankroll, amount - 1);
+    const next = applyCasino(engines, state, 'a', action, payload, clock).state;
+    if (at === 'slots') {
+      assert.equal(next.players.a!.bankroll, (next.tables.slots as SlotsState).machines.a!.win);
+    } else if (at === 'plinko') {
+      assert.equal(next.players.a!.bankroll, (next.tables.plinko as PlinkoState).balls[0]!.win);
+    } else if (at === 'blackjack') {
+      assert.ok(next.players.a!.bankroll >= 0);
+    } else {
+      assert.equal(next.players.a!.bankroll, 0);
+    }
+  }
+});

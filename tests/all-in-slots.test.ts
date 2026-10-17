@@ -117,6 +117,7 @@ test('spins resolve instantly, pay the paytable, and count one round', () => {
   const entropy = lcg(2026);
   let state = createCasino(engines, ['a'], { now: T0, entropy });
   state = seat(engines, state, 'a', 'slots', T0, entropy);
+  state.players.a!.bankroll = 10_000;
   for (let index = 0; index < 6; index += 1) {
     const bet = SLOTS_BETS[index % SLOTS_BETS.length]!;
     const before = state.players.a!.bankroll;
@@ -135,7 +136,7 @@ test('spins resolve instantly, pay the paytable, and count one round', () => {
   }
 });
 
-test('max-bet middle-row diamonds take the pot, smaller bets just pay the line', () => {
+test('$10 middle-row diamonds take the pot, smaller bets just pay the line', () => {
   const engines = registry();
   const rng = lcg(7);
   let state = createCasino(engines, ['a'], { now: T0, entropy: rng });
@@ -174,16 +175,17 @@ test('every spin tithes the pot by floor(bet × 0.05) and a jackpot resets it', 
   const rng = lcg(11);
   let state = createCasino(engines, ['a'], { now: T0, entropy: rng });
   state = seat(engines, state, 'a', 'slots', T0, rng);
+  state.players.a!.bankroll = 10_000;
   let pot = JACKPOT_SEED;
   for (const bet of SLOTS_BETS) {
     state = spin(engines, state, 'a', bet, T0 + bet, scripted([6, 8, 10], rng)).state;
     pot += Math.floor(bet * JACKPOT_RATE);
     assert.equal(table(state).pot, pot);
   }
-  assert.equal(pot, JACKPOT_SEED);
+  assert.ok(pot > JACKPOT_SEED);
   state = spin(engines, state, 'a', 10, T0 + 100, scripted([0, 1, 0], rng)).state;
   assert.equal(table(state).pot, JACKPOT_SEED);
-  assert.equal(table(state).machines.a!.win, JACKPOT_SEED);
+  assert.equal(table(state).machines.a!.win, pot);
 });
 
 test('big wins reach the feed and quiet spins stay out', () => {
@@ -225,7 +227,7 @@ test('the view shares every machine, the pot, and the bets with the table', () =
   assert.deepEqual(viewA.grid, [[0, 0, 0], [5, 5, 5], [0, 0, 0]]);
   assert.deepEqual(viewA.machines, [{ id: 'a', lastWin: 168 }, { id: 'b', lastWin: 0 }]);
   assert.equal(viewA.jackpot, JACKPOT_SEED);
-  assert.deepEqual(viewA.bets, [1, 5, 10]);
+  assert.deepEqual(viewA.bets, SLOTS_BETS);
   assert.equal(viewA.limit, SLOTS_LIMIT);
   assert.deepEqual(viewCasino(engines, state, 'a').table, viewA);
 
@@ -290,7 +292,10 @@ test('slots never hold a player, ignore the clock, and stay inside the state bud
   const ids = Array.from({ length: SLOTS_LIMIT }, (_, index) => `player-${index}`);
   const rng = lcg(42);
   let state = createCasino(engines, ids, { now: T0, entropy: rng });
-  for (const id of ids) state = seat(engines, state, id, 'slots', T0, rng);
+  for (const id of ids) {
+    state = seat(engines, state, id, 'slots', T0, rng);
+    state.players[id]!.bankroll = 10_000;
+  }
   for (let index = 0; index < 30; index += 1) {
     const bet = SLOTS_BETS[index % SLOTS_BETS.length]!;
     state = spin(engines, state, ids[index % SLOTS_LIMIT]!, bet, T0 + index + 1, rng).state;
@@ -308,4 +313,18 @@ test('slots never hold a player, ignore the clock, and stay inside the state bud
   const json = JSON.stringify(state.tables.slots);
   assert.ok(json.length < 4096, `slots table serializes to ${json.length} bytes`);
   assert.deepEqual(JSON.parse(json), state.tables.slots);
+});
+
+
+test('high-stake diamonds qualify for the jackpot without reducing the line payout', () => {
+  const engines = registry();
+  const rng = lcg(7);
+  let state = createCasino(engines, ['a'], { now: T0, entropy: rng });
+  state = seat(engines, state, 'a', 'slots', T0, rng);
+  const next = spin(engines, state, 'a', 1000, T0 + 1, scripted([0, 1, 0], rng)).state;
+  assert.deepEqual(table(next).machines.a!.lines, [1]);
+  assert.equal(table(next).machines.a!.win, 5000);
+  assert.equal(next.players.a!.bankroll, 5000);
+  assert.equal(table(next).pot, JACKPOT_SEED);
+  assert.equal(next.feed.at(-1)!.kind, 'jackpot');
 });

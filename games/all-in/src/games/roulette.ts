@@ -6,8 +6,8 @@ import type { ActionCtx, Engine } from '../core/types';
 
 export const ROULETTE_LIMIT = 16;
 export const ROULETTE_MIN_CHIP = 1;
-export const ROULETTE_MAX_CHIP = 100;
-export const ROULETTE_MAX_TOTAL = 500;
+export const ROULETTE_MAX_CHIP = 1000;
+export const ROULETTE_MAX_TOTAL = 10_000;
 export const ROULETTE_MAX_CHIPS = 20;
 export const ROULETTE_BET_MS = 12_000;
 export const ROULETTE_RESULT_MS = 3_000;

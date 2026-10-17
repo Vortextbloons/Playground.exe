@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { SPACES } from '../rules/board';
   import type { MonoAction, MonoView } from '../rules/engine';
   import DiceTray from './DiceTray.svelte';
 
@@ -16,18 +15,17 @@
   const you = $derived(view.you !== null ? view.players[view.you] : null);
   const canAct = $derived(view.you !== null && view.turn === view.you && !busy);
   const debt = $derived(view.phase === 'debt' ? view.debt : null);
-  const owedByYou = $derived(debt !== null && view.turn === view.you);
+  const owedByYou = $derived(debt !== null && debt.payer === view.you);
 
   function act(action: MonoAction): void {
     ondispatch(action);
   }
 
-  const buyPrice = $derived(view.phase === 'buy-decision' && view.you !== null ? SPACES[view.players[view.you]?.position ?? 0]?.price ?? 0 : 0);
 </script>
 
 <div class="action-bar">
   <div class="action-info">
-    {#if view.lastRoll && view.phase !== 'preroll'}
+    {#if view.lastRoll && (view.phase !== 'preroll' || view.doubles > 0)}
       <DiceTray roll={view.lastRoll} />
     {:else}
       <DiceTray roll={null} />
@@ -43,10 +41,12 @@
         Waiting for <strong>{names[view.turn] ?? view.turn}</strong>…
       {:else if view.phase === 'preroll' && you?.inJail}
         You are in jail — roll doubles, pay the fine, or use a card.
+      {:else if view.phase === 'preroll' && view.doubles > 0}
+        Doubles! Your turn continues — roll again.
       {:else if view.phase === 'preroll'}
         Roll the dice to move.
       {:else if view.phase === 'buy-decision'}
-        {SPACES[you?.position ?? 0]?.name} is unowned — buy it or send it to auction.
+        An unowned property is available.
       {:else if view.phase === 'postroll'}
         Build, mortgage, or end your turn.
       {:else if view.phase === 'results'}
@@ -63,6 +63,7 @@
       <button type="button" class="btn btn--danger" disabled={busy} onclick={() => act({ type: 'declare-bankrupt' })}>
         Declare bankruptcy
       </button>
+      <button type="button" class="btn btn--ghost" disabled={busy} onclick={ontrade}>Trade</button>
     </div>
   {:else if view.phase === 'preroll' && canAct}
     <div class="action-buttons">
@@ -78,19 +79,10 @@
         </button>
       {:else}
         <button type="button" class="btn btn--primary" disabled={busy} onclick={() => act({ type: 'roll' })}>
-          Roll dice
+          {view.doubles > 0 ? 'Roll again' : 'Roll dice'}
         </button>
       {/if}
       <button type="button" class="btn btn--ghost" disabled={busy} onclick={ontrade}>Trade</button>
-    </div>
-  {:else if view.phase === 'buy-decision' && canAct}
-    <div class="action-buttons">
-      <button type="button" class="btn btn--primary" disabled={busy || (you?.cash ?? 0) < buyPrice} onclick={() => act({ type: 'buy' })}>
-        Buy for ${buyPrice}
-      </button>
-      <button type="button" class="btn btn--ghost" disabled={busy} onclick={() => act({ type: 'decline' })}>
-        Send to auction
-      </button>
     </div>
   {:else if view.phase === 'postroll' && canAct}
     <div class="action-buttons">

@@ -23,9 +23,9 @@
 
   const BLURBS: Record<TableId, string> = {
     blackjack: 'Beat the dealer to 21',
-    roulette: 'Spin the neon wheel',
-    slots: 'Chase the glowing jackpot',
-    plinko: 'Drop a chip and pray',
+    roulette: 'Your number. Your lucky spin.',
+    slots: 'Five paylines. One progressive pot.',
+    plinko: 'Pick your risk. Watch it fall.',
     poker: 'Outplay the whole table',
   };
 
@@ -71,17 +71,17 @@
 {#snippet artwork(id: TableId)}
   {#if id === 'blackjack'}
     <svg viewBox="0 0 78 46" role="presentation">
-      <rect x="30" y="8" width="20" height="28" rx="3" fill="#121a30" stroke="var(--accent)" stroke-width="2" transform="rotate(-9 40 22)" />
-      <rect x="38" y="7" width="20" height="28" rx="3" fill="#1a2440" stroke="var(--accent)" stroke-width="2" transform="rotate(6 48 21)" />
+      <rect x="30" y="8" width="20" height="28" rx="3" fill="#f5eedb" stroke="var(--accent)" stroke-width="2" transform="rotate(-9 40 22)" />
+      <rect x="38" y="7" width="20" height="28" rx="3" fill="#efe4c8" stroke="var(--accent)" stroke-width="2" transform="rotate(6 48 21)" />
       <circle cx="45" cy="16" r="1.8" fill="var(--color-red)" />
       <circle cx="51" cy="16" r="1.8" fill="var(--color-red)" />
       <circle cx="48" cy="22" r="1.8" fill="var(--color-red)" />
-      <circle cx="19" cy="32" r="8" fill="#121a30" stroke="var(--color-gold)" stroke-width="2" />
+      <circle cx="19" cy="32" r="8" fill="#f5eedb" stroke="var(--color-gold)" stroke-width="2" />
       <circle cx="19" cy="32" r="3.4" fill="var(--color-gold)" />
     </svg>
   {:else if id === 'roulette'}
     <svg viewBox="0 0 78 46" role="presentation">
-      <circle cx="39" cy="23" r="16" fill="#121a30" stroke="var(--accent)" stroke-width="2.6" />
+      <circle cx="39" cy="23" r="16" fill="#f5eedb" stroke="var(--accent)" stroke-width="2.6" />
       <circle cx="39" cy="23" r="9.5" fill="none" stroke="var(--accent)" stroke-width="1.2" opacity="0.55" />
       <circle cx="39" cy="23" r="3" fill="var(--accent)" />
       <line x1="39" y1="7" x2="39" y2="14" stroke="var(--accent)" stroke-width="1.4" />
@@ -92,10 +92,10 @@
     </svg>
   {:else if id === 'slots'}
     <svg viewBox="0 0 78 46" role="presentation">
-      <rect x="14" y="7" width="46" height="32" rx="5" fill="#121a30" stroke="var(--accent)" stroke-width="2.4" />
-      <rect x="20" y="14" width="9" height="18" rx="2" fill="#1a2440" stroke="var(--color-gold)" stroke-width="1.4" />
-      <rect x="32.5" y="14" width="9" height="18" rx="2" fill="#1a2440" stroke="var(--color-gold)" stroke-width="1.4" />
-      <rect x="45" y="14" width="9" height="18" rx="2" fill="#1a2440" stroke="var(--color-gold)" stroke-width="1.4" />
+      <rect x="14" y="7" width="46" height="32" rx="5" fill="#f5eedb" stroke="var(--accent)" stroke-width="2.4" />
+      <rect x="20" y="14" width="9" height="18" rx="2" fill="#efe4c8" stroke="var(--color-gold)" stroke-width="1.4" />
+      <rect x="32.5" y="14" width="9" height="18" rx="2" fill="#efe4c8" stroke="var(--color-gold)" stroke-width="1.4" />
+      <rect x="45" y="14" width="9" height="18" rx="2" fill="#efe4c8" stroke="var(--color-gold)" stroke-width="1.4" />
       <line x1="60" y1="14" x2="66" y2="7" stroke="var(--color-muted)" stroke-width="1.8" />
       <circle cx="67" cy="6" r="2.6" fill="var(--color-red)" />
     </svg>
@@ -112,8 +112,8 @@
     </svg>
   {:else}
     <svg viewBox="0 0 78 46" role="presentation">
-      <rect x="20" y="10" width="18" height="25" rx="3" fill="#121a30" stroke="var(--accent)" stroke-width="2" transform="rotate(-12 29 22)" />
-      <rect x="31" y="9" width="18" height="25" rx="3" fill="#1a2440" stroke="var(--accent)" stroke-width="2" transform="rotate(5 40 21)" />
+      <rect x="20" y="10" width="18" height="25" rx="3" fill="#f5eedb" stroke="var(--accent)" stroke-width="2" transform="rotate(-12 29 22)" />
+      <rect x="31" y="9" width="18" height="25" rx="3" fill="#efe4c8" stroke="var(--accent)" stroke-width="2" transform="rotate(5 40 21)" />
       <ellipse cx="57" cy="16" rx="7" ry="3.4" fill="var(--color-mint)" stroke="#0b1a18" stroke-width="1" />
       <ellipse cx="57" cy="23" rx="7" ry="3.4" fill="var(--color-mint)" stroke="#0b1a18" stroke-width="1" />
       <ellipse cx="57" cy="30" rx="7" ry="3.4" fill="var(--color-mint)" stroke="#0b1a18" stroke-width="1" />
@@ -121,18 +121,21 @@
   {/if}
 {/snippet}
 
-<section class="safe-bottom grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 px-3 pt-3 short:px-2 short:pt-2">
+<section class="casino-floor safe-bottom grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 px-3 pt-3 short:px-2 short:pt-2">
   <div class="grid content-start gap-3">
     <div class="hero-strip short:gap-2 short:py-3">
-      <div class="grid gap-1">
-        <p class="eyebrow m-0">Tonight's run</p>
-        <h2 class="m-0 font-display text-[clamp(30px,7vw,44px)] leading-none tracking-[0.04em] text-fog">Casino Floor</h2>
-        <p class="m-0 text-[13px] text-muted short:hidden">
-          Five tables, one bankroll, ten minutes. Pick a seat and press your luck.
-          {#if leader !== null}
-            Top stack: <strong class="text-fog">{names[leader.id] ?? 'Player'}</strong>
-          {/if}
-        </p>
+      <div class="floor-heading">
+        <span class="house-seal" aria-hidden="true">♠</span>
+        <div class="grid gap-1">
+          <p class="eyebrow m-0 text-gold">ALL IN! · Casino & card room</p>
+          <h2 class="m-0 font-display text-[clamp(30px,7vw,44px)] leading-none tracking-[0.04em] text-fog">The floor is yours.</h2>
+          <p class="m-0 text-[13px] text-muted short:hidden">
+            Ten minutes. One stack. Make every hand count.
+            {#if leader !== null}
+              Top stack: <strong class="text-fog">{names[leader.id] ?? 'Player'}</strong>
+            {/if}
+          </p>
+        </div>
       </div>
       <dl class="hero-stats m-0">
         <div>
@@ -188,9 +191,8 @@
           {/if}
           <span class="badge flex-none" class:shared={summary.mode === 'shared'}>{summary.mode}</span>
         </span>
-        {#if hint !== null}
-          <span class="hint-line">{hint}</span>
-        {/if}
+        <span class="hint-line">{id === 'blackjack' || id === 'plinko' ? '$1 – $10,000' : id === 'roulette' ? 'Up to $10,000 per round' : id === 'slots' ? '$1 – $1,000 per spin' : 'Draw poker · $1 – $1,000'}{#if hint !== null}<br />{hint}{/if}</span>
+        <span class="table-entry">Take a seat <b aria-hidden="true">↗</b></span>
       </button>
     {/each}
   </div>

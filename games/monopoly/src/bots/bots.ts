@@ -1,5 +1,5 @@
-import { GROUP_SPACES, JAIL_FINE, SPACES, mortgageInterestOf } from '../rules/board';
-import { ownsGroup, type MonoAction, type MonoState } from '../rules/engine';
+import { GROUP_SPACES, HOUSE_STOCK, HOTEL_STOCK, JAIL_FINE, SPACES, mortgageInterestOf } from '../rules/board';
+import { housesInPlay, ownsGroup, type MonoAction, type MonoState } from '../rules/engine';
 import type { Rng } from '../rules/rng';
 
 const CASH_RESERVE = 120;
@@ -8,6 +8,7 @@ const BUILD_RESERVE = 200;
 export function actorFor(state: MonoState): string {
   if (state.phase === 'auction' && state.auction) return state.auction.turn;
   if (state.trade) return state.trade.to;
+  if (state.phase === 'debt' && state.debt) return state.debt.payer;
   return state.turn;
 }
 
@@ -18,7 +19,7 @@ function ownedProperties(state: MonoState, actor: string): number[] {
 }
 
 function pickMortgage(state: MonoState, actor: string): number | null {
-  const owned = ownedProperties(state, actor).filter(id => !state.mortgages[String(id)]);
+  const owned = ownedProperties(state, actor).filter(id => !state.mortgages[String(id)] && (!SPACES[id]!.group || GROUP_SPACES[SPACES[id]!.group!].every(other => !state.houses[String(other)])));
   if (!owned.length) return null;
   return owned.sort((a, b) => (SPACES[a]!.price ?? 0) - (SPACES[b]!.price ?? 0))[0]!;
 }
@@ -53,6 +54,7 @@ function pickBuild(state: MonoState, actor: string): number | null {
     if (GROUP_SPACES[group].some(other => state.mortgages[String(other)])) continue;
     const houses = state.houses[String(id)] ?? 0;
     if (houses >= 5) continue;
+    if (houses === 4 ? Object.values(state.houses).filter(count => count === 5).length >= HOTEL_STOCK : housesInPlay(state) >= HOUSE_STOCK) continue;
     const min = Math.min(...GROUP_SPACES[group].map(other => state.houses[String(other)] ?? 0));
     if (houses !== min) continue;
     if (space.houseCost! < bestCost) {
@@ -128,7 +130,7 @@ export function botMove(state: MonoState, actor: string, rng: Rng): MonoAction |
       const mortgage = pickMortgage(state, actor);
       if (mortgage !== null) return { type: 'mortgage', space: mortgage };
       const sale = pickSale(state, actor);
-      if (sale !== null) return { type: 'sell', space: sale };
+      if (sale !== null) return { type: 'sell', space: sale, all: state.houses[String(sale)] === 5 && HOUSE_STOCK - housesInPlay(state) < 4 };
       return { type: 'declare-bankrupt' };
     }
     case 'postroll': {

@@ -201,7 +201,7 @@ test('video hands pay the table, report results, and feed big wins', () => {
   seat(f, 'a');
   assert.deepEqual(tableView(f, 'a').actions, ['deal']);
   assert.equal(tableView(f, 'a').you.video, null);
-  assert.throws(() => step(f, 'a', 'deal', { coins: 6 } as Json), /Invalid coins/);
+  assert.throws(() => step(f, 'a', 'deal', { coins: 1001 } as Json), /Invalid coins/);
 
   step(f, 'a', 'deal', { coins: 5 } as Json);
   assert.equal(bankroll(f, 'a'), 995);
@@ -472,7 +472,7 @@ test('summary reports solo and shared modes with the pot', () => {
   assert.equal(pokerEngine.summary(table(f)).mode, 'shared');
   assert.deepEqual(pokerEngine.summary(table(f)).info, { phase: 'bet1', pot: POKER_ANTE * 2 });
   const view = tableView(f, 'a');
-  assert.deepEqual(view.limits, { ante: POKER_ANTE, bet: POKER_BET, maxRaises: POKER_MAX_RAISES, coins: 5 });
+  assert.deepEqual(view.limits, { ante: POKER_ANTE, bet: POKER_BET, maxRaises: POKER_MAX_RAISES, coins: 1000 });
   assert.deepEqual(view.actions, []);
 });
 

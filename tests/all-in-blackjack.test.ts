@@ -501,7 +501,7 @@ test('the table seats five and invalid bets change nothing', () => {
   assert.throws(() => seat(engines, state, 'f', 'blackjack', T0 + 2), /Table is full\./);
   assert.deepEqual(blackjackEngine.occupants(table(state)), ['a', 'b', 'c', 'd', 'e']);
   assert.throws(() => play(engines, state, 'a', 'bet', { amount: 0 }, T0 + 3), /Invalid amount\./);
-  assert.throws(() => play(engines, state, 'a', 'bet', { amount: 501 }, T0 + 3), /Invalid amount\./);
+  assert.throws(() => play(engines, state, 'a', 'bet', { amount: 10_001 }, T0 + 3), /Invalid amount\./);
   assert.throws(() => play(engines, state, 'a', 'bet', { amount: 2.5 }, T0 + 3), /Invalid amount\./);
   assert.throws(() => play(engines, state, 'a', 'stand', null, T0 + 3), /No hand is in play\./);
 });

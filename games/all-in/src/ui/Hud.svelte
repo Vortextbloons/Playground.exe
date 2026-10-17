@@ -68,7 +68,7 @@
 
 <header class="hud short:py-1.5">
   <div class="grid min-w-0 justify-items-start gap-0.5">
-    <span class="eyebrow">Bankroll</span>
+    <span class="eyebrow">Your chips</span>
     <strong
       class="hud-bankroll font-display text-[clamp(26px,5.4vw,34px)] leading-none tracking-wide tabular-nums text-mint"
       class:gain={flash === 'up'}
@@ -79,7 +79,7 @@
     {/if}
   </div>
   <div class="grid justify-items-center gap-0.5 text-center">
-    <span class="animate-title font-display text-[clamp(24px,4.6vw,32px)] leading-none tracking-[0.08em] text-gold">ALL IN!</span>
+    <span class="hud-brand font-display text-[clamp(24px,4.6vw,32px)] leading-none tracking-[0.08em] text-gold">ALL IN!</span>
     <span class="eyebrow">{screen}</span>
   </div>
   <div class="flex min-w-0 items-center justify-end gap-2">

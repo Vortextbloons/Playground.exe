@@ -1,37 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="ALL IN! neon casino">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="ALL IN! casino and card room">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="30%" r="80%">
-      <stop offset="0%" stop-color="#181e32"/>
-      <stop offset="100%" stop-color="#090d17"/>
+    <radialGradient id="felt" cx="50%" cy="30%" r="80%">
+      <stop stop-color="#315843"/><stop offset="1" stop-color="#071b17"/>
     </radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ffe9a8"/>
-      <stop offset="100%" stop-color="#f4c95d"/>
-    </linearGradient>
   </defs>
-  <rect width="480" height="270" fill="url(#glow)"/>
-  <g opacity="0.5" stroke="#23e0be" stroke-width="1" fill="none">
-    <path d="M24 46 h60 M24 58 h36"/>
-    <path d="M456 224 h-60 M456 236 h-36"/>
+  <rect width="480" height="270" fill="url(#felt)"/>
+  <rect x="16" y="16" width="448" height="238" rx="8" fill="none" stroke="#d8b76c"/>
+  <rect x="22" y="22" width="436" height="226" rx="5" fill="none" stroke="#d8b76c" opacity=".35"/>
+  <g text-anchor="middle">
+    <text x="240" y="65" font-family="Georgia,serif" font-size="32" fill="#d8b76c">♠</text>
+    <text x="240" y="139" font-family="Georgia,serif" font-size="70" fill="#f5eedb" letter-spacing="5">ALL IN!</text>
+    <text x="240" y="172" font-family="Arial,sans-serif" font-size="12" fill="#d8b76c" letter-spacing="4">CASINO &amp; CARD ROOM</text>
+    <text x="240" y="220" font-family="Arial,sans-serif" font-size="11" fill="#b2bba7" letter-spacing="2">FIVE TABLES · TEN MINUTES · ONE STACK</text>
   </g>
-  <g transform="translate(240 118)">
-    <circle r="52" fill="none" stroke="#ff395b" stroke-width="3" opacity="0.85"/>
-    <circle r="40" fill="none" stroke="#ff395b" stroke-width="1" opacity="0.5"/>
-    <g fill="#f4c95d">
-      <circle cx="0" cy="-46" r="3"/><circle cx="46" cy="0" r="3"/><circle cx="0" cy="46" r="3"/><circle cx="-46" cy="0" r="3"/>
-    </g>
-  </g>
-  <g font-family="'Bebas Neue','Arial Narrow',sans-serif" text-anchor="middle">
-    <text x="240" y="128" font-size="64" fill="url(#gold)" letter-spacing="6">ALL IN!</text>
-    <text x="240" y="160" font-size="15" fill="#a8b0c4" font-family="Inter,Arial,sans-serif" letter-spacing="3">10-MINUTE NEON CASINO</text>
-  </g>
-  <g transform="translate(120 214)">
-    <circle r="13" fill="#ff395b"/><circle r="6" fill="#090d17"/>
-  </g>
-  <g transform="translate(240 216)">
-    <circle r="13" fill="#f4c95d"/><circle r="6" fill="#090d17"/>
-  </g>
-  <g transform="translate(360 214)">
-    <circle r="13" fill="#23e0be"/><circle r="6" fill="#090d17"/>
-  </g>
+  <path d="M62 164h40m276 0h40" stroke="#d8b76c"/>
 </svg>

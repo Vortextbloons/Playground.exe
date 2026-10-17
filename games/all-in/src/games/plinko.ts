@@ -10,7 +10,7 @@ export type Risk = typeof RISKS[number];
 export const PLINKO_LIMIT = 16;
 export const PLINKO_ROWS = 12;
 export const PLINKO_MIN = 1;
-export const PLINKO_MAX = 100;
+export const PLINKO_MAX = 10_000;
 
 const BALL_CAP = 24;
 

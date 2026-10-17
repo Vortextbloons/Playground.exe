@@ -213,17 +213,7 @@
 <svelte:window onpointerdown={unlock} onkeydown={unlock} />
 
 <div class="shell h-full min-h-0">
-  <div class="backdrop" class:hot={danger} aria-hidden="true">
-    <div class="aurora aurora-a"></div>
-    <div class="aurora aurora-b"></div>
-    <div class="aurora aurora-c"></div>
-    <div class="stars"></div>
-    <div class="stars b"></div>
-    <div class="scan"></div>
-    <div class="grain"></div>
-    <div class="vignette"></div>
-    <div class="ember"></div>
-  </div>
+  <div class="backdrop" class:hot={danger} aria-hidden="true"></div>
 
   {#if view}
     <div class="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)] overflow-hidden">

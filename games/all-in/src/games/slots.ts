@@ -4,7 +4,7 @@ import { randomBelow } from '../core/rng';
 import type { Engine, EngineSummary } from '../core/types';
 
 export const SLOTS_LIMIT = 16;
-export const SLOTS_BETS: readonly number[] = [1, 5, 10];
+export const SLOTS_BETS: readonly number[] = [1, 5, 10, 25, 100, 500, 1000];
 export const JACKPOT_SEED = 500;
 export const JACKPOT_RATE = 0.05;
 
@@ -88,7 +88,7 @@ export const slotsEngine: Engine<SlotsState> = {
     if (name !== 'spin') throw new Error('Unknown action.');
     const machine = state.machines[playerId];
     if (!machine) throw new Error('You are not at this table.');
-    const bet = readInt(asRecord(payload), 'bet', MIN_BET, JACKPOT_BET);
+    const bet = readInt(asRecord(payload), 'bet', MIN_BET, SLOTS_BETS[SLOTS_BETS.length - 1]!);
     if (!SLOTS_BETS.includes(bet)) throw new Error('Invalid bet.');
     if (bet > ctx.bankroll(playerId)) throw new Error('Not enough chips.');
 
@@ -106,8 +106,8 @@ export const slotsEngine: Engine<SlotsState> = {
 
     state.pot += Math.floor(bet * JACKPOT_RATE);
     let jackpotWin = 0;
-    if (bet === JACKPOT_BET && grid[1]!.every(symbol => symbol === DIAMOND)) {
-      jackpotWin = state.pot;
+    if (bet >= JACKPOT_BET && grid[1]!.every(symbol => symbol === DIAMOND)) {
+      jackpotWin = Math.max(state.pot, Math.floor(bet * SLOT_PAYTABLE[DIAMOND]!));
       state.pot = JACKPOT_SEED;
       win += jackpotWin - Math.floor(bet * SLOT_PAYTABLE[DIAMOND]!);
     }

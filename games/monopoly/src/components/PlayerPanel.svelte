@@ -7,9 +7,11 @@
     names: Record<string, string>;
     selected: number | null;
     onselect: (space: number) => void;
+    cashChanges?: Record<string, number>;
+    cashKey?: number;
   }
 
-  let { view, names, selected = null, onselect }: Props = $props();
+  let { view, names, selected = null, onselect, cashChanges = {}, cashKey = 0 }: Props = $props();
 
   function colorOf(playerId: string): string {
     return playerColor(view.order.indexOf(playerId));
@@ -42,16 +44,29 @@
       class={['player-card', { 'is-turn': view.turn === id && view.phase !== 'results', 'is-bankrupt': player?.bankrupt }]}
       style:--player-color={colorOf(id)}
     >
+      {#if cashChanges[id]}
+        {#key cashKey}
+          <span class={['cash-delta', { 'is-gain': cashChanges[id]! > 0 }]} aria-label={`${cashChanges[id]! > 0 ? 'Received' : 'Paid'} $${Math.abs(cashChanges[id]!).toLocaleString()}`}>
+            {cashChanges[id]! > 0 ? '+' : '−'}${Math.abs(cashChanges[id]!).toLocaleString()}
+          </span>
+        {/key}
+      {/if}
       <header>
         <span class="dot"></span>
-        <strong>{names[id] ?? id}{view.you === id ? ' (you)' : ''}</strong>
-        <span class="worth">${worth}</span>
+        <strong>{names[id] ?? id}{view.you === id && names[id] !== 'You' ? ' (you)' : ''}</strong>
+        <span class="worth" title="Cash" aria-label={`Cash: $${(player?.cash ?? 0).toLocaleString()}`}>{#key player?.cash}<span class="money-update">${(player?.cash ?? 0).toLocaleString()}</span>{/key}</span>
       </header>
       <p class="cash">
-        ${player?.cash ?? 0}
+        <span>Total worth {#key worth}<strong class="money-update">${worth.toLocaleString()}</strong>{/key}</span>
+        <span>{deeds.length} {deeds.length === 1 ? 'deed' : 'deeds'}</span>
         {#if player?.inJail}<span class="jail-badge">in jail</span>{/if}
         {#if player?.bankrupt}<span class="bust-badge">bankrupt</span>{/if}
       </p>
+      {#if view.target !== null}
+      <div class="wealth-track" role="meter" aria-label={`${names[id] ?? id} net worth`} aria-valuemin={0} aria-valuemax={view.target} aria-valuenow={Math.max(0, Math.min(worth, view.target))}>
+        <span style:width="{Math.max(0, Math.min(100, worth / view.target * 100))}%"></span>
+      </div>
+      {/if}
       {#if deeds.length > 0 && !player?.bankrupt}
         <div class="deed-chips">
           {#each deeds as spaceId (spaceId)}

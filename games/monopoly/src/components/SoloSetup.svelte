@@ -1,6 +1,8 @@
 <script lang="ts">
+  import type { EndConditions } from '../rules/engine';
+  import EndConditionsForm from './EndConditions.svelte';
   interface Props {
-    onstart: (bots: number) => void;
+    onstart: (bots: number, conditions: EndConditions) => void;
   }
 
   let { onstart }: Props = $props();
@@ -10,14 +12,16 @@
 </script>
 
 <div class="solo-setup">
-  <span class="solo-kicker">Monopoly</span>
-  <h1>Own the city</h1>
+  <span class="solo-kicker">The property trading game</span>
+  <h1>MONOPOLY</h1>
+  <h2>Small city.<br />Big ambitions.</h2>
   <p class="solo-lede">
-    Buy streets, build houses, bankrupt your rivals — or reach a
-    <strong>$5,000</strong> net worth before they do.
+    Buy streets, build houses, and trade your way to the top.
+    Choose what ends your game.
   </p>
 
-  <div class="solo-picker">
+  <div class="opponents-label" id="opponents-label">Choose your opponents</div>
+  <div class="solo-picker" role="group" aria-labelledby="opponents-label">
     {#each { length: BOT_NAMES.length } as _, i (i)}
       {@const count = i + 1}
       <button
@@ -26,13 +30,12 @@
         onclick={() => (bots = count)}
         aria-pressed={bots === count}
       >
-        {count} bot{count === 1 ? '' : 's'}
+        {count}
       </button>
     {/each}
   </div>
+  <p class="opponent-preview">You + {bots} bot{bots === 1 ? '' : 's'}</p>
 
-  <button type="button" class="btn btn--primary btn--big" onclick={() => onstart(bots)}>
-    Start solo match
-  </button>
-  <p class="solo-hint">Or host a party match from the multiplayer menu to play with 2–8 people.</p>
+  <EndConditionsForm onsubmit={(conditions) => onstart(bots, conditions)} />
+  <p class="solo-hint">Buy. Build. Trade. Take over.</p>
 </div>

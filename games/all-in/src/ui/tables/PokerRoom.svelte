@@ -3,7 +3,7 @@
   import type { PlayerView } from '../../core/types';
   import { SUIT_LABELS, cardRank, cardSuit, rankLabel } from '../../core/cards';
   import { CATEGORY_NAMES, evaluate5, handCategory, videoCoinWin } from '../../games/poker-eval';
-  import { POKER_ANTE, POKER_BET, POKER_MAX_RAISES, POKER_RESULTS_MS, POKER_SEATS, POKER_TURN_MS } from '../../games/poker';
+  import { POKER_ANTE, POKER_BET, POKER_COINS, POKER_MAX_RAISES, POKER_RESULTS_MS, POKER_SEATS, POKER_TURN_MS } from '../../games/poker';
   import type { PokerView } from '../../games/poker';
   import { sound } from '../../sound';
   import Avatar from '../Avatar.svelte';
@@ -15,7 +15,7 @@
   type ChipFlight = { id: number; dx: number; dy: number; delay: number; tone: number };
   type TossCard = { id: number; card: number; left: number; machine: 'video' | 'own' };
 
-  const COIN_VALUES = [1, 2, 3, 4, 5] as const;
+  const COIN_VALUES = [1, 2, 3, 4, 5, 10, 25, 100, 500, 1000] as const;
   const CONFETTI_COLORS = ['var(--color-gold)', 'var(--color-red)', 'var(--color-mint)', 'var(--color-violet)', 'var(--color-sky)'];
   const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -70,7 +70,7 @@
 
   const you = $derived(view.you);
   const bankroll = $derived(view.vault?.bankroll ?? 0);
-  const limits = $derived(poker?.limits ?? { ante: POKER_ANTE, bet: POKER_BET, maxRaises: POKER_MAX_RAISES, coins: COIN_VALUES.length });
+  const limits = $derived(poker?.limits ?? { ante: POKER_ANTE, bet: POKER_BET, maxRaises: POKER_MAX_RAISES, coins: POKER_COINS });
   const phase = $derived(poker?.phase ?? 'idle');
   const mode = $derived(poker?.mode ?? 'solo');
   const table = $derived(poker?.table ?? null);
@@ -624,7 +624,7 @@
                     {/if}
                   {/each}
                 {:else}
-                  {#each COIN_VALUES as slot (slot)}{@render empty()}{/each}
+                  {#each [1, 2, 3, 4, 5] as slot (slot)}{@render empty()}{/each}
                 {/if}
               </div>
               {#if toss.some(item => item.machine === 'video')}
@@ -738,9 +738,9 @@
     border: 1px solid color-mix(in srgb, var(--color-sky) 28%, var(--color-edge));
     border-radius: 18px;
     background:
-      radial-gradient(420px 200px at 50% 0%, rgba(76, 201, 240, 0.12), transparent 70%),
-      radial-gradient(520px 260px at 50% 120%, rgba(35, 224, 190, 0.07), transparent 70%),
-      linear-gradient(170deg, #14213a, #0d1424);
+      radial-gradient(420px 200px at 50% 0%, rgba(164, 197, 187, 0.12), transparent 70%),
+      radial-gradient(520px 260px at 50% 120%, rgba(150, 211, 174, 0.07), transparent 70%),
+      linear-gradient(170deg, #214b37, #0d2f23);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px -30px rgba(0, 0, 0, 0.9);
   }
 
@@ -784,12 +784,12 @@
   .oval {
     position: absolute;
     inset: 1% 0.5%;
-    border: 1px solid color-mix(in srgb, var(--color-sky) 24%, var(--color-edge));
+    border: 7px solid #58432a;
     border-radius: 50%;
     background:
-      radial-gradient(60% 55% at 50% 42%, rgba(76, 201, 240, 0.1), transparent 70%),
-      radial-gradient(70% 65% at 50% 58%, rgba(35, 224, 190, 0.06), transparent 72%),
-      linear-gradient(170deg, #16233d, #0d1424);
+      radial-gradient(60% 55% at 50% 42%, rgba(164, 197, 187, 0.1), transparent 70%),
+      radial-gradient(70% 65% at 50% 58%, rgba(150, 211, 174, 0.06), transparent 72%),
+      linear-gradient(170deg, #24533d, #0d2f23);
     box-shadow: inset 0 0 70px -24px rgba(0, 0, 0, 0.95);
     pointer-events: none;
   }
@@ -844,17 +844,17 @@
     padding: 7px 8px;
     border: 1px solid var(--color-edge);
     border-radius: 13px;
-    background: rgba(9, 13, 23, 0.55);
+    background: rgba(7, 27, 23, 0.55);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .seat.turn {
     border-color: var(--color-gold);
-    box-shadow: 0 0 0 1px rgba(244, 201, 93, 0.4), 0 0 24px -8px rgba(244, 201, 93, 0.8);
+    box-shadow: 0 0 0 1px rgba(216, 183, 108, 0.4), 0 0 24px -8px rgba(216, 183, 108, 0.8);
   }
 
   .seat.me {
-    background: rgba(244, 201, 93, 0.07);
+    background: rgba(216, 183, 108, 0.07);
   }
 
   .seat.out {
@@ -863,7 +863,7 @@
 
   .seat.crowned {
     border-color: var(--color-mint);
-    box-shadow: 0 0 0 1px rgba(35, 224, 190, 0.4), 0 0 26px -8px rgba(35, 224, 190, 0.9);
+    box-shadow: 0 0 0 1px rgba(150, 211, 174, 0.4), 0 0 26px -8px rgba(150, 211, 174, 0.9);
   }
 
   .spot {
@@ -871,7 +871,7 @@
     inset: 0;
     z-index: 0;
     border-radius: inherit;
-    background: radial-gradient(65% 75% at 50% 38%, rgba(35, 224, 190, 0.34), transparent 72%);
+    background: radial-gradient(65% 75% at 50% 38%, rgba(150, 211, 174, 0.34), transparent 72%);
     animation: spot-in 0.7s ease-out both;
     pointer-events: none;
   }
@@ -884,7 +884,7 @@
     font-size: 17px;
     line-height: 1;
     color: var(--color-gold);
-    text-shadow: 0 0 12px rgba(244, 201, 93, 0.95);
+    text-shadow: 0 0 12px rgba(216, 183, 108, 0.95);
     animation: crown-sparkle 1.5s ease-in-out infinite;
     pointer-events: none;
   }
@@ -977,7 +977,7 @@
   }
 
   .tag.allin {
-    border-color: rgba(255, 57, 91, 0.5);
+    border-color: rgba(229, 116, 117, 0.5);
     color: var(--color-red);
   }
 
@@ -992,7 +992,7 @@
     padding: 6px 16px;
     border: 1px dashed color-mix(in srgb, var(--color-gold) 30%, var(--color-edge));
     border-radius: 14px;
-    background: rgba(9, 13, 23, 0.6);
+    background: rgba(7, 27, 23, 0.6);
     text-align: center;
   }
 
@@ -1011,9 +1011,9 @@
   .pot-ring {
     position: absolute;
     inset: -14% -8%;
-    border: 1px solid rgba(244, 201, 93, 0.55);
+    border: 1px solid rgba(216, 183, 108, 0.55);
     border-radius: 999px;
-    box-shadow: 0 0 26px -4px rgba(244, 201, 93, 0.8);
+    box-shadow: 0 0 26px -4px rgba(216, 183, 108, 0.8);
     animation: ring-burst 0.6s ease-out both;
     pointer-events: none;
   }
@@ -1060,7 +1060,7 @@
     margin: -5.5px 0 0 -5.5px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #fff3c9, var(--color-gold) 55%, #8a6410);
-    box-shadow: 0 0 9px rgba(244, 201, 93, 0.85);
+    box-shadow: 0 0 9px rgba(216, 183, 108, 0.85);
     animation: coin-burst 1.15s cubic-bezier(0.2, 0.75, 0.3, 1) both;
   }
 
@@ -1075,7 +1075,7 @@
     inset: 0;
     z-index: 6;
     border-radius: inherit;
-    background: radial-gradient(ellipse at center, transparent 42%, rgba(255, 57, 91, 0.16) 78%, rgba(255, 57, 91, 0.3) 100%);
+    background: radial-gradient(ellipse at center, transparent 42%, rgba(229, 116, 117, 0.16) 78%, rgba(229, 116, 117, 0.3) 100%);
     animation: tension-flash 1.35s ease-out both;
     pointer-events: none;
   }
@@ -1124,7 +1124,7 @@
     overflow: hidden;
     border: 1px solid var(--color-edge);
     border-radius: 8px;
-    background: linear-gradient(180deg, #1c2746, #101627);
+    background: linear-gradient(180deg, #1c2746, #0d2822);
     color: var(--color-fog);
     font: inherit;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -1159,7 +1159,7 @@
 
   button.pcard:hover:not(:disabled) {
     transform: translateY(-2px);
-    border-color: rgba(244, 201, 93, 0.55);
+    border-color: rgba(216, 183, 108, 0.55);
   }
 
   button.pcard:disabled {
@@ -1177,7 +1177,7 @@
 
   .pcard.held {
     border-color: var(--color-gold);
-    box-shadow: 0 0 0 1px rgba(244, 201, 93, 0.65), 0 0 20px -6px rgba(244, 201, 93, 0.9);
+    box-shadow: 0 0 0 1px rgba(216, 183, 108, 0.65), 0 0 20px -6px rgba(216, 183, 108, 0.9);
   }
 
   .cards-big .pcard:nth-child(1) { animation-delay: 0ms; }
@@ -1272,7 +1272,7 @@
   .pcard.empty {
     border-style: dashed;
     border-color: color-mix(in srgb, var(--color-muted) 30%, var(--color-edge));
-    background: rgba(9, 13, 23, 0.3);
+    background: rgba(7, 27, 23, 0.3);
   }
 
   .pc-tag {
@@ -1280,7 +1280,7 @@
     inset: auto 0 0 0;
     z-index: 2;
     padding: 2px 0;
-    background: rgba(244, 201, 93, 0.92);
+    background: rgba(216, 183, 108, 0.92);
     color: #241a02;
     font: 800 8.5px/1 var(--font-sans);
     letter-spacing: 0.12em;
@@ -1288,8 +1288,8 @@
   }
 
   .panel.turn {
-    border-color: rgba(244, 201, 93, 0.55);
-    box-shadow: 0 0 26px -12px rgba(244, 201, 93, 0.9);
+    border-color: rgba(216, 183, 108, 0.55);
+    box-shadow: 0 0 26px -12px rgba(216, 183, 108, 0.9);
   }
 
   .note {
@@ -1297,24 +1297,24 @@
     padding: 8px 11px;
     border: 1px dashed color-mix(in srgb, var(--color-gold) 35%, var(--color-edge));
     border-radius: 13px;
-    background: rgba(244, 201, 93, 0.05);
+    background: rgba(216, 183, 108, 0.05);
     font-size: 12.5px;
     color: var(--color-muted);
   }
 
   .outcome {
     padding: 7px 10px;
-    border: 1px solid rgba(255, 57, 91, 0.4);
+    border: 1px solid rgba(229, 116, 117, 0.4);
     border-radius: 12px;
-    background: rgba(255, 57, 91, 0.08);
+    background: rgba(229, 116, 117, 0.08);
     font-size: 13.5px;
     color: #ffd4dc;
     animation: var(--animate-panel);
   }
 
   .outcome.win {
-    border-color: rgba(35, 224, 190, 0.45);
-    background: rgba(35, 224, 190, 0.08);
+    border-color: rgba(150, 211, 174, 0.45);
+    background: rgba(150, 211, 174, 0.08);
     color: #b8fff0;
   }
 
@@ -1328,7 +1328,7 @@
     padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
     border: 1px solid var(--color-edge);
     border-radius: 16px;
-    background: rgba(9, 13, 23, 0.94);
+    background: rgba(7, 27, 23, 0.94);
     box-shadow: 0 -16px 34px -26px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(10px);
   }
@@ -1342,7 +1342,7 @@
     padding: 0 10px;
     border: 1px solid var(--color-edge);
     border-radius: 12px;
-    background: linear-gradient(180deg, #202a49, #161d33);
+    background: linear-gradient(180deg, #254c3d, #143328);
     color: var(--color-fog);
     font: 700 13px/1 var(--font-sans);
     cursor: pointer;
@@ -1351,13 +1351,13 @@
 
   .coin:hover:not(:disabled) {
     transform: translateY(-1px);
-    border-color: rgba(244, 201, 93, 0.5);
+    border-color: rgba(216, 183, 108, 0.5);
   }
 
   .coin.on {
-    border-color: rgba(244, 201, 93, 0.9);
-    background: rgba(244, 201, 93, 0.16);
-    box-shadow: 0 0 18px -6px rgba(244, 201, 93, 0.8);
+    border-color: rgba(216, 183, 108, 0.9);
+    background: rgba(216, 183, 108, 0.16);
+    box-shadow: 0 0 18px -6px rgba(216, 183, 108, 0.8);
   }
 
   .coin:disabled {
@@ -1437,4 +1437,14 @@
       padding: 8px;
     }
   }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    .room { overflow-y: auto; }
+    .table-felt { flex: none; min-height: 300px; }
+    .felt.video { flex: none; min-height: 220px; }
+    .dock { position: sticky; bottom: 0; z-index: 10; flex-shrink: 0; }
+    .coin { flex: 1 1 46px; min-height: 44px; }
+    .dock .btn-primary { min-height: 48px; }
+  }
+
 </style>

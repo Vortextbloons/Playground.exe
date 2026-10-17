@@ -17,7 +17,7 @@ export const START_CASH = 1500;
 export const JAIL_FINE = 50;
 export const JAIL_POSITION = 10;
 export const HOUSE_STOCK = 32;
-export const HOTEL_STOCK = 16;
+export const HOTEL_STOCK = 12;
 export const WEALTH_TARGET = 5000;
 export const TURN_MS = 90_000;
 export const MORTGAGE_INTEREST = 1.1;
@@ -130,7 +130,7 @@ export const CHANCE_CARDS: CardDef[] = [
   chance(12, 'Take a walk on the Boardwalk.', { kind: 'move', to: 39 }),
   chance(13, 'You have been elected chairman: pay each player $50.', { kind: 'pay-each', amount: 50 }),
   chance(14, 'Your building loan matures: collect $150.', { kind: 'cash', amount: 150 }),
-  chance(15, 'You have won a crossword competition: collect $100.', { kind: 'cash', amount: 100 }),
+  chance(15, 'Advance to the nearest Railroad. Pay the owner double rent.', { kind: 'move-nearest', to: 'railroad' }),
 ];
 
 export const CHEST_CARDS: CardDef[] = [

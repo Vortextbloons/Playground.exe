@@ -6,9 +6,10 @@
     view: MonoView;
     names: Record<string, string>;
     onrestart: (() => void) | null;
+    onmenu?: (() => void) | null;
   }
 
-  let { view, names, onrestart }: Props = $props();
+  let { view, names, onrestart, onmenu = null }: Props = $props();
 
   const standings = $derived(
     [...view.order]
@@ -55,6 +56,7 @@
 
     {#if onrestart}
       <button type="button" class="btn btn--primary" onclick={onrestart}>Play again</button>
+      {#if onmenu}<button type="button" class="btn btn--ghost" onclick={onmenu}>Change rules</button>{/if}
     {:else}
       <p class="deed-note">Start a fresh match from the multiplayer menu.</p>
     {/if}

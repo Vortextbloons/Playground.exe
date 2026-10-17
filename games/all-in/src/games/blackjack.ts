@@ -7,7 +7,7 @@ import type { ActionCtx, Engine, EngineSummary } from '../core/types';
 
 export const BLACKJACK_SEATS = 5;
 export const BLACKJACK_MIN = 1;
-export const BLACKJACK_MAX = 500;
+export const BLACKJACK_MAX = 10_000;
 export const BLACKJACK_BETTING_MS = 10_000;
 export const BLACKJACK_DECISION_MS = 20_000;
 export const BLACKJACK_RESULTS_MS = 4_000;

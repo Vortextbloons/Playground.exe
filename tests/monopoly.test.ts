@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mulberry32, type Rng } from '../games/monopoly/src/rules/rng.ts';
 import {
-  applyAction, newMatch, netWorth, removePlayer, rentFor, toView,
+  applyAction, housesInPlay, newMatch, netWorth, removePlayer, rentFor, toView,
   type MonoState, type PlayerState,
 } from '../games/monopoly/src/rules/engine.ts';
 import { actorFor, botMove } from '../games/monopoly/src/bots/bots.ts';
+import monopolyMultiplayer, { type MpState } from '../games/monopoly/src/multiplayer.ts';
 
 const PLAYERS = ['you', 'ada', 'rex'];
 
@@ -236,6 +237,81 @@ test('the wealth target ends the match with the richest player winning', () => {
   assert.equal(netWorth(state, 'ada'), 1832);
 });
 
+test('bankruptcy-only matches do not end at $5,000', () => {
+  let state = fresh();
+  playerOf(state, 'you').cash = 6000;
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 2));
+  assert.notEqual(state.phase, 'results');
+  assert.equal(state.target, null);
+});
+
+test('disabling bankruptcy lets the survivor continue until the time limit', () => {
+  let state = newMatch(['you', 'ada'], 7, { bankruptcy: false, timeLimitMs: 60_000, now: 10_000 });
+  state = removePlayer(state, 'ada');
+  assert.equal(state.phase, 'preroll');
+  assert.equal(state.turn, 'you');
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 2), 69_999);
+  assert.notEqual(state.phase, 'results');
+  state = applyAction(state, 'you', { type: 'finish-time' }, anyRng, 70_000);
+  assert.equal(state.phase, 'results');
+  assert.deepEqual(state.winners, ['you']);
+});
+
+test('timed matches reject early finishes and rank surviving net worth at the deadline', () => {
+  const state = newMatch(PLAYERS, 7, { bankruptcy: false, timeLimitMs: 60_000, now: 10_000 });
+  state.owners['39'] = 'ada';
+  assert.throws(() => applyAction(state, 'you', { type: 'finish-time' }, anyRng, 69_999), /still time/);
+  const result = applyAction(state, 'you', { type: 'finish-time' }, anyRng, 70_000);
+  assert.equal(result.phase, 'results');
+  assert.deepEqual(result.winners, ['ada']);
+  assert.notEqual(state.phase, 'results');
+  assert.equal(state.endsAt, 70_000);
+});
+
+test('time limits share victory for tied net worth and expire before processing another move', () => {
+  const state = newMatch(PLAYERS, 7, { timeLimitMs: 60_000 });
+  const result = applyAction(state, state.turn, { type: 'roll' }, dice(6, 6), 60_000);
+  assert.equal(result.phase, 'results');
+  assert.deepEqual([...result.winners].sort(), [...PLAYERS].sort());
+  assert.equal(result.lastRoll, null);
+});
+
+test('combined conditions finish on bankruptcy or wealth before the clock expires', () => {
+  const bankruptcy = newMatch(['you', 'ada'], 7, { target: 5000, timeLimitMs: 60_000 });
+  assert.equal(removePlayer(bankruptcy, 'ada').phase, 'results');
+  const wealth = newMatch(PLAYERS, 7, { bankruptcy: false, target: 1600, timeLimitMs: 60_000 });
+  wealth.turn = 'you';
+  playerOf(wealth, 'you').cash = 1700;
+  const result = applyAction(wealth, 'you', { type: 'roll' }, dice(1, 2), 1000);
+  assert.equal(result.phase, 'results');
+  assert.deepEqual(result.winners, ['you']);
+});
+
+test('end conditions require a valid target, duration, and at least one enabled rule', () => {
+  assert.throws(() => newMatch(PLAYERS, 7, { bankruptcy: false }), /at least one/);
+  assert.throws(() => newMatch(PLAYERS, 7, { target: 1500 }), /greater than/);
+  assert.throws(() => newMatch(PLAYERS, 7, { target: Number.NaN }), /greater than/);
+  assert.throws(() => newMatch(PLAYERS, 7, { timeLimitMs: 1 }), /at least one minute/);
+});
+
+test('party rules are chosen by the first player and the server controls the match clock', () => {
+  const context = { playerIds: PLAYERS, playerId: 'you', seed: 7, now: 10_000, mode: { id: 'classic', label: 'Classic board', minPlayers: 2, maxPlayers: 8, preset: 'turn-based' as const } };
+  const initial = monopolyMultiplayer.setup(context);
+  const game = (initial.state as unknown as MpState).game;
+  assert.equal(game.phase, 'setup');
+  assert.throws(() => monopolyMultiplayer.action(initial.state, 'roll', null, context), /end conditions first/);
+  const conditions = { bankruptcy: false, target: null, timeLimitMs: 60_000 };
+  const other = PLAYERS.find(id => id !== game.turn)!;
+  assert.throws(() => monopolyMultiplayer.action(initial.state, 'configure', conditions, { ...context, playerId: other }), /turn/);
+  const started = monopolyMultiplayer.action(initial.state, 'configure', conditions, { ...context, playerId: game.turn, now: 25_000 });
+  assert.equal((started.state as unknown as MpState).game.endsAt, 85_000);
+  assert.throws(() => monopolyMultiplayer.action(started.state, 'configure', conditions, { ...context, playerId: game.turn }), /not available/);
+  assert.throws(() => monopolyMultiplayer.action(started.state, 'finish-time', null, { ...context, now: 84_999 }), /still time/);
+  const ended = monopolyMultiplayer.action(started.state, 'finish-time', null, { ...context, now: 85_000 });
+  assert.equal(ended.finished, true);
+  assert.equal(ended.phase, 'results');
+});
+
 test('doubles grant a bonus roll and three doubles go to Jail', () => {
   let state = fresh();
   state = applyAction(state, 'you', { type: 'roll' }, dice(2, 2));
@@ -244,14 +320,25 @@ test('doubles grant a bonus roll and three doubles go to Jail', () => {
   assert.equal(state.phase, 'preroll');
   state = applyAction(state, 'you', { type: 'roll' }, dice(1, 3));
   assert.equal(state.phase, 'buy-decision');
+  state = applyAction(state, 'you', { type: 'buy' }, anyRng);
+  assert.equal(state.phase, 'postroll');
 
   state = fresh();
-  state.chanceDeck = [15, ...state.chanceDeck.filter(id => id !== 15)];
+  state = applyAction(state, 'you', { type: 'roll' }, dice(3, 3));
+  assert.equal(state.phase, 'buy-decision');
+  state = applyAction(state, 'you', { type: 'buy' }, anyRng);
+  assert.equal(state.turn, 'you');
+  assert.equal(state.phase, 'preroll');
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 2));
+  assert.equal(playerOf(state, 'you').position, 9);
+
+  state = fresh();
+  state.chanceDeck = [5, ...state.chanceDeck.filter(id => id !== 5)];
   playerOf(state, 'you').position = 34;
   state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
-  assert.equal(playerOf(state, 'you').cash, 1600);
+  assert.equal(playerOf(state, 'you').cash, 1550);
   state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
-  assert.equal(playerOf(state, 'you').cash, 1500);
+  assert.equal(playerOf(state, 'you').cash, 1450);
   state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
   assert.equal(playerOf(state, 'you').inJail, true);
   assert.equal(playerOf(state, 'you').position, 10);
@@ -267,16 +354,18 @@ test('chance cards move the player and charge card rents', () => {
   assert.equal(playerOf(state, 'you').position, 19);
   assert.equal(state.phase, 'buy-decision');
 
-  state = fresh();
-  state.chanceDeck = [4, ...state.chanceDeck.filter(id => id !== 4)];
-  state.owners['15'] = 'ada';
-  playerOf(state, 'you').position = 5;
-  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
-  assert.equal(playerOf(state, 'you').position, 15);
-  assert.equal(playerOf(state, 'you').cash, 1500 - 50);
-  assert.equal(playerOf(state, 'ada').cash, 1550);
-  assert.equal(state.phase, 'preroll');
-  assert.equal(state.doubles, 1);
+  for (const cardId of [4, 15]) {
+    state = fresh();
+    state.chanceDeck = [cardId, ...state.chanceDeck.filter(id => id !== cardId)];
+    state.owners['15'] = 'ada';
+    playerOf(state, 'you').position = 5;
+    state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
+    assert.equal(playerOf(state, 'you').position, 15);
+    assert.equal(playerOf(state, 'you').cash, 1500 - 50);
+    assert.equal(playerOf(state, 'ada').cash, 1550);
+    assert.equal(state.phase, 'preroll');
+    assert.equal(state.doubles, 1);
+  }
 });
 
 test('debts are raised by mortgaging and settled with pay-debt', () => {
@@ -361,8 +450,8 @@ test('views tag the spectator and the acting player', () => {
   assert.equal(toView(state, 'ada').you, 'ada');
 });
 
-test('bots drive a complete match to a result', () => {
-  let state = newMatch(PLAYERS, 123);
+test('bots drive a wealth-target match to a result', () => {
+  let state = newMatch(PLAYERS, 123, { target: 5000 });
   const rng = mulberry32(7);
   let steps = 0;
   while (state.phase !== 'results' && steps < 20_000) {
@@ -374,4 +463,171 @@ test('bots drive a complete match to a result', () => {
   assert.equal(state.phase, 'results');
   assert.equal(state.winners.length, 1);
   assert.ok(steps > 10);
+});
+
+test('a non-double after doubles ends the bonus rolls after resolving the space', () => {
+  let state = fresh();
+  state = applyAction(state, 'you', { type: 'roll' }, dice(2, 2));
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 3));
+  state = applyAction(state, 'you', { type: 'buy' }, anyRng);
+  assert.equal(state.phase, 'postroll');
+  assert.equal(state.doubles, 0);
+  assert.throws(() => applyAction(state, 'you', { type: 'roll' }, anyRng), /not available/);
+});
+
+test('trade acceptance rechecks available cash and developed properties', () => {
+  let state = fresh();
+  for (const id of [1, 3]) state.owners[String(id)] = 'you';
+  state = applyAction(state, 'you', { type: 'propose-trade', to: 'ada', cash: 1500, properties: [], wantCash: 0, wantProperties: [] }, anyRng);
+  state = applyAction(state, 'you', { type: 'build', space: 1 }, anyRng);
+  assert.throws(() => applyAction(state, 'ada', { type: 'accept-trade' }, anyRng), /cover the trade/);
+  state = applyAction(state, 'you', { type: 'reject-trade' }, anyRng);
+  state = applyAction(state, 'you', { type: 'sell', space: 1 }, anyRng);
+  state = applyAction(state, 'you', { type: 'propose-trade', to: 'ada', cash: 0, properties: [1], wantCash: 0, wantProperties: [] }, anyRng);
+  state = applyAction(state, 'you', { type: 'build', space: 3 }, anyRng);
+  assert.throws(() => applyAction(state, 'ada', { type: 'accept-trade' }, anyRng), /no longer available/);
+  assert.equal(state.owners['1'], 'you');
+});
+
+test('birthday payments require each debtor to raise the full amount before continuing', () => {
+  let state = fresh();
+  state.order = [...PLAYERS];
+  state.chestDeck = [24];
+  state.players.ada!.cash = 3;
+  state.players.rex!.cash = 2;
+  state.owners['1'] = 'ada';
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
+  assert.equal(state.phase, 'debt');
+  assert.equal(actorFor(state), 'ada');
+  assert.equal(state.debt!.amount, 10);
+  assert.equal(state.players.you!.cash, 1500);
+  assert.throws(() => applyAction(state, 'you', { type: 'pay-debt' }, anyRng), /not your turn/);
+  state = applyAction(state, 'ada', { type: 'mortgage', space: 1 }, anyRng);
+  state = applyAction(state, 'ada', { type: 'pay-debt' }, anyRng);
+  assert.equal(state.players.ada!.cash, 23);
+  assert.equal(actorFor(state), 'rex');
+  state = applyAction(state, 'rex', { type: 'declare-bankrupt' }, anyRng);
+  assert.equal(state.players.you!.cash, 1512);
+  assert.equal(state.phase, 'preroll');
+  assert.equal(state.turn, 'you');
+  assert.equal(state.collection, null);
+});
+
+test('hotels return their four houses and cannot be downgraded without bank stock', () => {
+  let state = fresh();
+  for (const id of [1, 3]) {
+    state.owners[String(id)] = 'you';
+    state.houses[String(id)] = 4;
+  }
+  for (const id of [6, 8, 9, 11, 13, 14]) state.houses[String(id)] = 4;
+  assert.equal(housesInPlay(state), 32);
+  state = applyAction(state, 'you', { type: 'build', space: 1 }, anyRng);
+  assert.equal(housesInPlay(state), 28);
+  state.owners['16'] = state.owners['18'] = state.owners['19'] = 'ada';
+  state = applyAction(state, 'ada', { type: 'build', space: 16 }, anyRng);
+  assert.equal(housesInPlay(state), 29);
+  assert.throws(() => applyAction(state, 'you', { type: 'sell', space: 1 }, anyRng), /four houses/);
+  const cash = state.players.you!.cash;
+  state = applyAction(state, 'you', { type: 'sell', space: 1, all: true }, anyRng);
+  assert.equal(state.houses['1'], 0);
+  assert.equal(state.houses['3'], 0);
+  assert.equal(state.players.you!.cash, cash + 225);
+});
+
+test('the thirteenth hotel cannot be built', () => {
+  const state = fresh();
+  for (const id of [1, 3]) {
+    state.owners[String(id)] = 'you';
+    state.houses[String(id)] = 4;
+  }
+  for (const id of [6, 8, 9, 11, 13, 14, 16, 18, 19, 21, 23, 24]) state.houses[String(id)] = 5;
+  assert.throws(() => applyAction(state, 'you', { type: 'build', space: 1 }, anyRng), /no hotels/);
+});
+
+test('bankruptcy transfers jail cards to the player creditor', () => {
+  let state = fresh();
+  state.players.you!.heldCards = [6, 20];
+  state.chanceDeck = state.chanceDeck.filter(id => id !== 6);
+  state.chestDeck = state.chestDeck.filter(id => id !== 20);
+  state.players.you!.position = 37;
+  state.players.you!.cash = 0;
+  state.owners['39'] = 'ada';
+  state.houses['39'] = 5;
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 1));
+  state = applyAction(state, 'you', { type: 'declare-bankrupt' }, anyRng);
+  assert.deepEqual(state.players.ada!.heldCards, [6, 20]);
+  assert.deepEqual(state.players.you!.heldCards, []);
+  assert.ok(!state.chanceDeck.includes(6));
+  assert.ok(!state.chestDeck.includes(20));
+});
+
+test('bankruptcy to the bank auctions every deed before the next player rolls', () => {
+  let state = fresh();
+  state.order = [...PLAYERS];
+  state.owners['1'] = state.owners['3'] = 'you';
+  state.mortgages['1'] = true;
+  state.players.you!.cash = 0;
+  state.players.you!.position = 1;
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 2));
+  state = applyAction(state, 'you', { type: 'declare-bankrupt' }, anyRng);
+  assert.equal(state.phase, 'auction');
+  assert.equal(state.auction!.space, 1);
+  assert.equal(state.mortgages['1'], false);
+  state = applyAction(state, state.auction!.turn, { type: 'bid', amount: 10 }, anyRng);
+  const winner = state.auction!.highBidder;
+  while (state.auction?.space === 1) state = applyAction(state, state.auction.turn, { type: 'pass-bid' }, anyRng);
+  assert.equal(state.owners['1'], winner);
+  assert.equal(state.auction!.space, 3);
+  while (state.auction) state = applyAction(state, state.auction.turn, { type: 'pass-bid' }, anyRng);
+  assert.equal(state.owners['3'], null);
+  assert.equal(state.phase, 'preroll');
+  assert.equal(state.turn, 'ada');
+});
+
+test('players can develop outside their turn and trade to raise cash during debt', () => {
+  let state = fresh();
+  state.owners['1'] = state.owners['3'] = 'ada';
+  state = applyAction(state, 'ada', { type: 'build', space: 1 }, anyRng);
+  assert.equal(state.turn, 'you');
+  assert.equal(state.houses['1'], 1);
+  state.owners['6'] = 'you';
+  state.players.you!.position = 1;
+  state.players.you!.cash = 0;
+  state = applyAction(state, 'you', { type: 'roll' }, dice(1, 2));
+  state = applyAction(state, 'you', { type: 'propose-trade', to: 'ada', cash: 0, properties: [6], wantCash: 200, wantProperties: [] }, anyRng);
+  state = applyAction(state, 'ada', { type: 'accept-trade' }, anyRng);
+  assert.equal(state.phase, 'debt');
+  state = applyAction(state, 'you', { type: 'pay-debt' }, anyRng);
+  assert.equal(state.phase, 'postroll');
+  assert.equal(state.players.you!.cash, 0);
+});
+
+test('settling a forced jail fine resolves the pending landing and its rent debt', () => {
+  let state = fresh();
+  state.players.you!.position = 10;
+  state.players.you!.inJail = true;
+  state.players.you!.jailTurns = 2;
+  state.players.you!.cash = 0;
+  state.owners['1'] = state.owners['3'] = 'you';
+  state.owners['15'] = 'ada';
+  state = applyAction(state, 'you', { type: 'jail-roll' }, dice(1, 4));
+  for (const id of [1, 3]) state = applyAction(state, 'you', { type: 'mortgage', space: id }, anyRng);
+  state = applyAction(state, 'you', { type: 'pay-debt' }, dice(1, 2));
+  assert.equal(state.players.you!.position, 15);
+  assert.equal(state.phase, 'debt');
+  assert.equal(state.debt!.amount, 25);
+  assert.equal(state.debt!.creditor, 'ada');
+});
+
+test('a bankrupt middle player passes the turn to the next surviving seat', () => {
+  let state = fresh();
+  state.order = [...PLAYERS];
+  state.turn = 'ada';
+  state.owners['1'] = 'ada';
+  state = removePlayer(state, 'ada');
+  assert.equal(state.turn, 'rex');
+  assert.equal(state.phase, 'auction');
+  while (state.auction) state = applyAction(state, state.auction.turn, { type: 'pass-bid' }, anyRng);
+  assert.equal(state.phase, 'preroll');
+  assert.equal(state.turn, 'rex');
 });

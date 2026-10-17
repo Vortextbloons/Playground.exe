@@ -1,16 +1,18 @@
 <script lang="ts">
-  import { GROUP_SPACES, GROUP_COLORS, SPACES, mortgageInterestOf, type Space } from '../rules/board';
-  import type { MonoAction, MonoView } from '../rules/engine';
+  import { GROUP_SPACES, GROUP_COLORS, HOUSE_STOCK, SPACES, mortgageInterestOf, type Space } from '../rules/board';
+  import { housesInPlay, type MonoAction, type MonoView } from '../rules/engine';
 
   interface Props {
     view: MonoView;
     names: Record<string, string>;
     spaceId: number;
     ondispatch: (action: MonoAction) => void;
-    onclose: () => void;
+    onclose?: () => void;
+    purchase?: boolean;
+    busy?: boolean;
   }
 
-  let { view, names, spaceId, ondispatch, onclose }: Props = $props();
+  let { view, names, spaceId, ondispatch, onclose, purchase = false, busy = false }: Props = $props();
 
   const space = $derived(SPACES[spaceId]);
   const owner = $derived(view.owners[String(spaceId)] ?? null);
@@ -19,9 +21,10 @@
 
   const isMine = $derived(owner !== null && owner === view.you);
   const canManage = $derived(
-    isMine && view.turn === view.you && (view.phase === 'preroll' || view.phase === 'postroll' || view.phase === 'debt'),
+    isMine && (view.phase === 'preroll' || view.phase === 'postroll' || view.phase === 'debt'),
   );
   const canDevelop = $derived(canManage && view.phase !== 'debt' && space?.kind === 'street');
+  const sellGroup = $derived(houses === 5 && HOUSE_STOCK - housesInPlay(view) < 4);
 
   const groupHouses = $derived.by(() => {
     if (!space?.group) return [] as number[];
@@ -29,6 +32,7 @@
   });
 
   const groupHasBuildings = $derived(groupHouses.some(count => count > 0));
+  const saleValue = $derived(Math.floor((space?.houseCost ?? 0) / 2) * (sellGroup ? groupHouses.reduce((sum, count) => sum + count, 0) : 1));
   const groupHasMortgage = $derived.by(() => {
     if (!space?.group) return false;
     return GROUP_SPACES[space.group].some(id => view.mortgages[String(id)]);
@@ -66,16 +70,24 @@
   function send(action: MonoAction): void {
     ondispatch(action);
   }
+
+  function openPurchase(dialog: HTMLDialogElement): () => void {
+    dialog.showModal();
+    return () => dialog.close();
+  }
 </script>
 
-{#if space}
-  <div class="veil" onclick={onclose} role="presentation">
-    <div class="modal deed-modal" onclick={(event) => event.stopPropagation()} role="presentation">
+{#snippet deedContents()}
+  {#if space}
       <header class="deed-head" style:--deed-accent={deedAccent(space)}>
-        <span class="deed-kicker">Title Deed</span>
-        <h2>{space.name}</h2>
-        {#if space.price}<p class="deed-price">Price ${space.price}</p>{/if}
+        <span class="deed-kicker">{purchase ? 'Unowned property' : 'Title Deed'}</span>
+        <h2 id={purchase ? 'purchase-title' : undefined}>{space.name}</h2>
+        {#if space.price && !purchase}<p class="deed-price">Price ${space.price}</p>{/if}
       </header>
+
+      {#if purchase}
+        <div class="purchase-price"><span>Purchase price</span><strong>${space.price?.toLocaleString()}</strong></div>
+      {/if}
 
       {#if rentRows.length > 0}
         <dl class="rent-table">
@@ -105,6 +117,8 @@
         <p class="deed-note">{space.name} — no rent, no deed.</p>
       {/if}
 
+      {#if !purchase}
+      {#key `${owner}-${mortgaged}-${houses}`}
       <p class="deed-owner">
         {#if owner}
           Owned by <strong>{names[owner] ?? owner}</strong>{mortgaged ? ' — mortgaged' : ''}
@@ -113,10 +127,13 @@
           Unowned
         {/if}
       </p>
+      {/key}
+      {/if}
 
       {#if canManage}
         <div class="deed-actions">
-          {#if canDevelop}
+          {#if space.kind === 'street'}
+            {#if canDevelop}
             <button
               type="button"
               class="btn"
@@ -126,14 +143,15 @@
             >
               Build house (${space.houseCost})
             </button>
+            {/if}
             <button
               type="button"
               class="btn"
               disabled={houses === 0 || !atGroupMax}
               title={!atGroupMax ? 'Sell evenly across the group' : ''}
-              onclick={() => send({ type: 'sell', space: spaceId })}
+              onclick={() => send({ type: 'sell', space: spaceId, all: sellGroup })}
             >
-              Sell house (${Math.floor((space.houseCost ?? 0) / 2)})
+              {sellGroup ? 'Sell all group buildings' : 'Sell building'} (${saleValue})
             </button>
           {/if}
           {#if !mortgaged}
@@ -159,7 +177,31 @@
         </div>
       {/if}
 
-      <button type="button" class="btn btn--ghost deed-close" onclick={onclose}>Close</button>
+      {#if purchase}
+        <p class="purchase-wallet">Your cash <strong>${(me?.cash ?? 0).toLocaleString()}</strong></p>
+        {#if (me?.cash ?? 0) < (space.price ?? 0)}
+          <p class="purchase-shortfall">You need ${((space.price ?? 0) - (me?.cash ?? 0)).toLocaleString()} more to buy. You can still send it to auction.</p>
+        {/if}
+        <div class="purchase-actions">
+          <button type="button" class="btn btn--primary btn--big" disabled={busy || (me?.cash ?? 0) < (space.price ?? 0)} onclick={() => send({ type: 'buy' })}>Buy for ${space.price?.toLocaleString()}</button>
+          <button type="button" class="btn btn--ghost" disabled={busy} onclick={() => send({ type: 'decline' })}>Send to auction</button>
+        </div>
+      {:else}
+        <button type="button" class="btn btn--ghost deed-close" onclick={onclose}>Close</button>
+      {/if}
+  {/if}
+{/snippet}
+
+{#if space}
+  {#if purchase}
+    <dialog class="modal deed-modal purchase-modal" aria-labelledby="purchase-title" oncancel={(event) => event.preventDefault()} {@attach openPurchase}>
+      {@render deedContents()}
+    </dialog>
+  {:else}
+  <div class="veil" onclick={onclose} role="presentation">
+    <div class="modal deed-modal" onclick={(event) => event.stopPropagation()} role="presentation">
+      {@render deedContents()}
     </div>
   </div>
+  {/if}
 {/if}

@@ -46,6 +46,7 @@
         <p class="modal-sub">List price ${space.price} — highest bid wins it.</p>
       </header>
 
+      {#key auction.highBid}
       <p class="auction-line">
         {#if auction.highBidder}
           <strong>{participantName(auction.highBidder)}</strong> leads at <strong>${auction.highBid}</strong>
@@ -53,6 +54,7 @@
           No bids yet — opening bid is $10.
         {/if}
       </p>
+      {/key}
 
       <ul class="auction-order">
         {#each auction.order as id (id)}

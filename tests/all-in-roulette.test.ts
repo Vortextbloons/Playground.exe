@@ -332,7 +332,7 @@ test('clear refunds committed chips and pending follows them', () => {
     { kind: 'straight', numbers: [17], amount: 60 },
     { kind: 'red', numbers: RED, amount: 40 },
   ]);
-  assert.deepEqual(before.limits, { minChip: 1, maxChip: 100, maxTotal: 500, maxChips: 20 });
+  assert.deepEqual(before.limits, { minChip: 1, maxChip: 1000, maxTotal: 10_000, maxChips: 20 });
   state = run(engines, state, 'a', 'clear', null, clock, T0 + 4).state;
   assert.equal(state.players.a!.bankroll, 1000);
   assert.equal(rouletteEngine.pending(table(state), 'a'), false);

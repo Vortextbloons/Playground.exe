@@ -14,8 +14,8 @@
   const EVEN = Array.from({ length: 18 }, (_, index) => index * 2 + 2);
   const LOW = Array.from({ length: 18 }, (_, index) => index + 1);
   const HIGH = Array.from({ length: 18 }, (_, index) => index + 19);
-  const CHIP_VALUES = [1, 5, 10, 25, 100];
-  const COIN_COLORS = ['#f4c95d', '#23e0be', '#ff395b'];
+  const CHIP_VALUES = [1, 5, 10, 25, 100, 500, 1000];
+  const COIN_COLORS = ['#d8b76c', '#96d3ae', '#e57475'];
   const ROWS = [
     [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
     [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
@@ -380,7 +380,7 @@
   </div>
 {:else}
   <div class="flex h-full min-h-0 min-w-0 flex-col gap-3 short:gap-2" class:table-shake={shake} data-table="roulette">
-    <div class="grid min-h-0 min-w-0 flex-1 gap-3 short:gap-2 short:grid-cols-[212px_minmax(0,1fr)] min-[900px]:grid-cols-[280px_minmax(0,1fr)]">
+    <div class="roulette-layout grid min-h-0 min-w-0 flex-1 gap-3 short:gap-2 short:grid-cols-[212px_minmax(0,1fr)] min-[900px]:grid-cols-[280px_minmax(0,1fr)]">
       <div class="panel short:gap-1.5 short:p-2">
         <div class="flex items-center justify-between gap-2">
           <p class="eyebrow m-0">The wheel</p>
@@ -390,7 +390,7 @@
         </div>
         <div class="grid grid-cols-[124px_minmax(0,1fr)] items-center gap-3 short:grid-cols-[98px_minmax(0,1fr)] short:gap-2">
           <svg viewBox="-66 -66 132 132" class="w-full max-w-[150px] justify-self-center" role="img" aria-label={`Roulette wheel, last outcome ${table.wheel.last === null ? 'none' : table.wheel.last}`}>
-            <circle r="63" fill="#0a0f1d" stroke="rgba(244, 201, 93, 0.35)" stroke-width="1.5" />
+            <circle r="63" fill="#0a0f1d" stroke="rgba(216, 183, 108, 0.35)" stroke-width="1.5" />
             {#if settling}
               <g class="wheel-rays" aria-hidden="true">
                 {#each RAYS as points, index (index)}
@@ -403,8 +403,8 @@
                 <path d={sector.path} fill={sector.color} stroke="#070b14" stroke-width="0.5" class:win={settling && table.wheel.last === sector.value} />
               {/each}
             </g>
-            <circle r="39" fill="#0a0f1d" stroke="rgba(244, 201, 93, 0.25)" />
-            <circle r="30" fill="#121a30" stroke="#242e4c" />
+            <circle r="39" fill="#0a0f1d" stroke="rgba(216, 183, 108, 0.25)" />
+            <circle r="30" fill="#122a21" stroke="#47604a" />
             {#key table.wheel.last}
               <text class="wheel-last" x="0" y="1" text-anchor="middle" dominant-baseline="central">{table.wheel.last ?? '–'}</text>
             {/key}
@@ -477,14 +477,15 @@
                 {/key}
               {/if}
             </button>
-            <div class="grid min-h-0 flex-1 grid-rows-[repeat(3,minmax(46px,1fr))_auto_auto_auto] gap-1">
+            <div class="betting-grid grid min-h-0 flex-1 grid-rows-[repeat(3,minmax(46px,1fr))_auto_auto_auto] gap-1">
               {#each ROWS as row, rowIndex (rowIndex)}
-                <div class="grid grid-cols-12 gap-1">
+                <div class="number-row grid grid-cols-12 gap-1">
                   {#each row as value (value)}
                     {@const badge = stakeAt(`n:${value}`)}
                     <button
                       type="button"
                       class="felt-cell"
+                      style:--pocket={value}
                       class:red={RED.includes(value)}
                       class:black={!RED.includes(value)}
                       class:selected={selected === value}
@@ -618,9 +619,9 @@
       </div>
     </div>
 
-    <div class="sticky bottom-0 z-20 -mx-3 -mb-3 mt-1 border-t border-edge bg-panel/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-14px_32px_-20px_rgba(0,0,0,0.95)] backdrop-blur short:py-1.5">
+    <div class="roulette-dock sticky bottom-0 z-20 -mx-3 -mb-3 mt-1 border-t border-edge bg-panel/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-14px_32px_-20px_rgba(0,0,0,0.95)] backdrop-blur short:py-1.5">
       <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1.5">
+        <div class="roulette-chips flex items-center gap-1.5">
           {#each CHIP_VALUES as value (value)}
             <button type="button" class="chip-btn" class:on={chipValue === value} disabled={value > bankroll} aria-pressed={chipValue === value} onclick={() => (chipValue = value)}>
               {money(value)}
@@ -665,7 +666,7 @@
 
   .felt-zero:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 0 18px -6px rgba(35, 224, 190, 0.9);
+    box-shadow: 0 0 18px -6px rgba(150, 211, 174, 0.9);
   }
 
   .felt-board {
@@ -697,7 +698,7 @@
 
   .felt-cell:hover:not(:disabled) {
     transform: translateY(-1px);
-    border-color: rgba(244, 201, 93, 0.55);
+    border-color: rgba(216, 183, 108, 0.55);
   }
 
   .felt-cell.selected {
@@ -706,7 +707,7 @@
   }
 
   .felt-cell.winner {
-    box-shadow: 0 0 0 2px var(--color-gold), 0 0 20px -2px rgba(244, 201, 93, 0.8);
+    box-shadow: 0 0 0 2px var(--color-gold), 0 0 20px -2px rgba(216, 183, 108, 0.8);
     animation: ai-winner 1.1s ease-in-out infinite;
   }
 
@@ -718,7 +719,7 @@
     padding: 2px 4px;
     border: 1px solid var(--color-edge);
     border-radius: 10px;
-    background: rgba(24, 30, 50, 0.75);
+    background: rgba(23, 59, 49, 0.75);
     color: var(--color-fog);
     font-size: 11px;
     font-weight: 800;
@@ -730,16 +731,16 @@
 
   .outside-cell.red {
     background: rgba(179, 35, 66, 0.55);
-    border-color: rgba(255, 57, 91, 0.45);
+    border-color: rgba(229, 116, 117, 0.45);
   }
 
   .outside-cell.black {
-    background: #12182a;
+    background: #17291f;
   }
 
   .outside-cell:hover:not(:disabled) {
     transform: translateY(-1px);
-    border-color: rgba(244, 201, 93, 0.55);
+    border-color: rgba(216, 183, 108, 0.55);
   }
 
   .felt-zero:disabled,
@@ -754,7 +755,7 @@
   }
 
   .felt-panel.fever {
-    border-color: rgba(255, 57, 91, 0.85);
+    border-color: rgba(229, 116, 117, 0.85);
     animation: ai-rim-fever 0.65s ease-in-out infinite;
   }
 
@@ -768,7 +769,7 @@
     min-width: 28px;
     height: 20px;
     padding: 0 5px;
-    border: 1px solid rgba(244, 201, 93, 0.85);
+    border: 1px solid rgba(216, 183, 108, 0.85);
     border-radius: 999px;
     background: radial-gradient(circle at 34% 28%, #ffe9a8, #e0a92e 72%);
     color: #241a02;
@@ -789,7 +790,7 @@
     height: 27px;
     border: 1px solid var(--color-edge);
     border-radius: 8px;
-    background: #12182a;
+    background: #17291f;
     font-size: 11.5px;
     font-weight: 800;
   }
@@ -801,7 +802,7 @@
 
   .history-pill.zero {
     background: #1fae90;
-    border-color: #23e0be;
+    border-color: #96d3ae;
     color: #06231d;
   }
 
@@ -813,7 +814,7 @@
     padding: 8px 11px;
     border: 1px solid var(--color-edge);
     border-radius: 12px;
-    background: rgba(24, 30, 50, 0.8);
+    background: rgba(23, 59, 49, 0.8);
     color: var(--color-fog);
     font-size: 12px;
     cursor: pointer;
@@ -833,7 +834,7 @@
 
   .combo-btn:hover:not(:disabled) {
     transform: translateY(-1px);
-    border-color: rgba(244, 201, 93, 0.55);
+    border-color: rgba(216, 183, 108, 0.55);
   }
 
   .combo-btn:disabled {
@@ -849,7 +850,7 @@
     padding: 0 6px;
     border: 2px dashed rgba(233, 238, 252, 0.35);
     border-radius: 999px;
-    background: radial-gradient(circle at 34% 28%, #2b3a63, #161d33 68%);
+    background: radial-gradient(circle at 34% 28%, #2b3a63, #143328 68%);
     color: var(--color-fog);
     font-size: 13px;
     font-weight: 800;
@@ -862,7 +863,7 @@
     border-color: var(--color-gold);
     background: radial-gradient(circle at 34% 28%, #ffe9a8, #e0a92e 72%);
     color: #241a02;
-    box-shadow: 0 0 16px -4px rgba(244, 201, 93, 0.85);
+    box-shadow: 0 0 16px -4px rgba(216, 183, 108, 0.85);
   }
 
   .chip-btn:hover:not(:disabled) {
@@ -883,7 +884,7 @@
   .wheel-rotor path.win {
     stroke: var(--color-gold);
     stroke-width: 1.4;
-    filter: drop-shadow(0 0 5px rgba(244, 201, 93, 0.85));
+    filter: drop-shadow(0 0 5px rgba(216, 183, 108, 0.85));
     animation: ai-win 1.1s ease-in-out infinite;
   }
 
@@ -911,7 +912,7 @@
   }
 
   .wheel-rays polygon {
-    fill: #f4c95d;
+    fill: #d8b76c;
     opacity: 0.17;
   }
 
@@ -921,7 +922,7 @@
 
   .streak-ring {
     fill: none;
-    stroke: rgba(244, 201, 93, 0.45);
+    stroke: rgba(216, 183, 108, 0.45);
     stroke-width: 3;
     stroke-dasharray: 7 15;
     filter: blur(2px);
@@ -931,7 +932,7 @@
   }
 
   .streak-ring.alt {
-    stroke: rgba(255, 57, 91, 0.4);
+    stroke: rgba(229, 116, 117, 0.4);
     stroke-width: 2;
     stroke-dasharray: 5 21;
     animation-duration: 0.95s;
@@ -939,13 +940,13 @@
   }
 
   .spotlight {
-    fill: rgba(244, 201, 93, 0.16);
+    fill: rgba(216, 183, 108, 0.16);
     filter: blur(2px);
     pointer-events: none;
   }
 
   .pocket-glow {
-    fill: rgba(244, 201, 93, 0.5);
+    fill: rgba(216, 183, 108, 0.5);
     filter: blur(6px);
     animation: ai-pocket 1.2s ease-in-out infinite;
     pointer-events: none;
@@ -963,7 +964,7 @@
     position: absolute;
     top: -24px;
     border-radius: 999px;
-    box-shadow: 0 0 8px rgba(244, 201, 93, 0.65);
+    box-shadow: 0 0 8px rgba(216, 183, 108, 0.65);
     opacity: 0;
     animation-name: ai-coin;
     animation-timing-function: cubic-bezier(0.3, 0.55, 0.6, 1);
@@ -989,7 +990,7 @@
   @keyframes ai-win {
     0%,
     100% {
-      stroke: rgba(244, 201, 93, 0.55);
+      stroke: rgba(216, 183, 108, 0.55);
     }
     50% {
       stroke: rgba(255, 235, 170, 1);
@@ -999,30 +1000,30 @@
   @keyframes ai-winner {
     0%,
     100% {
-      box-shadow: 0 0 0 2px var(--color-gold), 0 0 14px -4px rgba(244, 201, 93, 0.8);
+      box-shadow: 0 0 0 2px var(--color-gold), 0 0 14px -4px rgba(216, 183, 108, 0.8);
     }
     50% {
-      box-shadow: 0 0 0 2px var(--color-gold), 0 0 26px 0 rgba(244, 201, 93, 0.95);
+      box-shadow: 0 0 0 2px var(--color-gold), 0 0 26px 0 rgba(216, 183, 108, 0.95);
     }
   }
 
   @keyframes ai-rim-live {
     0%,
     100% {
-      box-shadow: 0 0 0 1px rgba(35, 224, 190, 0.25), 0 0 26px -14px rgba(35, 224, 190, 0.75);
+      box-shadow: 0 0 0 1px rgba(150, 211, 174, 0.25), 0 0 26px -14px rgba(150, 211, 174, 0.75);
     }
     50% {
-      box-shadow: 0 0 0 1px rgba(35, 224, 190, 0.6), 0 0 36px -8px rgba(35, 224, 190, 0.95);
+      box-shadow: 0 0 0 1px rgba(150, 211, 174, 0.6), 0 0 36px -8px rgba(150, 211, 174, 0.95);
     }
   }
 
   @keyframes ai-rim-fever {
     0%,
     100% {
-      box-shadow: 0 0 0 1px rgba(255, 57, 91, 0.55), 0 0 24px -12px rgba(255, 57, 91, 0.85);
+      box-shadow: 0 0 0 1px rgba(229, 116, 117, 0.55), 0 0 24px -12px rgba(229, 116, 117, 0.85);
     }
     50% {
-      box-shadow: 0 0 0 1px rgba(255, 57, 91, 0.95), 0 0 40px -6px rgba(255, 57, 91, 1);
+      box-shadow: 0 0 0 1px rgba(229, 116, 117, 0.95), 0 0 40px -6px rgba(229, 116, 117, 1);
     }
   }
 
@@ -1095,4 +1096,20 @@
       transform: translate3d(-1px, 1px, 0);
     }
   }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    [data-table='roulette'] { overflow-y: auto; overflow-x: hidden; }
+    .roulette-dock { margin: 0; padding: 8px 4px max(8px, env(safe-area-inset-bottom)); }
+    .roulette-layout { flex: none; }
+    .felt-board { min-width: 0; height: auto; flex-direction: column; }
+    .felt-zero { width: 100%; min-height: 44px; }
+    .betting-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: none; }
+    .number-row { display: contents; }
+    .felt-cell { order: var(--pocket); min-height: 44px; }
+    .betting-grid > div:not(.number-row) { grid-column: 1 / -1; order: 37; }
+    .roulette-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+    .chip-btn { flex: 1 1 44px; min-height: 44px; }
+    .chip-badge { right: -2px; bottom: -3px; font-size: 9px; min-width: 22px; }
+  }
+
 </style>

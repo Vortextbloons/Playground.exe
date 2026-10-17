@@ -22,7 +22,7 @@
 
   const table = $derived(detail as unknown as BlackjackView | null);
 
-  const CHIPS = [1, 5, 10, 25, 100];
+  const CHIPS = [1, 5, 10, 25, 100, 500, 1000];
   const SEAT_CENTERS = ['10%', '30%', '50%', '70%', '90%'];
   const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -54,7 +54,7 @@
   const bankroll = $derived(vault?.bankroll ?? 0);
   const ready = $derived(vault !== null && vault.status === 'active');
   const minBet = $derived(table?.min ?? 1);
-  const maxBet = $derived(table?.max ?? 500);
+  const maxBet = $derived(table?.max ?? 10_000);
   const mySeat = $derived(table !== null && view.you !== null ? table.seats.find(seat => seat.id === view.you) ?? null : null);
   const myHand = $derived(mySeat === null ? null : mySeat.hands.find(hand => hand.status === 'playing') ?? null);
   const myTurn = $derived(table !== null && view.you !== null && table.turn === view.you);
@@ -508,6 +508,7 @@
           {/each}
         </div>
         <div class="bj-bar-actions">
+          <button type="button" class="btn flex-1" onclick={() => { wager = Math.min(bankroll, maxBet); sound.play('chip'); }}>Max</button>
           <button type="button" class="btn flex-1" disabled={wager === 0} onclick={clearWager}>Clear</button>
           <button type="button" class="btn btn-primary flex-1" disabled={wager < minBet} onclick={deal}>Deal</button>
         </div>
@@ -576,7 +577,7 @@
     padding: 6px 10px;
     border: 1px solid var(--color-edge);
     border-radius: 12px;
-    background: rgba(16, 22, 39, 0.82);
+    background: rgba(13, 40, 34, 0.82);
   }
 
   .bj-timer-label {
@@ -592,7 +593,7 @@
     flex: 1;
     height: 6px;
     border-radius: 999px;
-    background: #202a49;
+    background: #254c3d;
     overflow: hidden;
   }
 
@@ -627,11 +628,11 @@
     gap: 10px;
     min-height: clamp(300px, calc(100dvh - 420px), 900px);
     padding: 10px;
-    border: 1px solid color-mix(in srgb, var(--color-gold) 22%, var(--color-edge));
-    border-radius: 18px;
+    border: 6px solid #58432a;
+    border-radius: 60px 60px 18px 18px;
     background:
-      radial-gradient(420px 200px at 50% -10%, rgba(35, 224, 190, 0.08), transparent 72%),
-      linear-gradient(170deg, #16203a, #0d1322 78%);
+      radial-gradient(420px 200px at 50% -10%, rgba(150, 211, 174, 0.08), transparent 72%),
+      linear-gradient(170deg, #24533d, #0b241d 78%);
     overflow: hidden;
   }
 
@@ -646,13 +647,13 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: inset 0 0 70px -12px rgba(35, 224, 190, 0.55), inset 0 0 0 2px rgba(35, 224, 190, 0.35);
+    box-shadow: inset 0 0 70px -12px rgba(150, 211, 174, 0.55), inset 0 0 0 2px rgba(150, 211, 174, 0.35);
     opacity: 0.22;
     animation: bj-rim 2.8s ease-in-out infinite;
   }
 
   .bj-felt-rim.mine {
-    box-shadow: inset 0 0 80px -8px rgba(35, 224, 190, 0.7), inset 0 0 0 2px rgba(35, 224, 190, 0.5);
+    box-shadow: inset 0 0 80px -8px rgba(150, 211, 174, 0.7), inset 0 0 0 2px rgba(150, 211, 174, 0.5);
     animation-duration: 1.7s;
   }
 
@@ -672,12 +673,12 @@
   }
 
   .bj-flash[data-tone='blackjack'] {
-    box-shadow: inset 0 0 110px 24px rgba(244, 201, 93, 0.55);
-    background: radial-gradient(circle at 50% 55%, transparent 38%, rgba(244, 201, 93, 0.3));
+    box-shadow: inset 0 0 110px 24px rgba(216, 183, 108, 0.55);
+    background: radial-gradient(circle at 50% 55%, transparent 38%, rgba(216, 183, 108, 0.3));
   }
 
   .bj-flash[data-tone='win'] {
-    box-shadow: inset 0 0 90px 18px rgba(35, 224, 190, 0.4);
+    box-shadow: inset 0 0 90px 18px rgba(150, 211, 174, 0.4);
   }
 
   @keyframes bj-flash {
@@ -700,8 +701,8 @@
     height: 18px;
     margin: -9px 0 0 -9px;
     border-radius: 999px;
-    background: radial-gradient(circle at 50% 30%, #ffe9a8, #f4c95d 45%, #a97c12 100%);
-    box-shadow: inset 0 0 0 3px rgba(9, 13, 23, 0.35), 0 5px 12px -5px rgba(0, 0, 0, 0.95);
+    background: radial-gradient(circle at 50% 30%, #ffe9a8, #d8b76c 45%, #a97c12 100%);
+    box-shadow: inset 0 0 0 3px rgba(7, 27, 23, 0.35), 0 5px 12px -5px rgba(0, 0, 0, 0.95);
     opacity: 0;
     animation: bj-toss 0.66s cubic-bezier(0.22, 1.1, 0.36, 1) both;
   }
@@ -773,7 +774,7 @@
     height: 280px;
     margin: -140px 0 0 -140px;
     border-radius: 999px;
-    background: repeating-conic-gradient(from 0deg, rgba(244, 201, 93, 0.5) 0deg 5deg, transparent 5deg 20deg);
+    background: repeating-conic-gradient(from 0deg, rgba(216, 183, 108, 0.5) 0deg 5deg, transparent 5deg 20deg);
     mask: radial-gradient(circle, rgba(0, 0, 0, 0.9) 0%, transparent 68%);
     -webkit-mask: radial-gradient(circle, rgba(0, 0, 0, 0.9) 0%, transparent 68%);
     opacity: 0;
@@ -794,7 +795,7 @@
     height: 220px;
     margin: -110px 0 0 -110px;
     border-radius: 44% 56% 52% 48% / 50% 44% 56% 50%;
-    background: radial-gradient(circle at 50% 46%, rgba(255, 57, 91, 0.5), rgba(255, 57, 91, 0.12) 55%, transparent 74%);
+    background: radial-gradient(circle at 50% 46%, rgba(229, 116, 117, 0.5), rgba(229, 116, 117, 0.12) 55%, transparent 74%);
     filter: blur(7px);
     opacity: 0;
     animation: bj-smear 1.1s ease-out both;
@@ -814,8 +815,8 @@
     height: 16px;
     margin: -8px 0 0 -8px;
     border-radius: 999px;
-    background: radial-gradient(circle at 50% 30%, #ffeeb8, #f4c95d 46%, #b8860b 100%);
-    box-shadow: inset 0 0 0 3px rgba(9, 13, 23, 0.32), 0 4px 10px -5px rgba(0, 0, 0, 0.9);
+    background: radial-gradient(circle at 50% 30%, #ffeeb8, #d8b76c 46%, #b8860b 100%);
+    box-shadow: inset 0 0 0 3px rgba(7, 27, 23, 0.32), 0 4px 10px -5px rgba(0, 0, 0, 0.9);
     opacity: 0;
     animation: bj-coin 1.2s cubic-bezier(0.25, 0.7, 0.4, 1) both;
   }
@@ -834,7 +835,7 @@
     padding: 10px;
     border: 1px solid rgba(36, 46, 76, 0.9);
     border-radius: 14px;
-    background: rgba(9, 13, 23, 0.42);
+    background: rgba(7, 27, 23, 0.42);
     transition: border-color 0.16s ease;
   }
 
@@ -844,7 +845,7 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(circle at 50% 120%, rgba(255, 57, 91, 0.5), transparent 72%);
+    background: radial-gradient(circle at 50% 120%, rgba(229, 116, 117, 0.5), transparent 72%);
     opacity: 0;
   }
 
@@ -869,7 +870,7 @@
   }
 
   .bj-dealer[data-live='true'] {
-    border-color: rgba(76, 201, 240, 0.4);
+    border-color: rgba(164, 197, 187, 0.4);
   }
 
   @media (min-width: 900px) {
@@ -903,7 +904,7 @@
     padding: 3px 4px;
     border: 1px solid #cdd6ec;
     border-radius: 6px;
-    background: linear-gradient(165deg, #fdfdff, #dde3f2);
+    background: linear-gradient(165deg, #fffaf0, #e9dfc8);
     color: #101728;
     font-weight: 800;
     box-shadow: 0 6px 14px -9px rgba(0, 0, 0, 0.95);
@@ -965,7 +966,7 @@
     inset: 0;
     border-radius: 6px;
     pointer-events: none;
-    background: rgba(255, 57, 91, 0.45);
+    background: rgba(229, 116, 117, 0.45);
     mix-blend-mode: multiply;
     animation: bj-dim 2.6s ease-out both;
   }
@@ -987,11 +988,11 @@
   }
 
   .bj-card.back {
-    border-color: rgba(244, 201, 93, 0.45);
+    border-color: rgba(216, 183, 108, 0.45);
     background:
-      repeating-linear-gradient(135deg, rgba(244, 201, 93, 0.18) 0 3px, transparent 3px 9px),
-      linear-gradient(160deg, #22305a, #131a2f);
-    box-shadow: inset 0 0 0 2px rgba(9, 13, 23, 0.9), inset 0 0 0 3px rgba(244, 201, 93, 0.3);
+      repeating-linear-gradient(135deg, rgba(216, 183, 108, 0.18) 0 3px, transparent 3px 9px),
+      linear-gradient(160deg, #7c343a, #401d23);
+    box-shadow: inset 0 0 0 2px rgba(7, 27, 23, 0.9), inset 0 0 0 3px rgba(216, 183, 108, 0.3);
   }
 
   .bj-card.back::after {
@@ -1060,7 +1061,7 @@
     padding: 8px;
     border: 1px solid var(--color-edge);
     border-radius: 14px;
-    background: rgba(24, 30, 50, 0.42);
+    background: rgba(23, 59, 49, 0.42);
     transition: border-color 0.16s ease, box-shadow 0.16s ease;
   }
 
@@ -1071,7 +1072,7 @@
     border-radius: inherit;
     pointer-events: none;
     opacity: 0;
-    background: radial-gradient(circle at 50% 28%, rgba(35, 224, 190, 0.32), transparent 76%);
+    background: radial-gradient(circle at 50% 28%, rgba(150, 211, 174, 0.32), transparent 76%);
   }
 
   .bj-seat.win::after {
@@ -1085,15 +1086,15 @@
   }
 
   .bj-seat.me {
-    border-color: rgba(244, 201, 93, 0.55);
-    background: rgba(244, 201, 93, 0.07);
-    box-shadow: 0 0 22px -12px rgba(244, 201, 93, 0.9);
+    border-color: rgba(216, 183, 108, 0.55);
+    background: rgba(216, 183, 108, 0.07);
+    box-shadow: 0 0 22px -12px rgba(216, 183, 108, 0.9);
   }
 
   .bj-seat.active {
-    border-color: rgba(35, 224, 190, 0.7);
-    background: rgba(35, 224, 190, 0.08);
-    box-shadow: 0 0 24px -10px rgba(35, 224, 190, 0.85);
+    border-color: rgba(150, 211, 174, 0.7);
+    background: rgba(150, 211, 174, 0.08);
+    box-shadow: 0 0 24px -10px rgba(150, 211, 174, 0.85);
     animation: bj-seat-pulse 1.6s ease-in-out infinite;
   }
 
@@ -1103,8 +1104,8 @@
   }
 
   @keyframes bj-seat-pulse {
-    0%, 100% { box-shadow: 0 0 18px -12px rgba(35, 224, 190, 0.7); }
-    50% { box-shadow: 0 0 26px -8px rgba(35, 224, 190, 0.95); }
+    0%, 100% { box-shadow: 0 0 18px -12px rgba(150, 211, 174, 0.7); }
+    50% { box-shadow: 0 0 26px -8px rgba(150, 211, 174, 0.95); }
   }
 
   .bj-seat-top {
@@ -1139,7 +1140,7 @@
   .bj-you {
     flex: none;
     padding: 1px 7px;
-    border: 1px solid rgba(244, 201, 93, 0.55);
+    border: 1px solid rgba(216, 183, 108, 0.55);
     border-radius: 999px;
     font-size: 9.5px;
     font-weight: 800;
@@ -1172,7 +1173,7 @@
   }
 
   .bj-hand.smolder .bj-card {
-    box-shadow: 0 6px 14px -9px rgba(0, 0, 0, 0.95), 0 0 18px -4px rgba(255, 57, 91, 0.6);
+    box-shadow: 0 6px 14px -9px rgba(0, 0, 0, 0.95), 0 0 18px -4px rgba(229, 116, 117, 0.6);
   }
 
   .bj-hand-fx {
@@ -1192,7 +1193,7 @@
     border-radius: 6px;
     overflow: hidden;
     pointer-events: none;
-    box-shadow: 0 0 0 1px rgba(76, 201, 240, 0.55), 0 0 22px -4px rgba(76, 201, 240, 0.6);
+    box-shadow: 0 0 0 1px rgba(164, 197, 187, 0.55), 0 0 22px -4px rgba(164, 197, 187, 0.6);
     animation: bj-frost 2.2s ease-in-out infinite;
   }
 
@@ -1256,17 +1257,17 @@
   }
 
   .bj-tag[data-status='busted'] {
-    border-color: rgba(255, 57, 91, 0.45);
+    border-color: rgba(229, 116, 117, 0.45);
     color: var(--color-red);
   }
 
   .bj-tag[data-status='blackjack'] {
-    border-color: rgba(244, 201, 93, 0.5);
+    border-color: rgba(216, 183, 108, 0.5);
     color: var(--color-gold);
   }
 
   .bj-tag[data-status='doubled'] {
-    border-color: rgba(139, 124, 255, 0.5);
+    border-color: rgba(202, 168, 123, 0.5);
     color: var(--color-violet);
   }
 
@@ -1283,26 +1284,26 @@
   }
 
   .bj-badge[data-outcome='win'] {
-    border: 1px solid rgba(35, 224, 190, 0.5);
-    background: rgba(35, 224, 190, 0.14);
+    border: 1px solid rgba(150, 211, 174, 0.5);
+    background: rgba(150, 211, 174, 0.14);
     color: var(--color-mint);
   }
 
   .bj-badge[data-outcome='win'][data-status='blackjack'] {
-    border-color: rgba(244, 201, 93, 0.6);
-    background: rgba(244, 201, 93, 0.16);
+    border-color: rgba(216, 183, 108, 0.6);
+    background: rgba(216, 183, 108, 0.16);
     color: var(--color-gold);
   }
 
   .bj-badge[data-outcome='lose'] {
-    border: 1px solid rgba(255, 57, 91, 0.45);
-    background: rgba(255, 57, 91, 0.12);
+    border: 1px solid rgba(229, 116, 117, 0.45);
+    background: rgba(229, 116, 117, 0.12);
     color: #ffd4dc;
   }
 
   .bj-badge[data-outcome='push'] {
     border: 1px solid var(--color-edge);
-    background: rgba(24, 30, 50, 0.7);
+    background: rgba(23, 59, 49, 0.7);
     color: var(--color-muted);
   }
 
@@ -1323,14 +1324,14 @@
     padding-bottom: max(10px, env(safe-area-inset-bottom));
     border: 1px solid var(--color-edge);
     border-radius: 16px;
-    background: rgba(16, 22, 39, 0.96);
+    background: rgba(13, 40, 34, 0.96);
     box-shadow: 0 -14px 34px -18px rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(10px);
     transition: border-color 0.16s ease;
   }
 
   .bj-bar.mine {
-    border-color: rgba(35, 224, 190, 0.55);
+    border-color: rgba(150, 211, 174, 0.55);
   }
 
   .bj-bar-top {
@@ -1360,7 +1361,7 @@
 
   .bj-net[data-outcome='win'] {
     color: var(--color-mint);
-    text-shadow: 0 0 18px rgba(35, 224, 190, 0.5);
+    text-shadow: 0 0 18px rgba(150, 211, 174, 0.5);
   }
 
   .bj-net[data-outcome='lose'] {
@@ -1381,9 +1382,9 @@
     min-height: 44px;
     min-width: 54px;
     padding: 8px 10px;
-    border: 1px solid rgba(244, 201, 93, 0.4);
+    border: 1px solid rgba(216, 183, 108, 0.4);
     border-radius: 999px;
-    background: radial-gradient(circle at 50% 28%, #2a3a6a, #16203a);
+    background: radial-gradient(circle at 50% 28%, #3b5b40, #24533d);
     color: var(--color-gold);
     font: 800 13px/1 var(--font-sans);
     font-variant-numeric: tabular-nums;
@@ -1459,4 +1460,15 @@
       gap: 6px;
     }
   }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    .bj { overflow-y: auto; gap: 8px; }
+    .bj-felt { flex: none; min-height: 280px; border-width: 4px; border-radius: 28px 28px 12px 12px; }
+    .bj-seat.open { display: none; }
+    .bj-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .bj-chip { min-width: 0; padding: 8px 4px; font-size: 12px; }
+    .bj-bar { border-radius: 12px; }
+    .bj-moves { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
 </style>

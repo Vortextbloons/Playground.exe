@@ -15,8 +15,8 @@
   const RISK_ACCENTS: Record<Risk, string> = {
     low: 'var(--color-sky)', medium: 'var(--color-gold)', high: 'var(--color-red)',
   };
-  const CHIPS = [1, 5, 10, 25, 50, 100];
-  const OWNER_COLORS = ['#f4c95d', '#23e0be', '#4cc9f0', '#8b7cff', '#ff7ab5', '#ffa94d', '#a3e635', '#e879f9'];
+  const CHIPS = [1, 5, 10, 25, 50, 100, 500, 1000];
+  const OWNER_COLORS = ['#d8b76c', '#96d3ae', '#a4c5bb', '#caa87b', '#ff7ab5', '#ffa94d', '#a3e635', '#e879f9'];
   const TRAIL = [3, 2, 1];
   const FALL_MS = 1500;
   const STAGGER_MS = 150;
@@ -153,10 +153,10 @@
   }
 
   function tierOf(multiplier: number): { peak: string; fill: string; edge: string } {
-    if (multiplier >= 10) return { peak: 'var(--color-gold)', fill: 'rgba(244, 201, 93, 0.16)', edge: 'rgba(244, 201, 93, 0.5)' };
-    if (multiplier >= 2) return { peak: 'var(--color-mint)', fill: 'rgba(35, 224, 190, 0.13)', edge: 'rgba(35, 224, 190, 0.42)' };
-    if (multiplier >= 1) return { peak: '#8894b8', fill: 'rgba(136, 148, 184, 0.12)', edge: 'rgba(136, 148, 184, 0.34)' };
-    return { peak: 'var(--color-red)', fill: 'rgba(255, 57, 91, 0.13)', edge: 'rgba(255, 57, 91, 0.46)' };
+    if (multiplier >= 10) return { peak: 'var(--color-gold)', fill: 'rgba(216, 183, 108, 0.16)', edge: 'rgba(216, 183, 108, 0.5)' };
+    if (multiplier >= 2) return { peak: 'var(--color-mint)', fill: 'rgba(150, 211, 174, 0.13)', edge: 'rgba(150, 211, 174, 0.42)' };
+    if (multiplier >= 1) return { peak: '#b2bba7', fill: 'rgba(136, 148, 184, 0.12)', edge: 'rgba(136, 148, 184, 0.34)' };
+    return { peak: 'var(--color-red)', fill: 'rgba(229, 116, 117, 0.13)', edge: 'rgba(229, 116, 117, 0.46)' };
   }
 
   function ownerColor(playerId: string): string {
@@ -240,7 +240,7 @@
       labelOpacity: t < 0.65 ? 1 : (1 - t) / 0.35,
       floatOpacity: 1 - t,
       rise: flyer.instant ? 0 : t * 0.9,
-      paint: net > 0 ? 'var(--color-mint)' : net < 0 ? 'var(--color-red)' : '#8894b8',
+      paint: net > 0 ? 'var(--color-mint)' : net < 0 ? 'var(--color-red)' : '#b2bba7',
       flashPaint: tierOf(multiplierOf(flyer)).peak,
       text: net > 0 ? `+${money(flyer.win)}` : net < 0 ? `-${money(flyer.bet - flyer.win)}` : 'even',
     };
@@ -399,7 +399,7 @@
   });
 
   function adjustBet(direction: number): void {
-    const step = bet <= 10 ? 1 : bet <= 50 ? 5 : 10;
+    const step = bet <= 10 ? 1 : bet <= 50 ? 5 : bet < 1000 ? 10 : 100;
     bet = clamp(bet + direction * step, PLINKO_MIN, PLINKO_MAX);
   }
 
@@ -465,7 +465,7 @@
                   <circle cx={flyer.slot + 0.5} cy={restY} r={0.22 + ring * 1.05} fill="none" stroke={tierOf(multiplierOf(flyer)).peak} stroke-width={0.06 - ring * 0.045} opacity={(1 - ring) * 0.7} />
                 {/if}
               {/if}
-              <circle class="ball" cx={rest.x} cy={rest.y} r="0.09" fill={ownerColor(flyer.playerId)} opacity="0.85" stroke={flyer.own ? 'var(--color-fog)' : 'rgba(9, 13, 23, 0.9)'} stroke-width="0.025" />
+              <circle class="ball" cx={rest.x} cy={rest.y} r="0.09" fill={ownerColor(flyer.playerId)} opacity="0.85" stroke={flyer.own ? 'var(--color-fog)' : 'rgba(7, 27, 23, 0.9)'} stroke-width="0.025" />
               {#if burst !== null}
                 <text class="land-amount" x={flyer.slot + 0.5} y={slotTop - 0.52 - burst.rise} text-anchor="middle" fill={burst.paint} opacity={burst.floatOpacity}>{burst.text}</text>
               {/if}
@@ -475,7 +475,7 @@
                 <circle class="ball" cx={ghost.x} cy={ghost.y} r={0.18 - lag * 0.028} fill={ownerColor(flyer.playerId)} opacity={0.26 - lag * 0.07} />
               {/each}
               <circle class="ball" cx={head.x} cy={head.y} r="0.36" fill={ownerColor(flyer.playerId)} opacity="0.14" />
-              <circle class="ball" cx={head.x} cy={head.y} r="0.21" fill={ownerColor(flyer.playerId)} stroke={flyer.own ? 'var(--color-fog)' : 'rgba(9, 13, 23, 0.85)'} stroke-width={flyer.own ? 0.05 : 0.03} />
+              <circle class="ball" cx={head.x} cy={head.y} r="0.21" fill={ownerColor(flyer.playerId)} stroke={flyer.own ? 'var(--color-fog)' : 'rgba(7, 27, 23, 0.85)'} stroke-width={flyer.own ? 0.05 : 0.03} />
             {/if}
           {/each}
           {#each particles as particle (particle.id)}
@@ -558,6 +558,7 @@
             {#each CHIPS as chip (chip)}
               <button type="button" class="chip" class:active={bet === chip} disabled={!active || bankroll < chip} onclick={() => pickChip(chip)}>{money(chip)}</button>
             {/each}
+            <button type="button" class="chip" disabled={!active || bankroll < PLINKO_MIN} onclick={() => pickChip(Math.min(bankroll, PLINKO_MAX))}>Max</button>
           </div>
         </div>
 
@@ -623,13 +624,13 @@
   }
 
   .board-bg {
-    fill: rgba(9, 13, 23, 0.68);
+    fill: rgba(7, 27, 23, 0.68);
     stroke: var(--color-edge);
     stroke-width: 0.03;
   }
 
   .peg {
-    fill: #5b6790;
+    fill: #c4ac78;
   }
 
   .slot {
@@ -660,7 +661,7 @@
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.04em;
-    text-shadow: 0 1px 3px rgba(9, 13, 23, 0.95);
+    text-shadow: 0 1px 3px rgba(7, 27, 23, 0.95);
   }
 
   .land-amount {
@@ -723,7 +724,7 @@
     padding: 7px 6px;
     border: 1px solid var(--color-edge);
     border-radius: 12px;
-    background: rgba(24, 30, 50, 0.72);
+    background: rgba(23, 59, 49, 0.72);
     color: var(--color-muted);
     font: 700 12px/1.1 var(--font-sans);
     letter-spacing: 0.1em;
@@ -738,7 +739,7 @@
 
   .risk.active {
     border-color: var(--risk-accent, var(--color-gold));
-    background: color-mix(in srgb, var(--risk-accent, var(--color-gold)) 14%, rgba(24, 30, 50, 0.72));
+    background: color-mix(in srgb, var(--risk-accent, var(--color-gold)) 14%, rgba(23, 59, 49, 0.72));
     color: var(--color-fog);
     box-shadow: 0 0 18px -8px var(--risk-accent, var(--color-gold));
   }
@@ -771,7 +772,7 @@
     min-height: 44px;
     border: 1px solid var(--color-edge);
     border-radius: 12px;
-    background: rgba(9, 13, 23, 0.72);
+    background: rgba(7, 27, 23, 0.72);
     color: var(--color-fog);
     font-family: var(--font-display);
     font-size: 24px;
@@ -804,7 +805,7 @@
     min-height: 44px;
     border: 1px solid var(--color-edge);
     border-radius: 999px;
-    background: rgba(24, 30, 50, 0.72);
+    background: rgba(23, 59, 49, 0.72);
     color: var(--color-fog);
     font: 700 12.5px/1 var(--font-sans);
     cursor: pointer;
@@ -812,13 +813,13 @@
   }
 
   .chip:hover:not(:disabled) {
-    border-color: rgba(35, 224, 190, 0.55);
+    border-color: rgba(150, 211, 174, 0.55);
     transform: translateY(-1px);
   }
 
   .chip.active {
     border-color: var(--color-mint);
-    background: rgba(35, 224, 190, 0.14);
+    background: rgba(150, 211, 174, 0.14);
   }
 
   .chip:disabled {
@@ -873,7 +874,7 @@
     padding: 4px 8px;
     border: 1px solid var(--color-edge);
     border-radius: 999px;
-    background: rgba(24, 30, 50, 0.6);
+    background: rgba(23, 59, 49, 0.6);
     color: var(--color-muted);
     font-size: 11px;
     font-variant-numeric: tabular-nums;
@@ -914,4 +915,17 @@
       flex: 1 1 100%;
     }
   }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    [data-table='plinko'] { overflow-y: auto; }
+    [data-table='plinko'] > .panel { flex: none; height: clamp(220px, 35dvh, 320px); }
+    [data-table='plinko'] > .scroll-y { flex: none; }
+    .controls { gap: 8px; }
+    .risk-field, .bet-field { flex: 1 1 100%; }
+    .chip-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .chip { min-width: 0; padding: 6px 2px; font-size: 11px; }
+    .bet-input { font-size: 18px; }
+    .drop { min-height: 52px; }
+  }
+
 </style>
