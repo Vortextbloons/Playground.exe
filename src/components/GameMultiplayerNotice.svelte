@@ -25,9 +25,10 @@
 <aside class="multiplayer-notice" aria-label="Play with friends">
   <div>
     <p class="label">{party ? `PARTY ${party.code}` : 'PLAY TOGETHER'}</p>
-    <p class="message">{#if match}{match.status === 'finished' ? 'Round finished' : playing ? 'You’re in the round' : mode?.spectators === false ? 'You’re sitting this round out' : 'You’re watching'}<span> · {mode?.label}</span>{:else if config}{minimum}–{maximum} players<span>{selected ? ' · Choose your mode in the game' : solo ? ' · Solo is available below' : ' · Join a party to play'}</span>{:else}Your party is still together while you play solo.{/if}</p>
+    <p class="message">{#if match}{match.status === 'finished' ? 'Round finished' : playing ? 'You’re in the round' : mode?.spectators === false ? 'You’re sitting this round out' : 'You’re watching'}<span> · {mode?.label}</span>{:else if config}{minimum}–{maximum} players<span>{selected ? ' · Choose your mode in the game' : party ? ' · Open the lobby to play with your party' : solo ? ' · Solo is available below' : ' · Join a party to play'}</span>{:else}Leave your party to play this solo game.{/if}</p>
   </div>
-  {#if config && !selected}<a href={`${partyUrl}?game=${encodeURIComponent(gameId)}`}>{connection?.party ? 'Open with your party' : 'Play with friends'} <span aria-hidden="true">↗</span></a>{/if}
+  {#if config && !selected}<a href={`${partyUrl}?game=${encodeURIComponent(gameId)}`}>{connection?.party ? 'Go to party lobby' : 'Play with friends'} <span aria-hidden="true">↗</span></a>{/if}
+  {#if party && !config}<a href={partyUrl}>Go to party lobby <span aria-hidden="true">↗</span></a>{/if}
   {#if party}
     <details>
       <summary>Manage party · {party.players.length} {party.players.length === 1 ? 'member' : 'members'}</summary>

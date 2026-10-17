@@ -1,0 +1,12 @@
+{
+  "id": "tetris",
+  "title": "Stack Drop",
+  "description": "A fast falling-block puzzler. Rotate and place seven tetrominoes, clear lines to score, and survive as the drop speeds up every 10 lines.",
+  "genre": "Puzzle",
+  "tags": ["blocks", "falling", "endless", "keyboard", "touch"],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-17",
+  "controls": "Left/Right move, Down soft drop, Up or X rotate clockwise, Z rotate counter-clockwise, Space hard drop, P pause, R restart. On-screen buttons on touch.",
+  "cover": "cover.svg"
+}

@@ -47,7 +47,7 @@
   let jackpotTimer: ReturnType<typeof setTimeout> | undefined;
   let feedMark = -1;
 
-  const view = $derived(status?.view ?? null);
+  const view = $derived(status?.waitingForParty ? null : status?.view ?? null);
   const playing = $derived(status?.playing ?? false);
   const connected = $derived(status?.connected ?? true);
   const roster = $derived(status?.names ?? names);
@@ -275,8 +275,9 @@
       </div>
     </div>
   {:else}
-    <div class="relative z-10 grid h-full place-items-center">
-      <p class="animate-title font-display text-[30px] tracking-[0.12em] text-gold">ALL IN!</p>
+    <div class="relative z-10 grid h-full content-center gap-6 overflow-y-auto p-6">
+      <h1 class="text-center font-display text-[30px] tracking-[0.12em] text-gold">ALL IN!</h1>
+      {#if menu}<section class="lobby-panel mx-auto w-full max-w-3xl" bind:this={lobby} aria-label="Party lobby"></section>{/if}
     </div>
   {/if}
 

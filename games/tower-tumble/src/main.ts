@@ -166,7 +166,7 @@ const game = createGame('tower-tumble', {
     scene?.renderer.setAnimationLoop(tick);
   },
   restart() {
-    if (session.current.match?.status === 'playing') {
+    if (session.current.party) {
       hud?.toast('Use the party menu to start another round.');
       return;
     }
@@ -203,7 +203,8 @@ function detectQuality(): 'high' | 'low' {
 }
 
 function inputAllowed(): boolean {
-  if (session.current.match?.status !== 'playing') return true;
+  if (!session.current.match) return !session.current.party;
+  if (session.current.match.status !== 'playing') return false;
   return mode === 'authority' && phase !== 'over';
 }
 
@@ -607,6 +608,8 @@ session.subscribe(view => {
   const match = view.match;
   const playing = match?.status === 'playing';
   partyControls.hidden = view.party?.selection?.gameId !== metadata.id;
+  container.classList.toggle('party-waiting', !!view.party && !match);
+  hud?.setRestartVisible(!view.party);
   if (playing !== partyPlaying) {
     partyControls.open = !playing;
     partyPlaying = playing;

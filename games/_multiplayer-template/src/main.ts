@@ -15,19 +15,19 @@ const advance = document.createElement('button'); advance.textContent = 'Advance
 const back = document.createElement('button'); back.textContent = '← Move back';
 const warm = document.createElement('button'); warm.textContent = 'Practice finished — ready';
 const solo = document.createElement('button'); solo.textContent = 'Play solo';
-const note = document.createElement('p'); note.className = 'note'; note.textContent = 'Choose a mode and ready up here with your party. Practice while you wait.';
+const note = document.createElement('p'); note.className = 'note'; note.textContent = 'Choose a mode and ready up here with your party. The host starts once everyone is ready.';
 actions.append(back, advance, warm, solo); container.append(header, heading, status, tracks, actions, note);
 let soloScore = 0; let practice = 0; let playingSolo = false; let paused = false;
 const game = createGame('__GAME_ID__', {
   initialize() {}, start() { container.focus(); }, pause() { paused = true; }, resume() { paused = false; },
-  restart() { if (session.current.match?.status === 'playing') { status.textContent = 'Use Back to game menu to restart the shared round.'; return; } soloScore = 0; playingSolo = true; paused = false; render(); },
+  restart() { if (session.current.party) { status.textContent = 'Use Back to game menu to restart the shared round.'; return; } soloScore = 0; playingSolo = true; paused = false; render(); },
   destroy() { partyMenu.destroy(); window.removeEventListener('keydown', keydown); },
 });
 const session = game.multiplayer<CircuitState, { advance: Json; warm: Json; move: number }>();
 const partyMenu = createMultiplayerMenu(session, metadata.id, parseMultiplayer(metadata.multiplayer));
 heading.after(partyMenu.element);
 function act(direction = 1) {
-  if (paused) return;
+  if (paused || (session.current.party && !session.current.match)) return;
   const match = session.current.match;
   if (!match || playingSolo) { soloScore = Math.max(0, soloScore + direction); game.score(soloScore); render(); return; }
   if (!session.current.isPlayer || !session.current.connected) return;
@@ -36,7 +36,7 @@ function act(direction = 1) {
 }
 advance.onclick = () => act(); back.onclick = () => act(-1);
 warm.onclick = () => { if (practice >= 3) session.send('warm', null); };
-solo.onclick = () => { playingSolo = !playingSolo; render(); };
+solo.onclick = () => { if (session.current.party) return; playingSolo = !playingSolo; render(); };
 function keydown(event: KeyboardEvent) {
   if (event.target instanceof Element && event.target.closest('.multiplayer-menu')) return;
   if (event.code === 'Space' || event.code === 'ArrowRight' || event.code === 'ArrowLeft') { event.preventDefault(); if (!event.repeat) act(event.code === 'ArrowLeft' ? -1 : 1); }
@@ -46,14 +46,17 @@ let lastMatch = '';
 function render() {
   const { match, party, playerId, isPlayer, connected } = session.current;
   if ((match?.id ?? '') !== lastMatch) { lastMatch = match?.id ?? ''; practice = 0; playingSolo = false; }
-  note.textContent = party ? 'Choose a mode and ready up here with your party. Practice while you wait.' : 'Create or join a party above to play with friends. Solo is always available.';
+  note.textContent = party ? 'Choose a mode and ready up here with your party. The host starts once everyone is ready.' : 'Create or join a party above to play with friends. Solo is always available.';
   tracks.replaceChildren();
   const shared = match && !playingSolo;
   warm.hidden = !shared || match.state.round !== 'practice' || !isPlayer;
   warm.disabled = practice < 3 || !connected || !!match?.state.warm[playerId ?? ''];
   back.hidden = !shared || match.preset !== 'live' || match.state.round !== 'race';
   advance.disabled = !!shared && (!isPlayer || !connected || match.status === 'finished' || (match.state.round === 'race' && match.preset === 'turn-based' && match.state.turn !== playerId));
-  solo.hidden = !!match && isPlayer && match.status === 'playing';
+  solo.hidden = !!party;
+  tracks.hidden = !!party && !match;
+  actions.hidden = !!party && !match;
+  status.hidden = !!party && !match;
   solo.textContent = playingSolo && match ? 'Watch party round' : 'Play solo';
   if (!shared) {
     status.textContent = `Solo practice · ${soloScore} steps. Press Space or click Advance.`;

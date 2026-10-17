@@ -24,3 +24,5 @@ button { font:600 12px system-ui; border:1px solid #628575; border-radius:7px; p
   #game { padding:12px; justify-content:flex-start; }
   .mode-options { grid-template-columns:1fr; }
 }
+
+.with-party.party-waiting .race-layout { grid-template-columns:minmax(0,560px); justify-content:center; }

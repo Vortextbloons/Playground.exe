@@ -58,6 +58,7 @@
   let mpConnected = $state(true);
   let mpInMatch = $state(false);
   let mpSelected = $state(false);
+  let inParty = $state(false);
   let mpMatchStatus = $state<'playing' | 'finished' | null>(null);
   let lobbyHost = $state<HTMLElement | null>(null);
 
@@ -70,6 +71,8 @@
   $effect(() => {
     if (!session) return;
     const offState = session.subscribe(next => {
+      inParty = next.party !== null;
+      if (inParty) { local = null; clearTimeout(botTimer); }
       mpConnected = next.connected;
       mpInMatch = next.match !== null;
       mpSelected = next.party?.selection?.gameId === 'uno';
@@ -189,6 +192,7 @@
   // ------------------------------------------------------------------ menu / match control
 
   function startSolo(): void {
+    if (inParty) return;
     soloRng = mulberry32((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
     const botIds = BOT_NAMES.slice(0, botCount).map((_, i) => `bot${i}`);
     names = { you: 'You', ...Object.fromEntries(botIds.map((id, i) => [id, BOT_NAMES[i] ?? `Bot ${i}`])) };
@@ -311,7 +315,7 @@
       </div>
       {#if session && mpSelected}
         <div class="lobby-host" bind:this={lobbyHost}></div>
-      {:else}
+      {:else if !inParty}
         <div class="menu-form">
           <p class="form-title">{session ? 'Practice table' : 'Solo table'}</p>
           <label class="row">

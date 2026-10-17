@@ -1,0 +1,13 @@
+{
+  "id": "space-invaders",
+  "title": "Space Invaders",
+  "description": "Hold the line against the descending swarm. Slide the cannon, time your shots, and clear wave after wave for a high score.",
+  "genre": "Arcade",
+  "tags": ["shooter", "arcade", "retro", "endless", "keyboard", "touch"],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-17",
+  "controls": "Move with ArrowLeft / ArrowRight or A / D. Shoot with Space, ArrowUp, or W (hold for auto-fire). Drag to move and tap to shoot on touch. Press R to restart.",
+  "solo": true,
+  "cover": "cover.svg"
+}

@@ -28,6 +28,7 @@
   let mpInMatch = $state(false);
   let mpConnected = $state(true);
   let mpSelected = $state(false);
+  let inParty = $state(false);
   let meId = $state<string | null>(null);
   let names = $state<Record<string, string>>({});
   let difficulty = $state<Difficulty>('medium');
@@ -97,6 +98,7 @@
   }
 
   function startSolo(): void {
+    if (inParty) return;
     clearTimeout(botTimer);
     botTimer = undefined;
     soloRng = mulberry32((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
@@ -163,6 +165,8 @@
   $effect(() => {
     if (!session) return;
     const offState = session.subscribe(next => {
+      inParty = next.party !== null;
+      if (inParty) { local = null; clearTimeout(botTimer); }
       mpConnected = next.connected;
       mpInMatch = next.match !== null;
       mpSelected = next.party?.selection?.gameId === 'connect-four';
@@ -203,6 +207,7 @@
         <div class="lobby" bind:this={lobbyHost}></div>
       {/if}
 
+      {#if !inParty}
       <div class="setup">
         <div class="row">
           <span class="row-label">Opponent</span>
@@ -215,7 +220,8 @@
         <button type="button" class="primary" onclick={startSolo}>Play the computer</button>
       </div>
 
-      {#if session && !mpSelected}
+      {/if}
+      {#if session && !inParty}
         <p class="hint">Playing with friends? Create or join a party, then pick Connect Four.</p>
       {/if}
       {#if error}<p class="error" role="status">{error}</p>{/if}

@@ -26,6 +26,7 @@ test('the casino blocks local play while waiting in a party lobby', () => {
   session.current.party = snapshot(room, playerId, games);
   refresh();
   host.subscribe(status => {
+    assert.equal(status.waitingForParty, true);
     assert.equal(status.playing, false);
     assert.equal(status.view.vault, null);
   })();

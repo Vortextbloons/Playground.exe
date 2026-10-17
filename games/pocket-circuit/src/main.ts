@@ -28,7 +28,7 @@ const game = createGame('pocket-circuit', {
   initialize() {}, start() { animation = requestAnimationFrame(tick); },
   pause() { paused = true; keys.clear(); cancelAnimationFrame(animation); }, resume() { paused = false; animation = requestAnimationFrame(tick); },
   restart() {
-    if (session.current.party?.match?.status === 'playing') { status.textContent = 'The host can use Back to game menu to restart the party race.'; return; }
+    if (session.current.party) { status.textContent = 'The host can use Back to game menu to restart the party race.'; return; }
     playingSolo = true; reset(); paused = false; cancelAnimationFrame(animation); animation = requestAnimationFrame(tick); render();
   },
   destroy() { cancelAnimationFrame(animation); partyMenu.destroy(); window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', release); },
@@ -48,7 +48,10 @@ function render() {
   }
   const shared = !!match && !playingSolo;
   container.classList.toggle('with-party', !!party);
-  solo.hidden = shared && isPlayer && match.status === 'playing';
+  solo.hidden = !!party;
+  container.querySelector<HTMLElement>('.race-view')!.hidden = !!party && !match;
+  container.querySelector<HTMLElement>('.note')!.hidden = !!party && !match;
+  container.classList.toggle('party-waiting', !!party && !match);
   solo.textContent = playingSolo && match ? 'Watch party race' : finished ? 'Race again' : 'Race solo';
   warm.hidden = !shared || round !== 'practice' || !isPlayer;
   warm.disabled = practice < 3 || !connected || !!match?.state.warm[playerId ?? ''];
@@ -60,7 +63,7 @@ function render() {
   else if (match.preset === 'turn-based') status.textContent = `${name(match.state.turn)}’s turn. Tap accelerate to drive one checkpoint.`;
   else status.textContent = isPlayer ? 'Race your party. Three laps to the flag!' : 'Watching the race.';
 }
-solo.onclick = () => { playingSolo = !(playingSolo && session.current.match); reset(); render(); };
+solo.onclick = () => { if (session.current.party) return; playingSolo = !(playingSolo && session.current.match); reset(); render(); };
 warm.onclick = () => { if (practice >= 3) session.send('warm', null); };
 function turn() {
   const { match, playerId, connected, isPlayer } = session.current;
@@ -92,7 +95,7 @@ function tick(now: number) {
   const dt = Math.min((now - (lastFrame || now)) / 1000, .04); lastFrame = now;
   const { match, connected, isPlayer } = session.current;
   const shared = !!match && !playingSolo;
-  const driving = !paused && !finished && (!shared || (connected && isPlayer && match.status === 'playing' && (match.state.round === 'practice' || match.preset !== 'turn-based')));
+  const driving = !paused && !finished && ((!session.current.party && !shared) || (shared && connected && isPlayer && match.status === 'playing' && (match.state.round === 'practice' || match.preset !== 'turn-based')));
   if (driving) {
     if (keys.has('gas')) speed += 120 * dt;
     else speed -= 40 * dt;

@@ -61,3 +61,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; }
   .hud-interaction { bottom: 120px; }
   .hud-toast { bottom: 250px; }
 }
+
+.party-waiting > canvas, .party-waiting .hud > :not(.hud-party) { display:none; }
+.party-waiting .hud-party { inset:0; transform:none; width:100%; border:0; border-radius:0; display:grid; align-content:center; overflow:auto; padding:24px max(20px, calc((100% - 560px) / 2)); background:#11151b; }
+.party-waiting .hud-party summary { display:none; }

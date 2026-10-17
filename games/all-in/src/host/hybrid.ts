@@ -22,7 +22,7 @@ export function createHybridHost(session: PartySession): CasinoHost {
 
   const localStatus = (): HostStatus => ({
     view: viewCasino(engines, local, session.current.party ? null : LOCAL_ID), connected: true, playing: !session.current.party,
-    names: { [LOCAL_ID]: 'You' },
+    names: { [LOCAL_ID]: 'You' }, waitingForParty: !!session.current.party,
   });
 
   const partyStatus = (): HostStatus | null => {
@@ -31,7 +31,7 @@ export function createHybridHost(session: PartySession): CasinoHost {
     for (const player of party?.players ?? []) known.set(player.id, player.nickname);
     const names: Record<string, string> = {};
     for (const [id, nickname] of known) names[id] = nickname;
-    return { view: match.state, connected, playing: isPlayer, names };
+    return { view: match.state, connected, playing: isPlayer, names, waitingForParty: false };
   };
 
   let status = partyStatus() ?? localStatus();

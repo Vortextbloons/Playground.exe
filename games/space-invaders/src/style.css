@@ -1,0 +1,147 @@
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #050810;
+  color: #e2f3e5;
+  font: 16px system-ui, -apple-system, sans-serif;
+  overscroll-behavior: none;
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  outline: none;
+}
+
+#game:focus-visible {
+  outline: 2px solid #4ade80;
+  outline-offset: -3px;
+}
+
+.invaders-wrap {
+  position: relative;
+  line-height: 0;
+}
+
+.invaders-wrap canvas {
+  display: block;
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  background: #050810;
+  max-width: 100vw;
+  max-height: 100vh;
+}
+
+.invaders-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.invaders-score {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: clamp(30px, 7vw, 46px);
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.5), 0 0 18px rgba(74, 222, 128, 0.35);
+}
+
+.invaders-best {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(5, 12, 8, 0.6);
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #bbf7d0;
+}
+
+.invaders-lives {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(5, 12, 8, 0.6);
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #fecaca;
+}
+
+.invaders-center {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  width: min(86%, 340px);
+  text-align: center;
+  background: rgba(4, 12, 8, 0.82);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  line-height: 1.45;
+  backdrop-filter: blur(4px);
+}
+
+.invaders-center h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+}
+
+.invaders-center p {
+  margin: 6px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #d1fae5;
+}
+
+.invaders-center .keys {
+  font-size: 12px;
+  color: #86a895;
+}
+
+.invaders-center button {
+  pointer-events: auto;
+  margin-top: 10px;
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 18px;
+  background: #4ade80;
+  color: #052e16;
+  cursor: pointer;
+}
+
+.invaders-center button:hover {
+  filter: brightness(1.05);
+}
+
+.invaders-center button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}

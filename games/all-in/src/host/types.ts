@@ -5,6 +5,7 @@ export type HostStatus = {
   view: PlayerView;
   connected: boolean;
   playing: boolean;
+  waitingForParty: boolean;
   names: Record<string, string>;
 };
 

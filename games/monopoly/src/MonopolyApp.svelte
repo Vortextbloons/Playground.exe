@@ -44,6 +44,7 @@
   let mpConnected = $state(true);
   let mpInMatch = $state(false);
   let mpSelected = $state(false);
+  let inParty = $state(false);
   let lobbyHost = $state<HTMLElement | null>(null);
 
   $effect(() => {
@@ -55,6 +56,8 @@
   $effect(() => {
     if (!session) return;
     const offState = session.subscribe(next => untrack(() => {
+      inParty = next.party !== null;
+      if (inParty) { local = null; clearTimeout(botTimer); }
       mpConnected = next.connected;
       mpInMatch = next.match !== null;
       mpSelected = next.party?.selection?.gameId === 'monopoly';
@@ -289,6 +292,7 @@
   }
 
   function startSolo(bots: number, conditions: EndConditions = soloConditions): void {
+    if (inParty) return;
     soloConditions = conditions;
     soloRng = mulberry32((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
     const botIds = BOT_NAMES.slice(0, bots).map((_, i) => `bot${i}`);
@@ -321,9 +325,9 @@
         <Board view={preview} names={{ you: 'You' }} selected={null} onselect={() => {}} />
       </div>
       <div class="menu-content">
-      <div class="solo-host">
+      {#if !inParty}<div class="solo-host">
         <SoloSetup onstart={startSolo} />
-      </div>
+      </div>{/if}
       {#if session && mpSelected}
         <div class="lobby-host" bind:this={lobbyHost}></div>
       {/if}

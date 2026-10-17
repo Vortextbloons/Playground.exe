@@ -3,6 +3,41 @@ import assert from 'node:assert/strict';
 import { PartyClient } from '../src/lib/party';
 import { readFile } from 'node:fs/promises';
 import { compile } from 'svelte/compiler';
+import { transpile } from 'typescript';
+
+test('game player waits for party restoration and only loads the selected party game', async () => {
+  const source = await readFile(new URL('../src/components/GamePlayer.svelte', import.meta.url), 'utf8');
+  const script = source.match(/<script lang="ts">([\s\S]*?)<\/script>/)![1]!;
+  const code = transpile(script.replace(/^\s*import .*;$/gm, '').replaceAll('import.meta.env.DEV', 'false'));
+  let listener: (value: any) => void = () => {};
+  let mount: () => void = () => {};
+  let state: any = { party: null, playerId: null, connected: false, busy: false };
+  const client = {
+    initialize() { state = { ...state, busy: true }; },
+    subscribe(callback: typeof listener) { listener = callback; callback(state); return () => {}; },
+  };
+  const redirects: string[] = [];
+  const run = new Function('onMount', '$state', '$props', 'getPartyClient', 'readLocal', 'window', `${code}; return () => activeSrc;`);
+  const getSrc = run((callback: typeof mount) => mount = callback, Object.assign((value: unknown) => value, { raw: (value: unknown) => value }), () => ({ id: 'test-game', title: 'Test', src: '/game.html', base: '/', config: { modes: [] } }), () => client, (_key: string, fallback: unknown) => fallback, { location: { assign: (url: string) => redirects.push(url) }, setTimeout() {} });
+  mount();
+  assert.equal(getSrc(), undefined, 'restoring a lobby must not launch solo play');
+  listener({ ...state, busy: false, connected: true });
+  assert.equal(getSrc(), undefined, 'wait for the first party snapshot');
+  listener({ ...state, busy: false, connected: false, error: 'Connection lost' });
+  assert.equal(getSrc(), undefined, 'failed restoration must not launch solo play');
+  const party = { selection: null };
+  listener({ ...state, party, busy: false, connected: true });
+  assert.equal(getSrc(), undefined, 'a lobby without a selection must not launch a game');
+  listener({ ...state, party: { selection: { gameId: 'other-game' } }, busy: false, connected: true });
+  assert.equal(getSrc(), undefined);
+  assert.equal(redirects.at(-1), '/play/other-game/');
+  listener({ ...state, party: { selection: { gameId: 'test-game' } }, busy: false, connected: true });
+  assert.equal(getSrc(), '/game.html');
+  listener({ ...state, party, busy: false, connected: true });
+  assert.equal(getSrc(), undefined, 'returning to the lobby unloads the game');
+  listener({ ...state, party: null, busy: false, connected: false });
+  assert.equal(getSrc(), '/game.html', 'leaving the party allows solo play');
+});
 
 test('compiled join form does not turn the four-digit quantifier into a literal 4', async () => {
   const source = await readFile(new URL('../src/components/PartyPanel.svelte', import.meta.url), 'utf8');
