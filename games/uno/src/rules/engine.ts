@@ -169,13 +169,12 @@ export function handOf(state: UnoState, playerId: string): number[] {
 }
 
 export function canPlayCard(state: UnoState, cardId: number): boolean {
-  const card = cardFromId(cardId);
-  if (state.stackedDraw > 0) return card.kind === 'draw-two' && card.color === state.activeColor;
-  return cardMatchesView(card, state.activeColor, topCard(state));
+  return cardMatchesView(cardFromId(cardId), state.activeColor, topCard(state), state.stackedDraw);
 }
 
 /** View-safe twin of canPlayCard for clients that only ever see their filtered view. */
-export function cardMatchesView(card: Card, activeColor: Color | null, top: Card | null): boolean {
+export function cardMatchesView(card: Card, activeColor: Color | null, top: Card | null, stackedDraw = 0): boolean {
+  if (stackedDraw > 0) return card.kind === 'draw-two' && card.color === activeColor;
   if (card.kind === 'wild' || card.kind === 'wild-four') return true;
   if (!activeColor || !top) return false;
   if (card.color === activeColor) return true;

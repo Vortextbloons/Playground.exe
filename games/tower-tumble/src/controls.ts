@@ -8,7 +8,7 @@ export interface PointerRay {
 export interface ControlHost {
   pick(ray: PointerRay): number | null;
   canGrab(index: number): boolean;
-  beginGrab(index: number): void;
+  beginGrab(index: number, ray: PointerRay): void;
   drag(ray: PointerRay): void;
   release(): void;
   hover(index: number | null, legal: boolean): void;
@@ -47,22 +47,24 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
   }
 
   function down(event: PointerEvent) {
-    if (event.button === 1) return;
+    event.preventDefault();
     element.setPointerCapture(event.pointerId);
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, mode: 'orbit' });
     if (pointers.size > 1) {
       endGrab();
+      for (const pointer of pointers.values()) pointer.mode = 'orbit';
       const [first, second] = [...pointers.values()];
       pinch = { distance: Math.hypot(first!.x - second!.x, first!.y - second!.y), x: (first!.x + second!.x) / 2, y: (first!.y + second!.y) / 2 };
       host.hover(null, false);
       return;
     }
     pinch = null;
-    const index = event.button === 0 ? host.pick(ray(event)) : null;
+    const pointerRay = ray(event);
+    const index = event.button === 0 ? host.pick(pointerRay) : null;
     if (index !== null && host.canGrab(index)) {
       grabbing = true;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, mode: 'grab' });
-      host.beginGrab(index);
+      host.beginGrab(index, pointerRay);
     }
   }
 
@@ -105,7 +107,8 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
 
   function wheel(event: WheelEvent) {
     event.preventDefault();
-    host.orbit.zoom(event.deltaY);
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? element.clientHeight : 1;
+    host.orbit.zoom(Math.min(Math.max(event.deltaY * unit, -100), 100));
   }
 
   function leave() {
@@ -118,6 +121,7 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
   element.addEventListener('pointermove', move);
   element.addEventListener('pointerup', up);
   element.addEventListener('pointercancel', up);
+  element.addEventListener('lostpointercapture', up);
   element.addEventListener('pointerleave', leave);
   element.addEventListener('wheel', wheel, { passive: false });
 
@@ -129,6 +133,7 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
       element.removeEventListener('pointermove', move);
       element.removeEventListener('pointerup', up);
       element.removeEventListener('pointercancel', up);
+      element.removeEventListener('lostpointercapture', up);
       element.removeEventListener('pointerleave', leave);
       element.removeEventListener('wheel', wheel);
     },

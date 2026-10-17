@@ -28,7 +28,7 @@
     if (!canAct) return false;
     if (drawn !== null && cardId !== drawn) return false;
     const top = view.discardTop === null ? null : cardFromId(view.discardTop);
-    return cardMatchesView(cardFromId(cardId), view.activeColor, top);
+    return cardMatchesView(cardFromId(cardId), view.activeColor, top, view.stackedDraw);
   }
 
   interface Gesture {

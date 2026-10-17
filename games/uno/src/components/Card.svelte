@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cardFromId } from '../rules/cards';
+  import { cardFromId, type Card } from '../rules/cards';
 
   interface Props {
     id?: number | null;
@@ -26,6 +26,32 @@
   const isFour = $derived(card?.kind === 'wild-four');
 </script>
 
+{#snippet glyph(face: Card)}
+  {#if face.kind === 'number'}
+    <span class="numeral">{face.value}</span>
+  {:else if face.kind === 'skip'}
+    <svg viewBox="0 0 64 64" aria-hidden="true" class="icon"><circle cx="32" cy="32" r="21" fill="none" stroke="currentColor" stroke-width="7" /><path d="M17 47 L47 17" stroke="currentColor" stroke-width="7" stroke-linecap="round" /></svg>
+  {:else if face.kind === 'reverse'}
+    <svg viewBox="0 0 64 64" aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 37 A 18 18 0 0 1 44 25" />
+      <path d="M44 12 L47 26 L33 24 Z" fill="currentColor" stroke="none" />
+      <path d="M49 27 A 18 18 0 0 1 20 39" />
+      <path d="M20 52 L17 38 L31 40 Z" fill="currentColor" stroke="none" />
+    </svg>
+  {:else if face.kind === 'draw-two'}
+    <span class="numeral plus">+2</span>
+  {:else if face.kind === 'wild'}
+    <svg viewBox="0 0 64 64" aria-hidden="true" class="icon on-wild"><circle cx="32" cy="32" r="19" fill="none" stroke="#fff" stroke-width="7" /><path d="M19 45 L45 19" stroke="#fff" stroke-width="7" stroke-linecap="round" /></svg>
+  {:else}
+    <svg viewBox="0 0 64 64" aria-hidden="true" class="fan">
+      <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-royal)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(-18 32 56)" />
+      <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-grass)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(-6 32 56)" />
+      <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-sun)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(6 32 56)" />
+      <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-red)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(18 32 56)" />
+    </svg>
+  {/if}
+{/snippet}
+
 <button
   type="button"
   class="card {extra}"
@@ -37,35 +63,20 @@
   style:--c={solid}
   onclick={playable ? onclick : undefined}
   aria-label={ariaLabel}
->
+  >
   <div class="face">
     {#if card}
       <div class="ellipse" class:wild={isWild} style:--c={solid}></div>
       <div class="emblem">
-        {#if card.kind === 'number'}
-          <span class="numeral">{card.value}</span>
-        {:else if card.kind === 'skip'}
-          <svg viewBox="0 0 64 64" aria-hidden="true" class="icon"><circle cx="32" cy="32" r="21" fill="none" stroke="currentColor" stroke-width="7" /><path d="M17 47 L47 17" stroke="currentColor" stroke-width="7" stroke-linecap="round" /></svg>
-        {:else if card.kind === 'reverse'}
-          <svg viewBox="0 0 64 64" aria-hidden="true" class="icon" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 37 A 18 18 0 0 1 44 25" />
-            <path d="M44 12 L47 26 L33 24 Z" fill="currentColor" stroke="none" />
-            <path d="M49 27 A 18 18 0 0 1 20 39" />
-            <path d="M20 52 L17 38 L31 40 Z" fill="currentColor" stroke="none" />
-          </svg>
-        {:else if card.kind === 'draw-two'}
-          <span class="numeral plus">+2</span>
-        {:else if card.kind === 'wild'}
-          <svg viewBox="0 0 64 64" aria-hidden="true" class="icon on-wild"><circle cx="32" cy="32" r="19" fill="none" stroke="#fff" stroke-width="7" /><path d="M19 45 L45 19" stroke="#fff" stroke-width="7" stroke-linecap="round" /></svg>
-        {:else}
-          <svg viewBox="0 0 64 64" aria-hidden="true" class="fan">
-            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-royal)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(-18 32 56)" />
-            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-grass)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(-6 32 56)" />
-            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-sun)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(6 32 56)" />
-            <rect x="23" y="10" width="18" height="28" rx="3" fill="var(--color-red)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" transform="rotate(18 32 56)" />
-          </svg>
-        {/if}
+        {@render glyph(card)}
       </div>
+      {#if card.kind === 'wild-four'}
+        <div class="index tl"><span class="numeral plus">+4</span></div>
+        <div class="index br"><span class="numeral plus">+4</span></div>
+      {:else}
+        <div class="index tl">{@render glyph(card)}</div>
+        <div class="index br">{@render glyph(card)}</div>
+      {/if}
     {:else}
       <div class="ellipse"></div>
       <svg viewBox="0 0 64 64" aria-hidden="true" class="icon back-mark"><circle cx="32" cy="32" r="19" fill="none" stroke="var(--c)" stroke-width="7" /><path d="M19 45 L45 19" stroke="var(--c)" stroke-width="7" stroke-linecap="round" /></svg>
@@ -99,6 +110,37 @@
 
   .emblem .numeral.plus {
     font-size: calc(var(--w) * 0.42);
+  }
+
+  .index {
+    position: absolute;
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: calc(var(--w) * 0.19);
+    line-height: 1;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .index.tl {
+    top: calc(var(--w) * 0.06);
+    left: calc(var(--w) * 0.09);
+  }
+
+  .index.br {
+    bottom: calc(var(--w) * 0.06);
+    right: calc(var(--w) * 0.09);
+    transform: rotate(180deg);
+  }
+
+  .index .numeral.plus {
+    font-size: calc(var(--w) * 0.15);
+  }
+
+  .index .icon {
+    display: block;
+    width: calc(var(--w) * 0.16);
+    height: calc(var(--w) * 0.16);
   }
 
   .emblem .icon {

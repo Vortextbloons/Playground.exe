@@ -59,6 +59,7 @@ let moved: boolean[] = new Array(BLOCK_COUNT).fill(false);
 let previousSpeeds = new Float32Array(BLOCK_COUNT);
 let phase: Phase = 'idle';
 let grip: Grip | null = null;
+let pullOffset = 0;
 let carryReady = false;
 let carryOffset = { x: 0, z: 0 };
 let lastCarryPoint: { x: number; z: number } | null = null;
@@ -89,7 +90,7 @@ const game = createGame('tower-tumble', {
     tower = createTower(seed);
     scene = createScene(canvas, quality);
     hud = createHud(container);
-    hud.party.append(partyMenu.element);
+    hud.party.append(partyControls);
     const stored = game.storage.get<'high' | 'low' | 'auto'>('quality', 'auto');
     qualityName = stored === 'auto' ? detectQuality() : stored;
     quality = QUALITY_LEVELS[qualityName];
@@ -131,8 +132,20 @@ const game = createGame('tower-tumble', {
     scene.syncPoses(readPoses(tower));
   },
   start() {
+    const view = session.current;
+    if (view.match) {
+      handleState(view.match.state, view.match.status === 'playing', view.isPlayer);
+      if (mode === 'replay') pushSnapshot(view.match.state.blocks);
+      hud?.setRestartVisible(view.match.status !== 'playing');
+    }
+    updateStats(true);
     last = performance.now();
     accumulator = 0;
+    if (tower && scene) {
+      scene.syncPoses(mode === 'replay' ? sampleSnapshots(last) : readPoses(tower));
+      scene.update(0);
+      scene.render();
+    }
     scene?.renderer.setAnimationLoop(tick);
   },
   pause() {
@@ -167,6 +180,12 @@ const game = createGame('tower-tumble', {
 
 const session = game.multiplayer<TowerState, TowerActions>();
 const partyMenu = createMultiplayerMenu(session, metadata.id, config);
+const partyControls = document.createElement('details');
+partyControls.open = true;
+const partySummary = document.createElement('summary');
+partySummary.textContent = 'Party menu';
+partyControls.append(partySummary, partyMenu.element);
+let partyPlaying = false;
 
 function detectQuality(): 'high' | 'low' {
   const coarse = window.matchMedia('(pointer: coarse)').matches;
@@ -239,9 +258,10 @@ function pullPoint(ray: PointerRay, active: Grip): number | null {
   return (x - active.originX) * active.pullX + (z - active.originZ) * active.pullZ;
 }
 
-function beginGrab(index: number) {
+function beginGrab(index: number, ray: PointerRay) {
   if (!tower || phase !== 'idle') return;
   grip = beginGrip(tower, index);
+  pullOffset = pullPoint(ray, grip) ?? 0;
   carryReady = false;
   carryOffset = { x: 0, z: 0 };
   lastCarryPoint = null;
@@ -253,7 +273,7 @@ function updateDrag(ray: PointerRay) {
   if (!tower || !grip) return;
   if (grip.phase === 'extract') {
     const distance = pullPoint(ray, grip);
-    if (distance !== null) grip.input.distance = Math.max(distance, 0);
+    if (distance !== null) grip.input.distance = Math.max(distance - pullOffset, 0);
     return;
   }
   const top = towerTop(currentBlocks(), grip.index);
@@ -290,6 +310,7 @@ function releaseGrab() {
   carryReady = false;
   lastCarryPoint = null;
   scene?.showGuide(false, 0, 0);
+  if (active.phase === 'extract' && mode === 'authority') reportToServer();
 }
 
 function reportToServer() {
@@ -443,7 +464,8 @@ function tick(time: number) {
         timeoutSent = true;
         session.send('timeout', null);
       }
-    } else if (tower) scene?.syncPoses(readPoses(tower));
+    }
+    if (tower) scene?.syncPoses(readPoses(tower));
   }
   scene?.update(dt);
   scene?.render();
@@ -535,6 +557,7 @@ function showMatchResults(state: TowerState) {
 }
 
 function handleState(state: TowerState, playing: boolean, isPlayer: boolean) {
+  if (!tower) return;
   const playerId = session.current.playerId;
   if (state.phase === 'finished') {
     enterReplay(state, true);
@@ -547,17 +570,23 @@ function handleState(state: TowerState, playing: boolean, isPlayer: boolean) {
     else syncServerFlags(state);
     return;
   }
-  if (mode === 'authority') return;
   enterReplay(state, false);
   updateStats();
 }
 
 function onResize() {
   scene?.resize();
+  scene?.render();
 }
 
 session.subscribe(view => {
   const match = view.match;
+  const playing = match?.status === 'playing';
+  partyControls.hidden = view.party?.selection?.gameId !== metadata.id;
+  if (playing !== partyPlaying) {
+    partyControls.open = !playing;
+    partyPlaying = playing;
+  }
   if (!match) {
     if (mode !== 'solo') resetTower();
     return;

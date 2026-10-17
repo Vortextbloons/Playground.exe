@@ -11,6 +11,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; }
 
 .hud-party { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(560px, 92vw); padding: 14px 18px; background: rgba(17, 21, 27, 0.82); backdrop-filter: blur(6px); border: 1px solid #3a3f4b; border-top: 0; border-radius: 0 0 12px 12px; }
 .hud-party:empty { display: none; }
+.hud-party:has(> details[hidden]) { display: none; }
+.hud-party:has(> details:not([open])) { left: 16px; transform: none; width: auto; }
+.hud-party summary { pointer-events: auto; cursor: pointer; font-size: 12px; font-weight: 600; }
+.hud-party summary:focus-visible { outline: 2px solid #b9e6cf; outline-offset: 4px; }
+.hud-party details[open] > summary { margin-bottom: 12px; }
 
 .hud-stats { position: absolute; top: 14px; right: 16px; display: flex; gap: 6px; align-items: baseline; padding: 8px 12px; background: rgba(17, 21, 27, 0.72); border: 1px solid #343a46; border-radius: 9px; font-size: 12px; color: #b9c0cd; }
 .hud-stats strong { color: #f2efe9; font-size: 14px; }

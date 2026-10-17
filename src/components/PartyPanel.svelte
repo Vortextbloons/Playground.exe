@@ -24,7 +24,7 @@
     const proposedGame = new URLSearchParams(location.search).get('game');
     let proposedFor: string | null = null;
     let previousParty: { code: string; hostId: string } | null = null;
-    let previousSelection: string | undefined;
+    let previousSelection: string | null | undefined;
     const unsubscribe = client.subscribe(value => {
       clientState = value;
       const current = value.party;
@@ -34,7 +34,7 @@
         notice = `${newHost?.nickname ?? 'Another player'} is now the host.`;
       }
       previousParty = { code: current.code, hostId: current.hostId };
-      const selection = current.selection?.gameId;
+      const selection = current.selection?.gameId ?? null;
       if (previousSelection !== undefined && value.connected && selection && selection !== previousSelection) window.location.assign(`${base}play/${selection}/`);
       previousSelection = selection;
       if (proposedGame && current.hostId === value.playerId && !current.selection && !current.match && proposedFor !== current.code) {
