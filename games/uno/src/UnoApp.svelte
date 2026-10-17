@@ -171,6 +171,7 @@
     if (next.discardTop !== prev.discardTop) sound.play('play');
     else if (grew(prev.counts, next.counts)) sound.play('draw');
     if (next.direction !== prev.direction) showBanner('Reverse!');
+    if (next.stackedDraw > prev.stackedDraw) showBanner(`Draw ${next.stackedDraw}!`);
     if (next.phase === 'wild-four' && prev.phase !== 'wild-four') showBanner('Wild Draw Four!');
     if (next.missedUno && next.missedUno !== prev.missedUno) {
       showBanner(`${nameOf(next.missedUno)} forgot to call UNO!`);
@@ -209,6 +210,7 @@
   const callUnoNow = $derived(view !== null && view.you !== null && view.missedUno === view.you);
   const canPass = $derived(myTurn && view?.phase === 'playing' && view.drawnCard !== null);
   const canDraw = $derived(myTurn && view?.phase === 'playing' && view.drawnCard === null);
+  const stackedForMe = $derived(canDraw && (view?.stackedDraw ?? 0) > 0);
   let picking = $state<number | null>(null);
 
   const opponents = $derived(
@@ -232,6 +234,11 @@
     }
     if (view.phase === 'color') return `${nameOf(view.turn)} is choosing a color`;
     if (view.phase === 'results') return view.winner ? `${nameOf(view.winner)} won round ${view.round + 1}` : 'Match over';
+    if (view.stackedDraw > 0) {
+      return view.turn === view.you
+        ? `Stack a ${view.activeColor} Draw Two or take ${view.stackedDraw} cards`
+        : `${nameOf(view.turn)} must stack or take ${view.stackedDraw} cards`;
+    }
     if (view.turn === view.you) return 'Your turn';
     return `${nameOf(view.turn)}'s turn`;
   });
@@ -240,7 +247,7 @@
   const handWidth = $derived.by(() => {
     const count = Math.max(7, view?.you !== null && view?.you !== undefined ? view.counts[view.you] ?? 7 : 7);
     const spread = 0.66 * (count - 1) + 1;
-    return Math.max(48, Math.min(92, Math.floor((windowWidth - 48) / spread)));
+    return Math.max(56, Math.min(92, Math.floor((windowWidth - 48) / spread)));
   });
 
   // ------------------------------------------------------------------ confetti
@@ -361,7 +368,7 @@
       </div>
 
       <div class="center">
-        <TablePiles {view} drawCount={view.drawPile} {canDraw} direction={view.direction} dropActive={drag.active} dropHover={drag.over} onDraw={() => dispatch({ type: 'draw-card' })} />
+        <TablePiles {view} drawCount={view.drawPile} stackedDraw={view.stackedDraw} {canDraw} direction={view.direction} dropActive={drag.active} dropHover={drag.over} onDraw={() => dispatch({ type: 'draw-card' })} />
       </div>
 
       <p class="status" data-active={String(myTurn)}>{statusLine}</p>
@@ -373,10 +380,13 @@
       {/if}
 
       {#if !isSpectator && view.you}
-        <PlayerHand {view} width={handWidth} onDrag={onDrag} onPlay={playCard} />
-        <div class="actions">
+        <PlayerHand {view} width={handWidth} maxWidth={windowWidth - 48} onDrag={onDrag} onPlay={playCard} />
+        <div class="actions" class:raised={wildFourForMe}>
           {#if canPass}
             <button type="button" class="ghost-btn" onclick={() => dispatch({ type: 'pass-turn' })}>Pass</button>
+          {/if}
+          {#if stackedForMe}
+            <button type="button" class="catch-btn" onclick={() => dispatch({ type: 'draw-card' })}>Take {view.stackedDraw} cards</button>
           {/if}
           {#if callUnoNow}
             <button type="button" class="uno-btn" onclick={() => dispatch({ type: 'call-uno' })}>UNO!</button>
@@ -872,6 +882,11 @@
     display: flex;
     gap: 10px;
     padding-bottom: 4px;
+  }
+
+  .actions.raised {
+    position: relative;
+    z-index: 40;
   }
 
   .uno-btn {

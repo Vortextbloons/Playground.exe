@@ -5,6 +5,7 @@
   interface Props {
     view: UnoView;
     drawCount: number;
+    stackedDraw: number;
     canDraw: boolean;
     direction: 1 | -1;
     dropActive: boolean;
@@ -12,7 +13,7 @@
     onDraw: () => void;
   }
 
-  let { view, drawCount, canDraw, direction, dropActive, dropHover, onDraw }: Props = $props();
+  let { view, drawCount, stackedDraw, canDraw, direction, dropActive, dropHover, onDraw }: Props = $props();
 
   const tilt = $derived(view.discardTop === null ? 0 : ((view.discardTop * 47) % 21) - 10);
 </script>
@@ -24,7 +25,7 @@
       class="stack"
       onclick={canDraw ? onDraw : undefined}
       disabled={!canDraw}
-      aria-label="Draw a card ({drawCount} left)"
+      aria-label={stackedDraw > 0 ? `Take ${stackedDraw} stacked cards` : `Draw a card (${drawCount} left)`}
     >
       <span class="ghost g2"></span>
       <span class="ghost g1"></span>
@@ -32,7 +33,7 @@
         <Card width={92} />
       </span>
     </button>
-    <span class="pile-label">{drawCount}</span>
+    <span class="pile-label" class:owed={stackedDraw > 0}>{stackedDraw > 0 ? `take ${stackedDraw}` : drawCount}</span>
   </div>
 
   <div class="mid">
@@ -160,6 +161,10 @@
     font-weight: 800;
     font-size: 12px;
     color: var(--color-muted);
+  }
+
+  .pile-label.owed {
+    color: var(--color-gold);
   }
 
   .mid {

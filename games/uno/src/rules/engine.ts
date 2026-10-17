@@ -29,6 +29,8 @@ export type UnoState = {
   wildFour: WildFourPending | null;
   /** A just-drawn card the current player may still play; null otherwise. */
   drawnCard: number | null;
+  /** Draw-Two cards stacked on the current player, who must stack another or take them all. */
+  stackedDraw: number;
   /** Players who said UNO while holding exactly one card. */
   calledUno: string[];
   /** The single player who can currently be caught for a missed UNO call. */
@@ -109,6 +111,7 @@ export type UnoView = {
   phase: Phase;
   wildFour: { by: string; target: string } | null;
   drawnCard: number | null;
+  stackedDraw: number;
   calledUno: string[];
   missedUno: string | null;
   scores: Record<string, number>;
@@ -142,6 +145,7 @@ export function toView(state: UnoState, you: string | null): UnoView {
     phase: state.phase,
     wildFour: state.wildFour ? { by: state.wildFour.by, target: state.wildFour.target } : null,
     drawnCard: you === state.turn ? state.drawnCard : null,
+    stackedDraw: state.stackedDraw,
     calledUno: [...state.calledUno],
     missedUno: state.missedUno,
     scores: { ...state.scores },
@@ -165,7 +169,9 @@ export function handOf(state: UnoState, playerId: string): number[] {
 }
 
 export function canPlayCard(state: UnoState, cardId: number): boolean {
-  return cardMatchesView(cardFromId(cardId), state.activeColor, topCard(state));
+  const card = cardFromId(cardId);
+  if (state.stackedDraw > 0) return card.kind === 'draw-two' && card.color === state.activeColor;
+  return cardMatchesView(card, state.activeColor, topCard(state));
 }
 
 /** View-safe twin of canPlayCard for clients that only ever see their filtered view. */
@@ -257,6 +263,7 @@ function finishRound(state: UnoState, winnerId: string): UnoState {
   state.phase = 'results';
   state.missedUno = null;
   state.drawnCard = null;
+  state.stackedDraw = 0;
   state.wildFour = null;
   if (state.matchTarget > 0 && (state.scores[winnerId] ?? 0) >= state.matchTarget) state.matchWinner = winnerId;
   return state;
@@ -296,6 +303,7 @@ export function dealRound(players: readonly string[], scores: Record<string, num
     phase: 'playing',
     wildFour: null,
     drawnCard: null,
+    stackedDraw: 0,
     calledUno: [],
     missedUno: null,
     scores: { ...scores },
@@ -407,6 +415,12 @@ export function applyAction(raw: UnoState, playerId: string, action: UnoAction, 
     if (playerId !== state.turn) throw new Error('Not your turn.');
     if (state.drawnCard !== null) throw new Error('Play or pass the card you drew.');
     closeCatchWindow(state, playerId);
+    if (state.stackedDraw > 0) {
+      draw(state, playerId, state.stackedDraw, rng);
+      state.stackedDraw = 0;
+      advanceTurn(state, 1);
+      return state;
+    }
     const [card] = draw(state, playerId, 1, rng);
     if (card === undefined) advanceTurn(state, 1); // every card is in someone's hand
     else if (canPlayCard(state, card)) state.drawnCard = card;
@@ -457,9 +471,8 @@ export function applyAction(raw: UnoState, playerId: string, action: UnoAction, 
         }
         break;
       case 'draw-two': {
-        const victim = peekNext(state);
-        draw(state, victim, 2, rng);
-        advanceTurn(state, 2);
+        state.stackedDraw += 2;
+        advanceTurn(state, 1);
         break;
       }
       case 'wild-four':

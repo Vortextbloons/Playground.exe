@@ -7,16 +7,22 @@
   interface Props {
     view: UnoView;
     width: number;
+    maxWidth: number;
     onDrag: (active: boolean, over: boolean) => void;
     onPlay: (cardId: number) => void;
   }
 
-  let { view, width, onDrag, onPlay }: Props = $props();
+  let { view, width, maxWidth, onDrag, onPlay }: Props = $props();
 
   const you = $derived(view.you);
   const hand = $derived(you === null ? [] : view.hands[you] ?? []);
   const canAct = $derived(you !== null && view.turn === you && view.phase === 'playing');
   const drawn = $derived(view.drawnCard);
+  const overlap = $derived.by(() => {
+    if (hand.length <= 1) return 0;
+    const free = Math.max(0, maxWidth - width);
+    return Math.min(width * 0.34, free / (hand.length - 1));
+  });
 
   function isPlayable(cardId: number): boolean {
     if (!canAct) return false;
@@ -101,7 +107,7 @@
   }
 </script>
 
-<div class="hand" style:--w="{width}px" aria-label="Your hand, {hand.length} cards">
+<div class="hand" style:--w="{width}px" style:--overlap="{overlap}px" aria-label="Your hand, {hand.length} cards">
   {#each hand as cardId, index (cardId)}
     <div
       class="slot"
@@ -143,7 +149,7 @@
 
   .slot {
     position: relative;
-    margin-left: calc(var(--w) * -0.34);
+    margin-left: calc(var(--overlap, 0px) * -1);
     animation: var(--animate-card-in);
     animation-delay: calc(var(--i) * 22ms);
     touch-action: none;

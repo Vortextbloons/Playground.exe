@@ -260,6 +260,51 @@ test('an empty draw pile reshuffles the discard minus the top card', () => {
   assert.equal(drawn.drawnCard !== null, true, 'either leftover matches the red top');
 });
 
+// ------------------------------------------------------------ stacked twos
+
+test('draw twos stack: the threat passes along and the victim stacks or takes it', () => {
+  const state = riggedMatch(
+    { you: [action('red', 'draw-two', 1), num('red', 5, 1)], ada: [action('red', 'draw-two', 2), num('blue', 4, 1)] },
+    { turn: 'you', activeColor: 'red' },
+  );
+  state.discardPile = [num('red', 1, 1)];
+
+  const played = applyAction(state, 'you', { type: 'play-card', card: action('red', 'draw-two', 1) }, rngFrom(57));
+  assert.equal(played.stackedDraw, 2, 'nobody draws until the threat resolves');
+  assert.equal(played.turn, 'ada', 'the threat waits on the next player');
+  assert.equal(handOf(played, 'ada').length, 2, 'ada has not drawn');
+
+  assert.equal(canPlayCard(played, action('red', 'draw-two', 2)), true, 'a matching draw two stacks');
+  assert.equal(canPlayCard(played, action('blue', 'draw-two', 1)), false, 'the draw two must match the active color');
+  assert.equal(canPlayCard(played, num('blue', 4, 1)), false, 'nothing else is playable while stacked');
+  assert.equal(canPlayCard(played, wildFour(1)), false, 'wild fours do not stack draw twos');
+  assert.throws(() => applyAction(played, 'ada', { type: 'pass-turn' }, rngFrom(58)), /Draw a card before passing/);
+
+  const stacked = applyAction(played, 'ada', { type: 'play-card', card: action('red', 'draw-two', 2) }, rngFrom(58));
+  assert.equal(stacked.stackedDraw, 4, 'stacks accumulate');
+  assert.equal(stacked.turn, 'rex');
+
+  const taken = applyAction(stacked, 'rex', { type: 'draw-card' }, rngFrom(59));
+  assert.equal(handOf(taken, 'rex').length, 11, 'rex took the whole stack');
+  assert.equal(taken.stackedDraw, 0, 'the stack is settled');
+  assert.equal(taken.turn, 'mia', 'taking ends the turn');
+});
+
+test('a stacked player without a matching draw two must take the accumulated cards', () => {
+  const state = riggedMatch(
+    { you: [action('green', 'draw-two', 1), num('green', 5, 1)], ada: [num('green', 6, 1), num('blue', 2, 1)] },
+    { turn: 'you', activeColor: 'green' },
+  );
+  state.discardPile = [num('green', 1, 1)];
+
+  const played = applyAction(state, 'you', { type: 'play-card', card: action('green', 'draw-two', 1) }, rngFrom(60));
+  assert.throws(() => applyAction(played, 'ada', { type: 'play-card', card: num('green', 6, 1) }, rngFrom(61)), /does not match/);
+  const taken = applyAction(played, 'ada', { type: 'draw-card' }, rngFrom(61));
+  assert.equal(handOf(taken, 'ada').length, 4, 'ada drew the two');
+  assert.equal(taken.stackedDraw, 0);
+  assert.equal(taken.turn, 'rex');
+});
+
 // ----------------------------------------------------------------- uno calls
 
 test('missed UNO calls can be caught for a two-card penalty, and calling first is safe', () => {
