@@ -2,9 +2,11 @@
 import type { Registry } from './engine';
 import game0 from '../../games/connect-four/src/multiplayer';
 import game1 from '../../games/pocket-circuit/src/multiplayer';
-import game2 from '../../games/uno/src/multiplayer';
+import game2 from '../../games/tower-tumble/src/multiplayer';
+import game3 from '../../games/uno/src/multiplayer';
 export const games: Registry = {
 "connect-four": { ...{"id":"connect-four","title":"Connect Four","multiplayer":{"modes":[{"id":"duel","label":"Duel","minPlayers":2,"maxPlayers":2,"preset":"turn-based","spectators":true}]}}, definition: game0 },
 "pocket-circuit": { ...{"id":"pocket-circuit","title":"Pocket Circuit","multiplayer":{"modes":[{"id":"turns","label":"Take turns","minPlayers":2,"maxPlayers":4,"preset":"turn-based","spectators":true},{"id":"challenge","label":"Shared sprint","minPlayers":2,"maxPlayers":8,"preset":"shared-challenge","spectators":true},{"id":"live","label":"Live movement","minPlayers":2,"maxPlayers":4,"preset":"live","spectators":true}]}}, definition: game1 },
-"uno": { ...{"id":"uno","title":"UNO","multiplayer":{"modes":[{"id":"classic","label":"Classic UNO","minPlayers":2,"maxPlayers":10,"preset":"turn-based","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game2 }
+"tower-tumble": { ...{"id":"tower-tumble","title":"Tower Tumble","multiplayer":{"modes":[{"id":"classic","label":"Classic Tower","minPlayers":2,"maxPlayers":4,"preset":"live","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game2 },
+"uno": { ...{"id":"uno","title":"UNO","multiplayer":{"modes":[{"id":"classic","label":"Classic UNO","minPlayers":2,"maxPlayers":10,"preset":"turn-based","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game3 }
 };

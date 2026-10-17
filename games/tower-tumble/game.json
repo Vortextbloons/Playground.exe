@@ -1,0 +1,31 @@
+{
+  "id": "tower-tumble",
+  "title": "Tower Tumble",
+  "description": "Pull blocks from a leaning tower and stack them on top — one wrong tug and it all comes down. Play free solo or take turns with your party.",
+  "genre": "Physics",
+  "tags": [
+    "physics",
+    "3d",
+    "multiplayer",
+    "solo"
+  ],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-16",
+  "controls": "Drag a block to pull it free, then drag it over the tower and release to drop it on top. Right-drag rotates the camera, scroll zooms. On touch: one finger drags blocks, two fingers orbit and zoom.",
+  "solo": true,
+  "multiplayer": {
+    "modes": [
+      {
+        "id": "classic",
+        "label": "Classic Tower",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "preset": "live",
+        "spectators": true,
+        "lateJoin": "spectate",
+        "disconnect": "reserve"
+      }
+    ]
+  }
+}
