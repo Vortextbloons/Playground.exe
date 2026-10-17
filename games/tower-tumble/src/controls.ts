@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 export interface PointerRay {
+  screenX: number;
+  screenY: number;
   origin: { x: number; y: number; z: number };
   direction: { x: number; y: number; z: number };
 }
@@ -8,9 +10,11 @@ export interface PointerRay {
 export interface ControlHost {
   pick(ray: PointerRay): number | null;
   canGrab(index: number): boolean;
+  select(index: number): void;
   beginGrab(index: number, ray: PointerRay): void;
+  resumeGrab(ray: PointerRay): void;
   drag(ray: PointerRay): void;
-  release(): void;
+  pauseGrab(): void;
   hover(index: number | null, legal: boolean): void;
   orbit: { rotate(dx: number, dy: number): void; zoom(delta: number): void };
 }
@@ -18,7 +22,10 @@ export interface ControlHost {
 interface Pointer {
   x: number;
   y: number;
-  mode: 'grab' | 'orbit';
+  startX: number;
+  startY: number;
+  index: number | null;
+  mode: 'pending' | 'grab' | 'orbit';
 }
 
 export function createControls(element: HTMLElement, camera: THREE.Camera, host: ControlHost) {
@@ -28,13 +35,15 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
   let grabbing = false;
   let pinch: { distance: number; x: number; y: number } | null = null;
 
-  function ray(event: PointerEvent): PointerRay {
+  function ray(event: Pick<PointerEvent, 'clientX' | 'clientY'>): PointerRay {
     const rect = element.getBoundingClientRect();
     ndc.x = ((event.clientX - rect.left) / (rect.width || 1)) * 2 - 1;
     ndc.y = -((event.clientY - rect.top) / (rect.height || 1)) * 2 + 1;
     raycaster.setFromCamera(ndc, camera);
     const { origin, direction } = raycaster.ray;
     return {
+      screenX: event.clientX,
+      screenY: event.clientY,
       origin: { x: origin.x, y: origin.y, z: origin.z },
       direction: { x: direction.x, y: direction.y, z: direction.z },
     };
@@ -43,13 +52,13 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
   function endGrab() {
     if (!grabbing) return;
     grabbing = false;
-    host.release();
+    host.pauseGrab();
   }
 
   function down(event: PointerEvent) {
     event.preventDefault();
     element.setPointerCapture(event.pointerId);
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, mode: 'orbit' });
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, index: null, mode: 'orbit' });
     if (pointers.size > 1) {
       endGrab();
       for (const pointer of pointers.values()) pointer.mode = 'orbit';
@@ -62,9 +71,8 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
     const pointerRay = ray(event);
     const index = event.button === 0 ? host.pick(pointerRay) : null;
     if (index !== null && host.canGrab(index)) {
-      grabbing = true;
-      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, mode: 'grab' });
-      host.beginGrab(index, pointerRay);
+      host.select(index);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, index, mode: 'pending' });
     }
   }
 
@@ -92,6 +100,15 @@ export function createControls(element: HTMLElement, camera: THREE.Camera, host:
       }
       pinch = { distance, x, y };
       return;
+    }
+    if (entry.mode === 'pending') {
+      if (Math.hypot(event.clientX - entry.startX, event.clientY - entry.startY) < 8) return;
+      if (entry.index === null || !host.canGrab(entry.index)) { entry.mode = 'orbit'; return; }
+      const startRay = ray({ clientX: entry.startX, clientY: entry.startY });
+      host.beginGrab(entry.index, startRay);
+      host.resumeGrab(startRay);
+      grabbing = true;
+      entry.mode = 'grab';
     }
     if (entry.mode === 'grab') host.drag(ray(event));
     else host.orbit.rotate(dx, dy);

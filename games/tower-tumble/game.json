@@ -12,7 +12,7 @@
   "author": "Isaac",
   "version": "0.1.0",
   "date": "2026-10-16",
-  "controls": "Drag a block to pull it free, then drag it over the tower and release to drop it on top. Right-drag rotates the camera, scroll zooms. On touch: one finger drags blocks, two fingers orbit and zoom.",
+  "controls": "Select a block, then drag along the arrow to pull it free. Drag the held block over the tower and press Place block to drop it. Lift your finger or mouse to pause safely. Drag empty space or right-drag to rotate; scroll to zoom. On touch, use two fingers to orbit and pinch to zoom.",
   "cover": "cover.svg",
   "solo": true,
   "multiplayer": {

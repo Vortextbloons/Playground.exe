@@ -1,5 +1,7 @@
 export interface Hud {
   party: HTMLElement;
+  onPlace(listener: () => void): void;
+  setInteraction(message: string, canPlace: boolean): void;
   setStats(primary: string, secondary?: string): void;
   toast(message: string): void;
   showResult(title: string, detail: string, action: { label: string; onSelect(): void }): void;
@@ -55,7 +57,16 @@ export function createHud(container: HTMLElement): Hud {
   resultAction.type = 'button';
   result.append(resultTitle, resultDetail, resultAction);
 
-  root.append(party, stats, controls, toastNode, result);
+  const interaction = document.createElement('div');
+  interaction.className = 'hud-interaction';
+  const instruction = document.createElement('p');
+  instruction.setAttribute('role', 'status');
+  const place = document.createElement('button');
+  place.type = 'button';
+  place.textContent = 'Place block';
+  place.hidden = true;
+  interaction.append(instruction, place);
+  root.append(party, stats, controls, interaction, toastNode, result);
   container.append(root);
 
   let toastTimer = 0;
@@ -69,6 +80,11 @@ export function createHud(container: HTMLElement): Hud {
 
   return {
     party,
+    onPlace(listener) { place.addEventListener('click', listener); },
+    setInteraction(message, canPlace) {
+      if (instruction.textContent !== message) instruction.textContent = message;
+      place.hidden = !canPlace;
+    },
     setStats(text, detail) {
       primary.textContent = text;
       secondary.textContent = detail ? `· ${detail}` : '';

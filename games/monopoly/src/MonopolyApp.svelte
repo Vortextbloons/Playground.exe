@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { SessionView } from '@playground-exe/game-kit/multiplayer';
   import { GROUP_COLORS, SPACES, TURN_MS } from './rules/board';
   import { applyAction, newMatch, toView, type EndConditions, type MonoAction, type MonoActionPayloads, type MonoState, type MonoView } from './rules/engine';
@@ -53,7 +54,7 @@
 
   $effect(() => {
     if (!session) return;
-    const offState = session.subscribe(next => {
+    const offState = session.subscribe(next => untrack(() => {
       mpConnected = next.connected;
       mpInMatch = next.match !== null;
       mpSelected = next.party?.selection?.gameId === 'monopoly';
@@ -65,7 +66,7 @@
         for (const player of next.party?.players ?? []) roster[player.id] = player.nickname;
         names = roster;
       }
-    });
+    }));
     const offError = session.onError(message => {
       showBanner(message);
     });
@@ -141,9 +142,9 @@
         const payload: MonoActionPayloads['propose-trade'] = {
           to: action.to,
           cash: action.cash,
-          properties: action.properties,
+          properties: [...action.properties],
           wantCash: action.wantCash,
-          wantProperties: action.wantProperties,
+          wantProperties: [...action.wantProperties],
         };
         return payload;
       }

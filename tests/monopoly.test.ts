@@ -1,5 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
+import ts from 'typescript';
 import { mulberry32, type Rng } from '../games/monopoly/src/rules/rng.ts';
 import {
   applyAction, housesInPlay, newMatch, netWorth, removePlayer, rentFor, toView,
@@ -9,6 +12,22 @@ import { actorFor, botMove } from '../games/monopoly/src/bots/bots.ts';
 import monopolyMultiplayer, { type MpState } from '../games/monopoly/src/multiplayer.ts';
 
 const PLAYERS = ['you', 'ada', 'rex'];
+
+test('multiplayer trade payloads can cross the message bridge with reactive property selections', () => {
+  const component = readFileSync(new URL('../games/monopoly/src/MonopolyApp.svelte', import.meta.url), 'utf8');
+  const script = component.slice(component.indexOf('>') + 1, component.indexOf('</script>'));
+  const file = ts.createSourceFile('MonopolyApp.ts', script, ts.ScriptTarget.Latest, true);
+  const payloadOf = file.statements.find(statement => ts.isFunctionDeclaration(statement) && statement.name?.text === 'payloadOf');
+  assert.ok(payloadOf);
+  const serialize = runInNewContext(ts.transpile(`${payloadOf.getText(file)}\npayloadOf;`));
+  for (const [properties, wantProperties] of [[[], []], [[1], [3]]]) {
+    const payload = serialize({
+      type: 'propose-trade', to: 'ada', cash: 100, wantCash: 0,
+      properties: new Proxy(properties!, {}), wantProperties: new Proxy(wantProperties!, {}),
+    });
+    assert.deepEqual(structuredClone(payload), { to: 'ada', cash: 100, wantCash: 0, properties, wantProperties });
+  }
+});
 
 function playerOf(state: MonoState, id: string): PlayerState {
   const player = state.players[id];

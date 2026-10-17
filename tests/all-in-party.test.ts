@@ -6,11 +6,35 @@ import { parseMultiplayer } from '../packages/game-kit/src/multiplayer/protocol'
 import { MATCH_MS } from '../games/all-in/src/core/economy.ts';
 import type { PlayerView } from '../games/all-in/src/core/types.ts';
 import type { PokerView } from '../games/all-in/src/games/poker.ts';
+import { createHybridHost, type PartySession } from '../games/all-in/src/host/hybrid.ts';
 
 const multiplayer = parseMultiplayer({ modes: [{ id: 'casino', label: 'Casino', minPlayers: 1, maxPlayers: 16, preset: 'turn-based', spectators: true, lateJoin: 'join' }] });
 const games: Registry = { 'all-in': { id: 'all-in', title: 'ALL IN!', multiplayer, definition } };
 
 const T0 = 1_000_000;
+
+test('the casino blocks local play while waiting in a party lobby', () => {
+  let refresh = () => {};
+  const session: PartySession = {
+    current: { party: null, playerId: null, connected: true, match: null, isPlayer: false },
+    subscribe(listener) { refresh = () => listener(session.current); return () => {}; },
+    send() { return true; },
+  };
+  const host = createHybridHost(session);
+  assert.equal(host.send('sit', { at: 'slots' }), true);
+  const { room, host: playerId } = fixture();
+  session.current.party = snapshot(room, playerId, games);
+  refresh();
+  host.subscribe(status => {
+    assert.equal(status.playing, false);
+    assert.equal(status.view.vault, null);
+  })();
+  assert.equal(host.send('spin', { bet: 1 }), false);
+  assert.equal(host.send('again', null), false);
+  session.current.party = null;
+  refresh();
+  assert.equal(host.send('again', null), true);
+});
 
 function fixture(count = 2) {
   const room = createRoom('9001', T0);

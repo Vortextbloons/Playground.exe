@@ -20,7 +20,8 @@ export interface Scene3D {
   camera: THREE.PerspectiveCamera;
   syncPoses(poses: readonly BlockPose[]): void;
   highlight(index: number | null, legal: boolean): void;
-  showGuide(visible: boolean, y: number, yaw: number): void;
+  showGuide(visible: boolean, y: number, yaw: number, x?: number, z?: number): void;
+  showPull(point: { x: number; y: number; z: number; dx: number; dz: number } | null): void;
   shake(strength: number): void;
   setQuality(quality: Quality): void;
   update(dt: number): void;
@@ -115,18 +116,25 @@ export function createScene(canvas: HTMLCanvasElement, quality: Quality): Scene3
 
   const guide = new THREE.Group();
   const guideSurface = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.79, 0.79),
+    new THREE.BoxGeometry(BLOCK_LENGTH, BLOCK_HEIGHT, BLOCK_WIDTH),
     new THREE.MeshBasicMaterial({ color: 0x8ef0c8, transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide }),
   );
-  guideSurface.rotation.x = -Math.PI / 2;
+
   const guideEdges = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.79, 0.79)),
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(BLOCK_LENGTH, BLOCK_HEIGHT, BLOCK_WIDTH)),
     new THREE.LineBasicMaterial({ color: 0x8ef0c8, transparent: true, opacity: 0.55 }),
   );
-  guideEdges.rotation.x = -Math.PI / 2;
+
   guide.add(guideSurface, guideEdges);
   guide.visible = false;
   scene.add(guide);
+  const pullArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.7, 0xb9e6cf, 0.16, 0.1);
+  (pullArrow.line.material as THREE.Material).depthTest = false;
+  (pullArrow.cone.material as THREE.Material).depthTest = false;
+  pullArrow.line.renderOrder = 1;
+  pullArrow.cone.renderOrder = 1;
+  pullArrow.visible = false;
+  scene.add(pullArrow);
 
   const dummy = new THREE.Object3D();
   const tint = new THREE.Color();
@@ -182,10 +190,17 @@ export function createScene(canvas: HTMLCanvasElement, quality: Quality): Scene3
       lastLegal = legal;
       if (lastHighlight >= 0) applyHighlight(lastHighlight, legal);
     },
-    showGuide(visible, y, yaw) {
+    showGuide(visible, y, yaw, x = 0, z = 0) {
       guide.visible = visible;
-      guide.position.set(0, y, 0);
+      guide.position.set(x, y, z);
       guide.rotation.y = yaw;
+    },
+    showPull(point) {
+      pullArrow.visible = point !== null;
+      if (point) {
+        pullArrow.position.set(point.x, point.y + BLOCK_HEIGHT, point.z);
+        pullArrow.setDirection(new THREE.Vector3(point.dx, 0, point.dz));
+      }
     },
     shake(strength) {
       trauma = Math.min(trauma + strength, 1);
@@ -231,6 +246,7 @@ export function createScene(canvas: HTMLCanvasElement, quality: Quality): Scene3
       (guideSurface.material as THREE.Material).dispose();
       guideEdges.geometry.dispose();
       (guideEdges.material as THREE.Material).dispose();
+      pullArrow.dispose();
       renderer.dispose();
     },
   };

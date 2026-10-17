@@ -5,6 +5,8 @@ import metadata from '../game.json';
 import {
   BLOCK_COUNT,
   BLOCK_HEIGHT,
+  CARRY_LIMIT,
+  EXTRACT_LIMIT,
   POSE_STRIDE,
   TURN_MS,
   decodePoses,
@@ -59,10 +61,13 @@ let moved: boolean[] = new Array(BLOCK_COUNT).fill(false);
 let previousSpeeds = new Float32Array(BLOCK_COUNT);
 let phase: Phase = 'idle';
 let grip: Grip | null = null;
-let pullOffset = 0;
+let selected: number | null = null;
+let hovered: number | null = null;
+let hoverLegal = false;
+let pullStart = { x: 0, y: 0, distance: 0, dx: 0, dy: 0 };
+let snapped = false;
 let carryReady = false;
 let carryOffset = { x: 0, z: 0 };
-let lastCarryPoint: { x: number; z: number } | null = null;
 let drop: { index: number; previousTop: number } | null = null;
 let placed = 0;
 let best = 0;
@@ -96,6 +101,7 @@ const game = createGame('tower-tumble', {
     quality = QUALITY_LEVELS[qualityName];
     scene.setQuality(quality);
     hud.setQuality(qualityName);
+    hud.onPlace(releaseGrab);
     hud.onRestart(() => game.restart());
     timerButton.addEventListener('click', () => {
       const state = lastState;
@@ -115,13 +121,16 @@ const game = createGame('tower-tumble', {
         return pick(tower, ray.origin, ray.direction)?.index ?? null;
       },
       canGrab(index) {
-        return inputAllowed() && phase === 'idle' && isRemovable(currentBlocks(), index);
+        return inputAllowed() && (grip ? grip.index === index : phase === 'idle' && isRemovable(currentBlocks(), index));
       },
+      select(index) { selected = index; },
       beginGrab,
+      resumeGrab,
       drag: updateDrag,
-      release: releaseGrab,
+      pauseGrab() { carryReady = false; },
       hover(index, legal) {
-        scene?.highlight(inputAllowed() ? index : null, legal);
+        hovered = index;
+        hoverLegal = legal;
       },
       orbit: scene.orbit,
     });
@@ -246,71 +255,70 @@ function planePoint(ray: PointerRay, y: number): { x: number; z: number } | null
   return { x: ray.origin.x + ray.direction.x * t, z: ray.origin.z + ray.direction.z * t };
 }
 
-function pullPoint(ray: PointerRay, active: Grip): number | null {
-  const nx = -active.pullZ;
-  const nz = active.pullX;
-  const denominator = ray.direction.x * nx + ray.direction.z * nz;
-  if (Math.abs(denominator) < 0.07) return null;
-  const t = ((active.originX - ray.origin.x) * nx + (active.originZ - ray.origin.z) * nz) / denominator;
-  if (t <= 0.05) return null;
-  const x = ray.origin.x + ray.direction.x * t;
-  const z = ray.origin.z + ray.direction.z * t;
-  return (x - active.originX) * active.pullX + (z - active.originZ) * active.pullZ;
-}
-
-function beginGrab(index: number, ray: PointerRay) {
-  if (!tower || phase !== 'idle') return;
+function beginGrab(index: number, _ray: PointerRay) {
+  if (!tower || grip || phase !== 'idle') return;
   grip = beginGrip(tower, index);
-  pullOffset = pullPoint(ray, grip) ?? 0;
-  carryReady = false;
-  carryOffset = { x: 0, z: 0 };
-  lastCarryPoint = null;
+  selected = index;
+  snapped = false;
   phase = 'holding';
   if (mode === 'authority') session.send('grab', { block: index });
 }
 
+function resumeGrab(ray: PointerRay) {
+  if (!tower || !grip || !scene) return;
+  const position = tower.bodies[grip.index]!.translation();
+  scene.camera.updateMatrixWorld();
+  const start = new THREE.Vector3(position.x, position.y, position.z).project(scene.camera);
+  const end = new THREE.Vector3(position.x + grip.pullX, position.y, position.z + grip.pullZ).project(scene.camera);
+  const rect = canvas.getBoundingClientRect();
+  pullStart = { x: ray.screenX, y: ray.screenY, distance: grip.input.distance,
+    dx: (end.x - start.x) * rect.width / 2, dy: -(end.y - start.y) * rect.height / 2 };
+  carryReady = false;
+  if (grip.phase === 'carry') rebaseCarry(ray);
+}
+
+function rebaseCarry(ray: PointerRay) {
+  if (!grip) return;
+  const point = planePoint(ray, towerTop(currentBlocks(), grip.index) + CARRY_HEIGHT);
+  if (!point) return;
+  carryOffset = { x: grip.input.x - point.x, z: grip.input.z - point.z };
+  carryReady = true;
+}
+
 function updateDrag(ray: PointerRay) {
-  if (!tower || !grip) return;
+  if (!tower || !grip || !inputAllowed()) return;
   if (grip.phase === 'extract') {
-    const distance = pullPoint(ray, grip);
-    if (distance !== null) grip.input.distance = Math.max(distance - pullOffset, 0);
+    const { x, y, distance, dx, dy } = pullStart;
+    grip.input.distance = THREE.MathUtils.clamp(distance + ((ray.screenX - x) * dx + (ray.screenY - y) * dy) / Math.max(dx * dx + dy * dy, 1600), 0, EXTRACT_LIMIT);
     return;
   }
   const top = towerTop(currentBlocks(), grip.index);
   const point = planePoint(ray, top + CARRY_HEIGHT);
   if (!point) return;
-  if (!carryReady) {
-    carryReady = true;
-    const position = tower.bodies[grip.index]!.translation();
-    carryOffset = { x: position.x - point.x, z: position.z - point.z };
-  }
-  lastCarryPoint = point;
-  grip.input.x = point.x + carryOffset.x;
-  grip.input.z = point.z + carryOffset.z;
+  if (!carryReady) { rebaseCarry(ray); return; }
+  const x = THREE.MathUtils.clamp(point.x + carryOffset.x, -CARRY_LIMIT, CARRY_LIMIT);
+  const z = THREE.MathUtils.clamp(point.z + carryOffset.z, -CARRY_LIMIT, CARRY_LIMIT);
+  const distance = Math.hypot(x, z);
+  snapped = distance < (snapped ? 0.12 : 0.08);
+  grip.input.x = snapped ? 0 : x;
+  grip.input.z = snapped ? 0 : z;
 }
 
 function releaseGrab() {
-  if (!tower || !grip) return;
+  if (!tower || !grip || grip.phase !== 'carry' || !inputAllowed()) return;
   const active = grip;
   const blocks = currentBlocks();
   const top = towerTop(blocks, active.index);
-  if (active.phase === 'carry') {
-    releaseGrip(tower, active);
-    moved[active.index] = true;
-    drop = { index: active.index, previousTop: top };
-    settleTime = 0;
-    stableTime = 0;
-    phase = 'settling';
-  } else {
-    if (active.input.distance > 0.12) moved[active.index] = true;
-    releaseGrip(tower, active);
-    phase = 'idle';
-  }
+  releaseGrip(tower, active);
+  moved[active.index] = true;
+  drop = { index: active.index, previousTop: top };
+  settleTime = 0;
+  stableTime = 0;
+  phase = 'settling';
   grip = null;
+  selected = null;
   carryReady = false;
-  lastCarryPoint = null;
   scene?.showGuide(false, 0, 0);
-  if (active.phase === 'extract' && mode === 'authority') reportToServer();
 }
 
 function reportToServer() {
@@ -344,6 +352,7 @@ function finishSettling() {
 function collapseLocal() {
   if (phase === 'over') return;
   grip = null;
+  selected = null;
   drop = null;
   scene?.showGuide(false, 0, 0);
   scene?.shake(1);
@@ -358,23 +367,16 @@ function collapseLocal() {
   });
 }
 
-function simulate(step: number) {
+function simulate() {
   if (!tower) return;
   if (grip) {
     const blocks = currentBlocks();
-    if (grip.phase === 'carry') {
-      const decay = Math.exp(-step * 2.4);
-      carryOffset.x *= decay;
-      carryOffset.z *= decay;
-      if (lastCarryPoint) {
-        grip.input.x = lastCarryPoint.x + carryOffset.x;
-        grip.input.z = lastCarryPoint.z + carryOffset.z;
-      }
-    }
     const top = towerTop(blocks, grip.index);
     const yaw = carryYaw(blocks, grip.index);
+    const wasExtracting = grip.phase === 'extract';
     applyGrip(tower, grip, top, yaw);
-    scene?.showGuide(true, top + BLOCK_HEIGHT / 2, yaw);
+    if (wasExtracting && grip.phase === 'carry') carryReady = false;
+    scene?.showGuide(grip.phase === 'carry', top + BLOCK_HEIGHT, yaw, grip.input.x, grip.input.z);
   }
   stepTower(tower, previousSpeeds);
   const impacts = collectImpacts(tower, previousSpeeds);
@@ -386,7 +388,7 @@ function simulateFrame(dt: number) {
   accumulator += dt;
   let steps = 0;
   while (accumulator >= STEP && steps < 5) {
-    simulate(STEP);
+    simulate();
     accumulator -= STEP;
     steps++;
   }
@@ -468,8 +470,27 @@ function tick(time: number) {
     if (tower) scene?.syncPoses(readPoses(tower));
   }
   scene?.update(dt);
+  updateControlFeedback();
   scene?.render();
   updateStats();
+}
+
+function updateControlFeedback() {
+  if (!scene || !tower || !hud) return;
+  const allowed = inputAllowed() && phase !== 'over';
+  if (!allowed) selected = null;
+  scene.highlight(allowed ? selected ?? hovered : null, selected !== null || hoverLegal);
+  const placement = selected === null ? null : tower.placements[selected]!;
+  const position = selected === null ? null : tower.bodies[selected]!.translation();
+  scene.showPull(position && placement && (!grip || grip.phase === 'extract') ? { ...position, dx: placement.axis === 'z' ? (placement.slot === 0 ? -1 : 1) : 0, dz: placement.axis === 'x' ? (placement.slot === 0 ? -1 : 1) : 0 } : null);
+  if (!grip) scene.showGuide(false, 0, 0);
+  const canPlace = allowed && grip?.phase === 'carry';
+  const message = !allowed ? 'Watch the tower — wait for your turn.'
+    : canPlace ? 'Position the block, then press Place block. Lift to pause.'
+    : phase === 'settling' ? 'Wait for the block to settle.'
+    : selected !== null ? 'Drag the highlighted block along the arrow. Lift to pause.'
+    : 'Select a block. Drag empty space to rotate the tower.';
+  hud.setInteraction(message, canPlace);
 }
 
 function resetTower() {
@@ -480,6 +501,7 @@ function resetTower() {
   previousSpeeds = new Float32Array(BLOCK_COUNT);
   phase = 'idle';
   grip = null;
+  selected = null;
   drop = null;
   placed = 0;
   accumulator = 0;
@@ -500,6 +522,7 @@ function applyServerState(state: TowerState) {
   placed = state.placed;
   phase = 'idle';
   grip = null;
+  selected = null;
   drop = null;
   accumulator = 0;
   snapshots = [{ time: performance.now(), poses: decodePoses(state.blocks) }];
@@ -534,6 +557,7 @@ function enterReplay(state: TowerState, falling: boolean) {
     mode = 'replay';
     phase = 'idle';
     grip = null;
+    selected = null;
     drop = null;
     snapshots = [];
     hud?.setRestartVisible(false);

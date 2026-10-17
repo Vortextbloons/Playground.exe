@@ -21,7 +21,7 @@ export function createHybridHost(session: PartySession): CasinoHost {
   let local = createCasino(engines, [LOCAL_ID], { now: Date.now(), entropy });
 
   const localStatus = (): HostStatus => ({
-    view: viewCasino(engines, local, LOCAL_ID), connected: true, playing: true,
+    view: viewCasino(engines, local, session.current.party ? null : LOCAL_ID), connected: true, playing: !session.current.party,
     names: { [LOCAL_ID]: 'You' },
   });
 
@@ -48,6 +48,7 @@ export function createHybridHost(session: PartySession): CasinoHost {
       return () => { listeners.delete(listener); };
     },
     send(action, payload) {
+      if (session.current.party && !session.current.match) return false;
       if (action === 'again') {
         if (session.current.match) return false;
         local = createCasino(engines, [LOCAL_ID], { now: Date.now(), entropy });

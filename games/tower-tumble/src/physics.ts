@@ -195,7 +195,11 @@ export function applyGrip(tower: Tower, grip: Grip, topY: number, yaw: number): 
     along = (position.x - grip.originX) * grip.pullX + (position.z - grip.originZ) * grip.pullZ;
     const straining = grip.input.distance >= grip.clear && along < grip.clear;
     grip.strain = straining ? Math.min(grip.strain + STEP, 2) : Math.max(grip.strain - STEP * 3, 0);
-    if (grip.input.distance >= grip.clear && along >= grip.clear) grip.phase = 'carry';
+    if (grip.input.distance >= grip.clear && along >= grip.clear) {
+      grip.phase = 'carry';
+      grip.input.x = position.x;
+      grip.input.z = position.z;
+    }
   }
   grip.yaw = yaw;
   const target = gripTarget(grip, topY);
