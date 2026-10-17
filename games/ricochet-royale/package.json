@@ -1,0 +1,1 @@
+{ "name": "@playground-exe/ricochet-royale", "private": true, "type": "module", "scripts": { "dev": "vite", "build": "tsc --noEmit && vite build", "preview": "vite preview" }, "dependencies": { "@playground-exe/game-kit": "file:../../packages/game-kit" }, "devDependencies": { "typescript": "^6.0.3", "vite": "^8.3.4" } }

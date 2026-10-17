@@ -1,0 +1,18 @@
+{
+  "id": "tic-tac-toe",
+  "title": "Tic Tac Toe",
+  "description": "Take turns marking the grid. Line up three in a row to win. Face the computer on three difficulties or duel a friend in your party.",
+  "genre": "Board",
+  "tags": ["board", "classic", "strategy", "multiplayer", "solo", "touch"],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-17",
+  "controls": "Click or tap a cell to place your mark. Line up three in a row to win. Choose Easy, Medium or Hard against the computer, or ready up for a party duel.",
+  "solo": true,
+  "multiplayer": {
+    "modes": [
+      { "id": "duel", "label": "Duel", "minPlayers": 2, "maxPlayers": 2, "preset": "turn-based", "spectators": true }
+    ]
+  },
+  "cover": "cover.svg"
+}

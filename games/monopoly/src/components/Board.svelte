@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { sound } from '../sound';
   import { GROUP_COLORS, playerColor, SPACES, type Space } from '../rules/board';
   import type { MonoView } from '../rules/engine';
 
@@ -45,6 +46,7 @@
           remaining = true;
         }
       }
+      sound.play(remaining ? 'step' : 'land');
       if (!remaining) {
         clearInterval(timer);
         ontravel?.(false);
@@ -69,7 +71,17 @@
     { x: 69, y: 60, w: 40, d: 32, h: 30, color: '#e5d2b0' },
   ];
   const trees = [[12, 14], [12, 28], [87, 17], [86, 33], [12, 47], [46, 37], [48, 50], [54, 59], [84, 58], [16, 74], [30, 75], [72, 75], [85, 74]];
-  const icons: Record<string, string> = { go: '➜', railroad: '▤', utility: 'ϟ', chance: '?', chest: '▣', tax: '$', jail: '▥', parking: 'P', gotojail: '➜' };
+  const icons: Record<string, string> = {
+    go: 'M3 12h17m-6-6 6 6-6 6',
+    railroad: 'M7 17h10V5H7zM7 10h10M9 3h6M8 21l2-4m6 4-2-4M9 14h.01M15 14h.01',
+    utility: 'M13 2 5 14h6l-1 8 9-13h-7z',
+    chance: 'M8 7a4 4 0 1 1 6 3.5c-2 1-2 2-2 3.5M12 19h.01',
+    chest: 'M3 9h18v11H3zM3 9V6h18v3M10 9v5h4V9M7 6V3h10v3',
+    tax: 'M12 2v20M17 6H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H6',
+    jail: 'M3 3h18v18H3zM8 3v18M16 3v18M3 8h18M3 16h18',
+    parking: 'M4 16V9l3-5h10l3 5v7H4zM4 10h16M7 16v4m10-4v4M7 13h.01M17 13h.01',
+    gotojail: 'M3 5h10v14H3zM7 5v14M15 12h7m-3-3 3 3-3 3',
+  };
 
   const CELL = 54;
 
@@ -180,7 +192,13 @@
       >
         <span class="tile-top">
           {#if t.space.kind === 'street'}<span class="tile-band"></span>{/if}
-          {#if icons[t.space.kind]}<span class="tile-icon" aria-hidden="true">{icons[t.space.kind]}</span>{/if}
+          {#if icons[t.space.kind]}
+            <span class="tile-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d={t.space.id === 28 ? 'M12 2S5 10 5 14a7 7 0 0 0 14 0c0-4-7-12-7-12ZM8 14a4 4 0 0 0 4 4' : icons[t.space.kind]} />
+              </svg>
+            </span>
+          {/if}
           <span class="tile-label">{labelOf(t.space)}</span>
           {#if priceOf(t.space)}<span class="tile-price">{priceOf(t.space)}</span>{/if}
           {#key ownerOf(t.space.id)}

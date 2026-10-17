@@ -1215,6 +1215,25 @@ button.deed-chip:hover { filter: brightness(1.1); }
   .purchase-modal .deed-head { margin-inline: -16px; padding: 18px 16px; }
   .purchase-actions { position: sticky; bottom: -16px; padding: 12px 0 16px; margin-bottom: -16px; background: var(--color-paper); }
 }
+.tile.is-selected .tile-icon svg { animation: landmark-pop .4s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes landmark-pop { 0% { transform: scale(.7) rotate(-12deg); } 65% { transform: scale(1.18) rotate(5deg); } 100% { transform: scale(1) rotate(0); } }
+.tile-icon svg { display: block; width: 22px; height: 22px; margin-inline: auto; filter: drop-shadow(0 1px 0 #fff); }
+.tile-kind--go .tile-icon svg { width: 26px; }
+.tile-kind--chest .tile-icon { color: #247d98; }
+.tile-kind--parking .tile-icon { color: #278363; }
+.tile-band { background: linear-gradient(180deg, #ffffff35, transparent 55%), var(--group-color); box-shadow: inset 0 1px 0 #ffffff70; }
+.tile-price { font-variant-numeric: tabular-nums; }
+.tile:focus-visible { outline: 3px solid #f4c85b; outline-offset: 3px; }
+.building-roof::before { content: ''; position: absolute; width: 7px; height: 10px; right: 2px; top: 2px; background: #597d83; border: 1px solid #d9e5cc; box-shadow: 2px 3px 0 #173d3c44; }
+.city-car::before { content: ''; position: absolute; inset: 1px 5px; border-radius: 2px; background: #bfe0ef; border-inline: 2px solid #315e70; }
+.city-car::after { content: ''; position: absolute; inset: 1px 1px 5px auto; width: 2px; background: #fff4b8; box-shadow: 0 5px 0 #fff4b8; }
+.house, .hotel { position: relative; border-radius: 1px; }
+.house::after, .hotel::after { content: ''; position: absolute; inset: 1px 2px 2px; background: repeating-linear-gradient(90deg, #ffecab 0 2px, transparent 2px 5px); }
+.token-body { background: linear-gradient(105deg, #fff, color-mix(in srgb, var(--token-color), white 65%) 32%, #f7ffff 48%, color-mix(in srgb, var(--token-color), #173d3c 35%)); }
+.token-body b { color: #103c49; text-shadow: 0 1px 0 #ffffffaa; }
+.tile.is-occupied .tile-top { background: #fff4c6; }
+.tile.is-occupied .tile-price { color: #173d3c; font-weight: 800; }
+.city-water { background-size: 100% 25px, 100% 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

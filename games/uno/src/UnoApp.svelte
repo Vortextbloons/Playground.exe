@@ -242,7 +242,7 @@
     if (view.phase === 'results') return view.winner ? `${nameOf(view.winner)} won round ${view.round + 1}` : 'Match over';
     if (view.stackedDraw > 0) {
       return view.turn === view.you
-        ? `Stack a ${view.activeColor} Draw Two or take ${view.stackedDraw} cards`
+        ? `Stack a Draw Two or take ${view.stackedDraw} cards`
         : `${nameOf(view.turn)} must stack or take ${view.stackedDraw} cards`;
     }
     if (view.turn === view.you) return 'Your turn';

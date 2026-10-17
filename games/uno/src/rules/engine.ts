@@ -174,7 +174,7 @@ export function canPlayCard(state: UnoState, cardId: number): boolean {
 
 /** View-safe twin of canPlayCard for clients that only ever see their filtered view. */
 export function cardMatchesView(card: Card, activeColor: Color | null, top: Card | null, stackedDraw = 0): boolean {
-  if (stackedDraw > 0) return card.kind === 'draw-two' && card.color === activeColor;
+  if (stackedDraw > 0) return card.kind === 'draw-two';
   if (card.kind === 'wild' || card.kind === 'wild-four') return true;
   if (!activeColor || !top) return false;
   if (card.color === activeColor) return true;

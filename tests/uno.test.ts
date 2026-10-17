@@ -275,7 +275,7 @@ test('draw twos stack: the threat passes along and the victim stacks or takes it
   assert.equal(handOf(played, 'ada').length, 2, 'ada has not drawn');
 
   assert.equal(canPlayCard(played, action('red', 'draw-two', 2)), true, 'a matching draw two stacks');
-  assert.equal(canPlayCard(played, action('blue', 'draw-two', 1)), false, 'the draw two must match the active color');
+  assert.equal(canPlayCard(played, action('blue', 'draw-two', 1)), true, 'any draw two stacks');
   assert.equal(canPlayCard(played, num('blue', 4, 1)), false, 'nothing else is playable while stacked');
   assert.equal(canPlayCard(played, wildFour(1)), false, 'wild fours do not stack draw twos');
   assert.throws(() => applyAction(played, 'ada', { type: 'pass-turn' }, rngFrom(58)), /Draw a card before passing/);

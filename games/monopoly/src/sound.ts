@@ -4,7 +4,7 @@
  * can be muted by either the in-game toggle or the host player's mute button.
  */
 
-export type SoundName = 'dice' | 'cash' | 'pay' | 'buy' | 'build' | 'gavel' | 'card' | 'jail' | 'turn' | 'win' | 'lose';
+export type SoundName = 'step' | 'land' | 'trade' | 'dice' | 'cash' | 'pay' | 'buy' | 'build' | 'gavel' | 'card' | 'jail' | 'turn' | 'win' | 'lose';
 
 export interface SoundKit {
   play(name: SoundName): void;
@@ -64,10 +64,24 @@ export function createSound(): SoundKit {
     if (!context) return;
     const t = context.currentTime + 0.008;
     switch (name) {
+      case 'step':
+        blip(context, 210, t, 0.045, 0.025, 'sine', 140);
+        break;
+      case 'land':
+        noise(context, t, 0.045, 0.025);
+        blip(context, 330, t, 0.1, 0.035, 'triangle', 220);
+        break;
+      case 'trade':
+        blip(context, 523, t, 0.12, 0.04, 'sine');
+        blip(context, 784, t + 0.12, 0.18, 0.04, 'sine');
+        break;
       case 'dice':
         noise(context, t, 0.05, 0.05);
         noise(context, t + 0.09, 0.05, 0.04);
         noise(context, t + 0.18, 0.06, 0.03);
+        noise(context, t + 0.42, 0.07, 0.045);
+        noise(context, t + 0.68, 0.06, 0.035);
+        blip(context, 220, t + 0.85, 0.08, 0.04, 'triangle', 110);
         blip(context, 700, t + 0.19, 0.06, 0.03, 'square');
         break;
       case 'cash':

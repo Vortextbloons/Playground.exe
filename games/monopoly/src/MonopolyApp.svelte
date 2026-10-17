@@ -240,6 +240,8 @@
     if (Object.keys(changes).length > 0) {
       feedbackKey += 1;
       cashPulse = { changes, key: feedbackKey };
+      const yourChange = next.you ? changes[next.you] : undefined;
+      if (yourChange) sound.play(yourChange > 0 ? 'cash' : 'pay');
     }
     if (next.phase === 'auction' && prev.phase !== 'auction') {
       sound.play('gavel');
@@ -249,7 +251,11 @@
     if (next.phase === 'results' && prev.phase !== 'results') {
       sound.play(next.winners.includes(next.you ?? '') ? 'win' : 'lose');
     }
-    if (next.trade && !prev.trade) showBanner(bannerFor(next.trade.from, 'proposes a trade'));
+    if (next.turn !== prev.turn && next.you === next.turn && next.phase !== 'results') sound.play('turn');
+    if (next.trade && !prev.trade) {
+      sound.play('trade');
+      showBanner(bannerFor(next.trade.from, 'proposes a trade'));
+    }
   }
 
   let now = $state(Date.now());

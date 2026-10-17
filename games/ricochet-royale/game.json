@@ -1,0 +1,12 @@
+{
+  "id": "ricochet-royale", "title": "Ricochet Royale",
+  "description": "Three shots. Every wall is a weapon. Dodge your own ricochets in a neon tank arena for up to eight players.",
+  "genre": "Action", "tags": ["multiplayer", "shooter", "tanks", "solo", "mobile"], "author": "Isaac",
+  "version": "0.1.0", "date": "2026-10-17",
+  "controls": "WASD or arrow keys to move. Mouse to aim; hold click or Space to fire. Mobile: left stick to move, right stick to aim and fire. Three shots, then a two-second reload. Your own bounced bullets are lethal.",
+  "cover": "cover.png",
+  "solo": true,
+  "multiplayer": { "modes": [
+    { "id": "royale", "label": "Free for All", "minPlayers": 2, "maxPlayers": 8, "preset": "live", "spectators": true, "lateJoin": "spectate", "disconnect": "reserve" }
+  ] }
+}

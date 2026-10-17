@@ -1,0 +1,27 @@
+{
+  "id": "snake-wars",
+  "title": "Snake Wars",
+  "description": "Neon battle-royale snake. Eat, trap, survive the closing arena. Solo practice vs bots or live party battles.",
+  "genre": "Arcade",
+  "tags": ["snake", "multiplayer", "arcade", "party", "mobile"],
+  "author": "Isaac",
+  "version": "0.1.0",
+  "date": "2026-10-17",
+  "controls": "WASD or arrows to steer, Space for power-up. Mobile: swipe on the arena or tap the D-pad, big button for power-up.",
+  "solo": true,
+  "cover": "cover.svg",
+  "multiplayer": {
+    "modes": [
+      {
+        "id": "classic",
+        "label": "Classic",
+        "minPlayers": 2,
+        "maxPlayers": 8,
+        "preset": "live",
+        "spectators": true,
+        "lateJoin": "spectate",
+        "disconnect": "reserve"
+      }
+    ]
+  }
+}

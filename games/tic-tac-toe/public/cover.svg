@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Tic-Tac-Toe cover art">
+  <defs>
+    <radialGradient id="arena" cx="50%" cy="-12%" r="105%">
+      <stop offset="0%" stop-color="#1d4269"/>
+      <stop offset="52%" stop-color="#0d2038"/>
+      <stop offset="100%" stop-color="#070d18"/>
+    </radialGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a8ed3"/>
+      <stop offset="100%" stop-color="#0f3f66"/>
+    </linearGradient>
+    <radialGradient id="xgrad" cx="34%" cy="26%" r="80%">
+      <stop offset="0%" stop-color="#b9f0ff"/>
+      <stop offset="52%" stop-color="#6ee7ff"/>
+      <stop offset="100%" stop-color="#1c8fb0"/>
+    </radialGradient>
+    <radialGradient id="ograd" cx="34%" cy="26%" r="80%">
+      <stop offset="0%" stop-color="#ffc0d6"/>
+      <stop offset="52%" stop-color="#ff6b9d"/>
+      <stop offset="100%" stop-color="#b02a5a"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="640" height="480" fill="url(#arena)"/>
+
+  <text x="320" y="66" text-anchor="middle" font-family="Fredoka, 'Arial Black', Arial, sans-serif" font-size="46" font-weight="600" letter-spacing="0.5" fill="#eaf3ff">Tic-Tac-Toe</text>
+
+  <g transform="translate(150 96)">
+    <rect width="340" height="340" rx="34" fill="url(#frame)"/>
+    <rect x="6" y="6" width="328" height="328" rx="28" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+
+    <!-- grid lines -->
+    <g stroke="#eaf3ff" stroke-opacity="0.25" stroke-width="4" stroke-linecap="round">
+      <line x1="113" y1="24" x2="113" y2="316"/>
+      <line x1="227" y1="24" x2="227" y2="316"/>
+      <line x1="24" y1="113" x2="316" y2="113"/>
+      <line x1="24" y1="227" x2="316" y2="227"/>
+    </g>
+
+    <!-- marks -->
+    <g font-family="Fredoka, 'Arial Black', Arial, sans-serif" font-weight="700" text-anchor="middle" dominant-baseline="central">
+      <text x="56" y="56" font-size="78" fill="url(#xgrad)">X</text>
+      <text x="170" y="56" font-size="78" fill="url(#ograd)">O</text>
+      <text x="284" y="56" font-size="78" fill="url(#xgrad)">X</text>
+
+      <text x="56" y="170" font-size="78" fill="url(#ograd)">O</text>
+      <text x="170" y="170" font-size="78" fill="url(#xgrad)">X</text>
+      <text x="284" y="170" font-size="78" fill="url(#ograd)">O</text>
+
+      <text x="56" y="284" font-size="78" fill="url(#xgrad)">X</text>
+      <text x="170" y="284" font-size="78" fill="url(#ograd)">O</text>
+      <text x="284" y="284" font-size="78" fill="url(#xgrad)">X</text>
+    </g>
+  </g>
+</svg>

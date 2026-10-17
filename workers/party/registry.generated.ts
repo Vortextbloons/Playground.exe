@@ -4,13 +4,19 @@ import game0 from '../../games/all-in/src/multiplayer';
 import game1 from '../../games/connect-four/src/multiplayer';
 import game2 from '../../games/monopoly/src/multiplayer';
 import game3 from '../../games/pocket-circuit/src/multiplayer';
-import game4 from '../../games/tower-tumble/src/multiplayer';
-import game5 from '../../games/uno/src/multiplayer';
+import game4 from '../../games/ricochet-royale/src/multiplayer';
+import game5 from '../../games/snake-wars/src/multiplayer';
+import game6 from '../../games/tic-tac-toe/src/multiplayer';
+import game7 from '../../games/tower-tumble/src/multiplayer';
+import game8 from '../../games/uno/src/multiplayer';
 export const games: Registry = {
 "all-in": { ...{"id":"all-in","title":"ALL IN!","multiplayer":{"modes":[{"id":"casino","label":"10-minute casino","minPlayers":1,"maxPlayers":16,"preset":"turn-based","spectators":true,"lateJoin":"join"}]}}, definition: game0 },
 "connect-four": { ...{"id":"connect-four","title":"Connect Four","multiplayer":{"modes":[{"id":"duel","label":"Duel","minPlayers":2,"maxPlayers":2,"preset":"turn-based","spectators":true}]}}, definition: game1 },
 "monopoly": { ...{"id":"monopoly","title":"Monopoly","multiplayer":{"modes":[{"id":"classic","label":"Classic board","minPlayers":2,"maxPlayers":8,"preset":"turn-based","spectators":true,"lateJoin":"spectate"}]}}, definition: game2 },
 "pocket-circuit": { ...{"id":"pocket-circuit","title":"Pocket Circuit","multiplayer":{"modes":[{"id":"turns","label":"Take turns","minPlayers":2,"maxPlayers":4,"preset":"turn-based","spectators":true},{"id":"challenge","label":"Shared sprint","minPlayers":2,"maxPlayers":8,"preset":"shared-challenge","spectators":true},{"id":"live","label":"Live movement","minPlayers":2,"maxPlayers":4,"preset":"live","spectators":true}]}}, definition: game3 },
-"tower-tumble": { ...{"id":"tower-tumble","title":"Tower Tumble","multiplayer":{"modes":[{"id":"classic","label":"Classic Tower","minPlayers":2,"maxPlayers":4,"preset":"live","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game4 },
-"uno": { ...{"id":"uno","title":"UNO","multiplayer":{"modes":[{"id":"classic","label":"Classic UNO","minPlayers":2,"maxPlayers":10,"preset":"turn-based","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game5 }
+"ricochet-royale": { ...{"id":"ricochet-royale","title":"Ricochet Royale","multiplayer":{"modes":[{"id":"royale","label":"Free for All","minPlayers":2,"maxPlayers":8,"preset":"live","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game4 },
+"snake-wars": { ...{"id":"snake-wars","title":"Snake Wars","multiplayer":{"modes":[{"id":"classic","label":"Classic","minPlayers":2,"maxPlayers":8,"preset":"live","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game5 },
+"tic-tac-toe": { ...{"id":"tic-tac-toe","title":"Tic Tac Toe","multiplayer":{"modes":[{"id":"duel","label":"Duel","minPlayers":2,"maxPlayers":2,"preset":"turn-based","spectators":true}]}}, definition: game6 },
+"tower-tumble": { ...{"id":"tower-tumble","title":"Tower Tumble","multiplayer":{"modes":[{"id":"classic","label":"Classic Tower","minPlayers":2,"maxPlayers":4,"preset":"live","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game7 },
+"uno": { ...{"id":"uno","title":"UNO","multiplayer":{"modes":[{"id":"classic","label":"Classic UNO","minPlayers":2,"maxPlayers":10,"preset":"turn-based","spectators":true,"lateJoin":"spectate","disconnect":"reserve"}]}}, definition: game8 }
 };

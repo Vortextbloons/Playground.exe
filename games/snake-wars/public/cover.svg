@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Snake Wars cover: neon snakes battling on a dark grid">
+  <defs>
+    <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <path d="M25 0H0V25" fill="none" stroke="#38bdf8" stroke-opacity="0.12" stroke-width="1"/>
+    </pattern>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="9" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <radialGradient id="vignette" cx="50%" cy="46%" r="75%">
+      <stop offset="55%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
+    </radialGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a5f3fc"/>
+      <stop offset="0.5" stop-color="#e2f3ff"/>
+      <stop offset="1" stop-color="#f9a8d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="#0a0e1a"/>
+  <rect width="800" height="500" fill="url(#grid)"/>
+  <rect x="14" y="14" width="772" height="472" fill="none" stroke="#ef4444" stroke-width="10" opacity="0.28" filter="url(#soft)"/>
+  <rect x="14" y="14" width="772" height="472" fill="none" stroke="#ef4444" stroke-width="3" opacity="0.85"/>
+  <g filter="url(#glow)" fill="#86efac">
+    <circle cx="120" cy="220" r="6"/>
+    <circle cx="230" cy="330" r="6"/>
+    <circle cx="350" cy="250" r="6"/>
+    <circle cx="470" cy="400" r="6"/>
+    <circle cx="590" cy="230" r="6"/>
+    <circle cx="680" cy="350" r="6"/>
+    <circle cx="660" cy="420" r="6"/>
+    <circle cx="90" cy="400" r="6"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <g filter="url(#soft)" opacity="0.9">
+      <path d="M-30 400 C 90 370, 130 440, 250 405 S 430 320, 520 355" stroke="#22d3ee" stroke-width="24"/>
+      <path d="M830 180 C 700 200, 690 290, 580 270 S 470 200, 400 235" stroke="#f472b6" stroke-width="24"/>
+      <path d="M120 520 C 160 430, 280 450, 330 400 S 420 330, 480 360" stroke="#a3e635" stroke-width="24"/>
+    </g>
+    <path d="M-30 400 C 90 370, 130 440, 250 405 S 430 320, 520 355" stroke="#22d3ee" stroke-width="17"/>
+    <path d="M830 180 C 700 200, 690 290, 580 270 S 470 200, 400 235" stroke="#f472b6" stroke-width="17"/>
+    <path d="M120 520 C 160 430, 280 450, 330 400 S 420 330, 480 360" stroke="#a3e635" stroke-width="17"/>
+  </g>
+  <g filter="url(#glow)">
+    <circle cx="520" cy="355" r="15" fill="#22d3ee"/>
+    <circle cx="400" cy="235" r="15" fill="#f472b6"/>
+    <circle cx="480" cy="360" r="15" fill="#a3e635"/>
+  </g>
+  <g fill="#fff">
+    <circle cx="526" cy="348" r="4.6"/><circle cx="514" cy="348" r="4.6"/>
+    <circle cx="394" cy="229" r="4.6"/><circle cx="406" cy="229" r="4.6"/>
+    <circle cx="486" cy="354" r="4.6"/><circle cx="474" cy="354" r="4.6"/>
+  </g>
+  <g fill="#0a0e1a">
+    <circle cx="527" cy="348" r="2.2"/><circle cx="515" cy="348" r="2.2"/>
+    <circle cx="393" cy="229" r="2.2"/><circle cx="405" cy="229" r="2.2"/>
+    <circle cx="487" cy="354" r="2.2"/><circle cx="475" cy="354" r="2.2"/>
+  </g>
+  <g filter="url(#glow)">
+    <polygon points="712,180 688,218 702,218 692,252 718,210 704,210" fill="#facc15"/>
+  </g>
+  <g font-family="system-ui, sans-serif" text-anchor="middle">
+    <text x="400" y="118" font-size="88" font-weight="900" font-style="italic" letter-spacing="-2" fill="#22d3ee" opacity="0.55" filter="url(#soft)">SNAKE WARS</text>
+    <text x="400" y="118" font-size="88" font-weight="900" font-style="italic" letter-spacing="-2" fill="url(#title)">SNAKE WARS</text>
+    <text x="400" y="162" font-size="24" font-weight="700" letter-spacing="8" fill="#22d3ee" font-family="monospace, monospace">EAT · TRAP · SURVIVE</text>
+  </g>
+  <g font-family="system-ui, sans-serif">
+    <rect x="30" y="440" width="150" height="34" rx="17" fill="#0f1b2d" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="105" y="463" font-size="16" font-weight="700" letter-spacing="1" fill="#a5f3fc" text-anchor="middle">2–8 PLAYERS</text>
+  </g>
+  <rect width="800" height="500" fill="url(#vignette)"/>
+</svg>
