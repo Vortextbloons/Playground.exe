@@ -1,5 +1,5 @@
 :root { font:15px 'Trebuchet MS',sans-serif; color:#e1f5ff; background:#071624; color-scheme:dark; }
-* { box-sizing:border-box; } body { margin:0; }
+* { box-sizing:border-box; } html, body { height:100%; } body { margin:0; }
 #game { min-height:100vh; min-height:100svh; max-width:1320px; margin:auto; padding:clamp(12px,3vw,28px); padding-bottom:calc(clamp(12px,3vw,28px) + env(safe-area-inset-bottom)); outline:none; display:flex; flex-direction:column; gap:14px; justify-content:center; touch-action:manipulation; }
 header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 h1,p { margin:0; } h1 { font-family:'Arial Black',Impact,sans-serif; font-size:clamp(28px,5vw,52px); font-weight:900; font-style:italic; line-height:1; letter-spacing:-2px; } h1 span { color:#ffc875; }
@@ -39,7 +39,7 @@ button:focus-visible { outline:3px solid #ffc875; outline-offset:3px; }
 .multiplayer-menu [role="status"] { font-size:11px; color:#b2cedc; line-height:1.5; }
 @media(max-width:700px) {
   #game { padding:10px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); justify-content:flex-start; gap:10px; }
-  header { align-items:flex-start; } .eyebrow { font-size:8px; letter-spacing:1px; } .header-actions { max-width:170px; } .header-actions button { padding:9px; font-size:11px; }
+  header { align-items:flex-start; } .eyebrow { font-size:10px; letter-spacing:1px; } .header-actions { max-width:170px; } .header-actions button { padding:9px; font-size:11px; }
   .with-party .war-layout { grid-template-columns:1fr; }
   .canvas-wrap { max-height:48svh; }
   #status { min-height:40px; font-size:12px; }
@@ -48,7 +48,26 @@ button:focus-visible { outline:3px solid #ffc875; outline-offset:3px; }
   .standing { flex-basis:40%; padding:8px 10px; }
 }
 @media(max-height:500px) and (orientation:landscape) {
-  #game { justify-content:flex-start; } .canvas-wrap { max-height:70svh; } .touch-controls { padding:6px 12px; }
+  body { overflow:hidden; }
+  #game { height:100%; min-height:0; padding:0; gap:0; justify-content:flex-start; overflow:hidden; }
+  header { flex-shrink:0; padding:4px max(10px,env(safe-area-inset-right)) 4px max(10px,env(safe-area-inset-left)); }
+  .eyebrow, .note, #scoreboard { display:none; }
+  h1 { display:none; }
+  .header-actions { flex-wrap:nowrap; gap:4px; margin-left:auto; }
+  .header-actions button { padding:6px 8px; font-size:11px; min-height:36px; }
+  .war-layout { flex:1; min-height:0; display:flex; gap:0; }
+  .with-party .war-layout { display:grid; grid-template-columns:minmax(0,1fr) 220px; }
+  .war-view { flex:1; min-width:0; display:flex; flex-direction:column; border-radius:0; border-left:0; border-right:0; }
+  .hud { flex-shrink:0; min-height:0; padding:3px 10px; font-size:11px; }
+  #clock { font-size:13px; }
+  .canvas-wrap { flex:1; min-height:0; aspect-ratio:auto; max-height:none; display:grid; place-items:center; }
+  #status { flex-shrink:0; min-height:0; padding:3px 10px; font-size:11px; line-height:1.4; }
+  .touch-controls { position:fixed; inset:auto 0 0 0; z-index:3; padding:0 max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); background:transparent; pointer-events:none; }
+  .touch-controls button { pointer-events:auto; background:#1c3b50e6; min-width:44px; min-height:44px; font-size:14px; }
+  .dpad { gap:3px; }
+  .boost { min-height:44px; font-size:13px; flex:0 0 auto; }
+  #menu { flex-shrink:0; max-height:60%; overflow:auto; }
+  .multiplayer-menu { padding:10px; gap:8px; }
 }
 @media(prefers-reduced-motion:reduce) { button { transition:none; } }
 .with-party.party-waiting .war-layout { grid-template-columns:minmax(0,560px); justify-content:center; }

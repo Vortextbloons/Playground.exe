@@ -1097,6 +1097,13 @@
     }
   }
 
+  @media (orientation: landscape) and (max-height: 620px) {
+    .felt-board { min-width: 0; }
+    .betting-grid { grid-template-rows: repeat(3, minmax(30px, 1fr)) auto auto auto; }
+    .felt-cell { min-height: 30px; }
+    .felt-zero { min-width: 30px; }
+  }
+
   @media (max-width: 600px) and (orientation: portrait) {
     [data-table='roulette'] { overflow-y: auto; overflow-x: hidden; }
     .roulette-dock { margin: 0; padding: 8px 4px max(8px, env(safe-area-inset-bottom)); }

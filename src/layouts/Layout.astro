@@ -3,17 +3,27 @@ import '../styles/global.css';
 import { withBase } from '../lib/paths';
 
 import PartyIndicator from '../components/PartyIndicator.svelte';
-interface Props { title?: string; active?: 'library' | 'guide' | 'party' }
-const { title = 'Playground.exe', active = 'library' } = Astro.props;
+interface Props { title?: string; active?: 'library' | 'guide' | 'party'; playing?: boolean }
+const { title = 'Playground.exe', active = 'library', playing = false } = Astro.props;
 
 ---
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="A personal collection of small browser games. Open a game and make yourself at home."/><link rel="icon" href={withBase('favicon.svg')}/><title>{title}</title></head>
-<body><a class="skip fixed left-[15px] top-[-100px] p-[12px] bg-accent text-[#17111f] z-[10] [&:focus]:top-[15px]" href="#main">Skip to content</a>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><meta name="description" content="A personal collection of small browser games. Open a game and make yourself at home."/><link rel="icon" href={withBase('favicon.svg')}/><title>{title}</title></head>
+<body class:list={{ playing }}><a class="skip fixed left-[15px] top-[-100px] p-[12px] bg-accent text-[#17111f] z-[10] [&:focus]:top-[15px]" href="#main">Skip to content</a>
 <header class="site-header [border-bottom:1px_solid_var(--line)]"><div class="header-inner max-w-[1200px] m-[0_auto] pl-[48px] pr-[48px] h-[91px] flex items-center justify-between min-[1400px]:max-w-[1280px] max-[760px]:pl-[24px] max-[760px]:pr-[24px] max-[760px]:h-[76px] max-[500px]:pl-[20px] max-[500px]:pr-[20px]"><a class="brand [font-family:'Space_Grotesk',sans-serif] flex items-center text-[23px] font-semibold tracking-[-1px] max-[760px]:text-[19px]" href={withBase()}><span class="brand-mark text-[0] grid place-items-center bg-accent text-[#19151f] rounded-[9px] w-[33px] h-[35px] mr-[12px] [transform:rotate(-5deg)] [&_span]:[font:27px_monospace] max-[500px]:w-[29px] max-[500px]:h-[31px] max-[500px]:mr-[9px]" aria-hidden="true">p<span>▧</span></span>playground<span class="brand-light text-muted font-normal ml-[3px] max-[500px]:hidden">.exe</span><span class="beta [font:9px_monospace] tracking-[1px] [border:1px_solid_var(--line)] p-[5px_7px] rounded-[4px] ml-[14px] text-muted max-[760px]:hidden">VOL. 001</span></a><nav aria-label="Main navigation"><a href={withBase()} aria-current={active === 'library' ? 'page' : undefined}>Library</a><PartyIndicator href={withBase('party/')} active={active === 'party'} client:load /><a class="guide-nav" href={withBase('guide/')} aria-current={active === 'guide' ? 'page' : undefined}>Developer guide <span aria-hidden="true">↗</span></a></nav></div></header>
 
 <main id="main"><slot/></main>
 <footer class="site-footer max-w-[1200px] m-[0_auto] pl-[48px] pr-[48px] flex gap-[22px] items-center text-[10px] text-[#817a8c] pt-[26px] pb-[30px] [border-top:1px_solid_var(--line)] [&>a]:ml-auto min-[1400px]:max-w-[1280px] max-[760px]:pl-[24px] max-[760px]:pr-[24px] max-[760px]:flex-wrap max-[760px]:gap-[8px_18px] max-[760px]:[&>a]:ml-[0] max-[500px]:pl-[20px] max-[500px]:pr-[20px] max-[500px]:grid max-[500px]:text-[10px]"><span class="footer-brand text-[#b5adbf]">A little space for a lot of play.</span><span>Independent games. Right in your browser.</span><a href={withBase('guide/')}>Built to be built on <span aria-hidden="true">↗</span></a></footer>
 </body></html>
 
-<style>@media(max-width:600px){.guide-nav{display:none}}</style>
+<style>
+  .playing { height:100dvh; display:flex; flex-direction:column; }
+  .playing .site-header { flex-shrink:0; }
+  .playing .header-inner { height:56px; }
+  .playing main { flex:1; min-height:0; width:100%; }
+  .playing .site-footer { display:none; }
+  @media(max-height:500px) and (orientation:landscape) {
+    .playing .site-header { display:none; }
+    .playing main { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+  }
+  @media(max-width:600px){.guide-nav{display:none}}</style>

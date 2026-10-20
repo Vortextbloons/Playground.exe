@@ -142,6 +142,16 @@ body {
   outline-offset: 2px;
 }
 
+@media (orientation: landscape) and (max-height: 500px) {
+  .invaders-center { top: 50%; width: min(78%, 320px); padding: 12px 14px; }
+  .invaders-center h1 { font-size: 22px; }
+  .invaders-center p { margin: 4px 0; font-size: 12px; }
+  .invaders-center .keys { font-size: 11px; }
+  .invaders-center button { margin-top: 6px; min-height: 44px; padding: 9px 16px; }
+  .invaders-score { font-size: clamp(26px, 6vw, 38px); }
+  .invaders-best, .invaders-lives { font-size: 11px; padding: 5px 8px; }
+}
+
 [hidden] {
   display: none !important;
 }

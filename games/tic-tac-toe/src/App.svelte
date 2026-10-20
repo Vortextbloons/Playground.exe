@@ -540,7 +540,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: clamp(6px, 1.6vw, 12px);
-    width: min(94vw, 74vh, 420px);
+    width: min(100%, calc(100dvh - 120px), 420px);
     padding: clamp(8px, 2vw, 16px);
     border-radius: clamp(16px, 3vw, 26px);
     background: linear-gradient(180deg, #1a2f4a, #0a1c31);
@@ -672,5 +672,19 @@
   @media (max-width: 520px) {
     .brand { display: none; }
     .seat, .turn-chip { font-size: 12px; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    .app { padding:4px max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); gap:4px; }
+    .brand { display:none; }
+    .top { flex-shrink:0; gap:8px; }
+    .ghost { min-height:44px; padding:6px 10px; font-size:11px; }
+    .segment button { min-height:44px; }
+    .seat { padding:3px 10px 3px 7px; font-size:11px; }
+    .stage { gap:6px; }
+    .board { width: min(100%, calc(100dvh - 96px), 420px); padding:8px; border-radius:12px; }
+    .menu { flex-direction:row; gap:16px; padding:0; overflow:auto; }
+    .wordmark { font-size:32px; }
+    .setup { padding:10px; gap:8px; }
+    .hint { display:none; }
   }
 </style>

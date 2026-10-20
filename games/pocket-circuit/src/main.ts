@@ -1,4 +1,4 @@
-import { createGame } from '@playground-exe/game-kit';
+import { createGame, fitCanvas } from '@playground-exe/game-kit';
 import { createMultiplayerMenu, parseMultiplayer, type Json } from '@playground-exe/game-kit/multiplayer';
 import type { CircuitState } from './multiplayer';
 import metadata from '../game.json';
@@ -6,9 +6,10 @@ import './style.css';
 
 const container = document.querySelector<HTMLElement>('#game')!;
 container.innerHTML = `<header><div><p class="eyebrow">LITTLE CARS. CLOSE RACES.</p><h1>Pocket Circuit</h1></div><button id="solo">Race solo</button></header>
-<div class="race-layout"><div class="race-view"><div class="hud"><span id="lap">LAP 01 / 03</span><span id="timer">00:00.0</span></div><canvas width="800" height="480" aria-label="Top-down oval racetrack. Use Up to accelerate, Left and Right to steer, and Down to brake."></canvas><p id="status" role="status"></p><div class="driving-controls"><div class="steering"><button data-drive="left" aria-label="Steer left">←</button><button data-drive="right" aria-label="Steer right">→</button></div><button data-drive="brake">Brake ↓</button><button data-drive="gas" class="gas">Accelerate ↑</button><button id="warm">Ready to race</button></div></div><div id="menu"></div></div><p class="note">Hold ↑ / W to accelerate · ← → / A D to steer · ↓ / S to brake · Three laps to win</p>`;
+<div class="race-layout"><div class="race-view"><div class="hud"><span id="lap">LAP 01 / 03</span><span id="timer">00:00.0</span></div><div class="race-canvas"><canvas width="800" height="480" aria-label="Top-down oval racetrack. Use Up to accelerate, Left and Right to steer, and Down to brake."></canvas></div><p id="status" role="status"></p><div class="driving-controls"><div class="steering"><button data-drive="left" aria-label="Steer left">←</button><button data-drive="right" aria-label="Steer right">→</button></div><button data-drive="brake">Brake ↓</button><button data-drive="gas" class="gas">Accelerate ↑</button><button id="warm">Ready to race</button></div></div><div id="menu"></div></div><p class="note">Hold ↑ / W to accelerate · ← → / A D to steer · ↓ / S to brake · Three laps to win</p>`;
 const canvas = container.querySelector('canvas')!;
 const ctx = canvas.getContext('2d')!;
+const sizing = fitCanvas(canvas, container.querySelector<HTMLElement>('.race-canvas')!, 800, 480);
 const status = container.querySelector<HTMLElement>('#status')!;
 const lap = container.querySelector<HTMLElement>('#lap')!;
 const timer = container.querySelector<HTMLElement>('#timer')!;
@@ -31,7 +32,7 @@ const game = createGame('pocket-circuit', {
     if (session.current.party) { status.textContent = 'The host can use Back to game menu to restart the party race.'; return; }
     playingSolo = true; reset(); paused = false; cancelAnimationFrame(animation); animation = requestAnimationFrame(tick); render();
   },
-  destroy() { cancelAnimationFrame(animation); partyMenu.destroy(); window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', release); },
+  destroy() { cancelAnimationFrame(animation); sizing.destroy(); partyMenu.destroy(); window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', release); },
 });
 const session = game.multiplayer<CircuitState, { advance: Json; warm: Json; move: number }>();
 const partyMenu = createMultiplayerMenu(session, metadata.id, parseMultiplayer(metadata.multiplayer));

@@ -1,6 +1,6 @@
-export const WORLD_W = 480;
-export const WORLD_H = 640;
-export const PLAYER_Y = 568;
+export let WORLD_W = 480;
+export let WORLD_H = 640;
+export let PLAYER_Y = 568;
 export const PLAYER_W = 40;
 export const PLAYER_H = 22;
 export const PLAYER_SPEED = 300;
@@ -13,7 +13,7 @@ export const INVADER_COLS = 9;
 export const INVADER_ROWS = 5;
 export const INVADER_HGAP = 14;
 export const INVADER_VGAP = 16;
-export const INVADER_ORIGIN_Y = 92;
+export let INVADER_ORIGIN_Y = 92;
 export const INVADER_DROP = 18;
 export const INVADER_MARGIN = 16;
 
@@ -29,7 +29,16 @@ export const BUNKER_H = 36;
 export const BUNKER_CELL = 6;
 export const BUNKER_COLS = BUNKER_W / BUNKER_CELL;
 export const BUNKER_ROWS = BUNKER_H / BUNKER_CELL;
-export const BUNKER_Y = 468;
+export let BUNKER_Y = 468;
+
+/** Pick a portrait or landscape world and rescale the layout to match. */
+export function setWorldSize(width: number, height: number): void {
+  WORLD_W = Math.round(width);
+  WORLD_H = Math.round(height);
+  PLAYER_Y = WORLD_H - 72;
+  INVADER_ORIGIN_Y = Math.round(WORLD_H * 0.144);
+  BUNKER_Y = WORLD_H - 172;
+}
 
 export type Phase = 'ready' | 'playing' | 'waveclear' | 'over';
 

@@ -259,7 +259,7 @@
       drag = { ...drag, moving: true };
       sound.play('pick');
     }
-    const lift = drag.pointerType === 'touch' ? 56 : 0;
+    const lift = drag.pointerType === 'touch' ? Math.min(44, drag.pitch * 1.4) : 0;
     const gx = x - (drag.grabCol + 0.5) * drag.pitch;
     const gy = y - lift - (drag.grabRow + 0.5) * drag.pitch;
     let anchorRow = -99;
@@ -542,20 +542,20 @@
   );
 
   // Shared utility stacks for the markup below.
-  const ICON_BTN = 'grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-[11px] border border-edge bg-[rgba(35,32,48,0.6)] p-0 text-muted transition-colors hover:border-[rgba(185,163,247,0.5)] hover:text-fog focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px] [&_svg]:h-[21px] [&_svg]:w-[21px]';
+  const ICON_BTN = 'grid h-[44px] w-[44px] cursor-pointer place-items-center rounded-[11px] border border-edge bg-[rgba(35,32,48,0.6)] p-0 text-muted transition-colors hover:border-[rgba(185,163,247,0.5)] hover:text-fog focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px] [&_svg]:h-[21px] [&_svg]:w-[21px]';
   const VEIL = 'absolute inset-0 z-[8] grid animate-veil place-items-center bg-[rgba(19,17,24,0.6)] p-[16px] backdrop-blur-[4px]';
   const VEIL_DIM = 'absolute inset-0 z-[9] grid animate-veil place-items-center bg-[rgba(19,17,24,0.52)] p-[16px] backdrop-blur-[4px]';
-  const PANEL = 'grid animate-panel justify-items-center gap-[10px] rounded-[20px] border border-edge bg-panel px-[22px] pt-[22px] pb-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,320px)]';
-  const PANEL_SMALL = 'grid animate-panel justify-items-center gap-[10px] rounded-[20px] border border-edge bg-panel p-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,280px)]';
+  const PANEL = 'grid max-h-full animate-panel justify-items-center gap-[10px] overflow-y-auto rounded-[20px] border border-edge bg-panel px-[22px] pt-[22px] pb-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,320px)]';
+  const PANEL_SMALL = 'grid max-h-full animate-panel justify-items-center gap-[10px] overflow-y-auto rounded-[20px] border border-edge bg-panel p-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,280px)]';
   const BTN = 'cursor-pointer rounded-[12px] border border-edge bg-[rgba(35,32,48,0.7)] px-[18px] py-[11px] text-[14px] font-semibold text-fog transition-[transform,background-color,border-color] duration-[120ms] hover:bg-[#262336] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px]';
   const BTN_PRIMARY = 'cursor-pointer rounded-[12px] border border-accent bg-accent px-[18px] py-[11px] text-[14px] font-semibold text-accent-ink transition-[transform,background-color,border-color] duration-[120ms] hover:bg-[#c8b5ff] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px]';
   const BTN_QUIET = 'cursor-pointer rounded-[12px] border border-transparent bg-none px-[12px] py-[7px] text-[13px] font-medium text-muted transition-colors hover:bg-[rgba(35,32,48,0.6)] hover:text-fog focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px]';
 </script>
 
 <div class="relative grid h-full place-items-center p-[12px]">
-  <div class="grid w-[min(94vw,56vh,520px)] gap-[10px] short:w-[min(92vw,680px)] short:grid-cols-[minmax(0,1.1fr)_minmax(180px,0.9fr)] short:[grid-template-areas:'bar_bar'_'board_stats'_'board_tray'] short:gap-x-[16px] short:content-center">
-    <header class="relative z-10 flex min-h-[40px] items-center justify-between short:[grid-area:bar]">
-      <div class="flex items-center gap-[9px] font-display text-[17px] font-semibold [&_svg]:h-[26px] [&_svg]:w-[26px]">
+  <div class="grid w-[min(94vw,56dvh,520px)] gap-[10px] short:w-[min(92vw,680px)] short:grid-cols-[minmax(0,1.1fr)_minmax(180px,0.9fr)] short:[grid-template-areas:'bar_bar'_'board_stats'_'board_tray'] short:gap-x-[16px] short:content-center">
+    <header class="relative z-10 flex min-h-[40px] items-center justify-between short:[grid-area:bar] short:justify-end">
+      <div class="flex items-center gap-[9px] font-display text-[17px] font-semibold [&_svg]:h-[26px] [&_svg]:w-[26px] short:hidden">
         <svg viewBox="0 0 48 48" aria-hidden="true">
           <rect x="4" y="26" width="18" height="18" rx="5" fill="#b9a3f7"></rect>
           <rect x="26" y="26" width="18" height="18" rx="5" fill="#8fd6b8"></rect>
@@ -605,7 +605,7 @@
       </div>
     </div>
 
-    <div class="relative short:[grid-area:board] short:w-[min(100%,68vh)] short:justify-self-center short:self-center">
+    <div class="relative short:[grid-area:board] short:w-[min(100%,68dvh)] short:justify-self-center short:self-center">
       <div class="board-shaker" class:shaking>
         <Board
           bind:grid={gridEl}
@@ -649,7 +649,7 @@
         onactivate={onTrayActivate}
       />
       {#if moves === 0 && phase === 'playing'}
-        <p class="m-0 text-center text-[12.5px] text-muted short:hidden">Drag a block onto the board — or tap a block, then a cell.</p>
+        <p class="m-0 text-center text-[12.5px] text-muted">Drag a block onto the board — or tap a block, then a cell.</p>
       {/if}
     </div>
   </div>

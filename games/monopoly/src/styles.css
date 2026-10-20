@@ -949,18 +949,38 @@ button.deed-chip:hover { filter: brightness(1.1); }
   .solo-host { width: min(400px, 100%); }
   .opponents-label { margin-top: 0; }
 }
-@media (max-height: 600px) and (min-width: 701px) {
-  .city-app { grid-template-rows: 52px minmax(0, 1fr) auto; }
-  .city-menu { padding-block: 20px; align-items: start; }
-  .menu-city { height: 420px; }
-  .solo-setup { gap: 12px; }
-  .solo-setup h1 { font-size: 48px; }
-  .solo-setup h2 { font-size: 34px; }
-  .solo-lede { font-size: 12px; }
-  .player-list { max-height: 85%; }
-  .player-card { padding: 9px; }
-  .city-dock { padding-bottom: 12px; }
-  .action-bar { padding: 12px; }
+@media (orientation: landscape) and (max-height: 620px) {
+  .city-app { grid-template-columns: minmax(0, 1fr) 210px; grid-template-rows: 44px minmax(0, 1fr) auto; }
+  .city-topbar { padding: 4px max(10px, env(safe-area-inset-right)) 4px max(10px, env(safe-area-inset-left)); gap: 8px; }
+  .brand-chip { font-size: 18px; padding-inline: 6px; }
+  .match-goal { display: none; }
+  .turn-strip { font-size: 11px; padding: 5px 10px; }
+  .timer-pill { padding: 4px 8px; }
+  .gear { width: 44px; height: 44px; font-size: 20px; }
+  .city-side { padding: 4px 8px 4px 0; gap: 6px; overflow: hidden; }
+  .city-dock { padding: 0 8px max(4px, env(safe-area-inset-bottom)); }
+  .action-bar { padding: 6px 8px; gap: 8px; }
+  .btn, .gear, .board-camera button, .deed-chip, .lobby-host .actions button { min-height: 44px; }
+  .board-camera { top: 6px; left: 8px; }
+  .board-camera button { padding: 6px 9px; font-size: 10px; }
+  .board-caption { display: none; }
+  .board-fit { transform: translate(-50%, -50%) scale(min(1, calc((100cqw - 24px) / 800px), calc((100cqh - 24px) / 580px))); }
+  .is-overhead .board-fit { transform: translate(-50%, -50%) scale(min(1, calc((100cqw - 24px) / 640px), calc((100cqh - 24px) / 640px))); }
+  .player-list { max-height: 100%; overflow: auto; }
+  .player-card { padding: 6px; }
+  .event-log { max-height: 70px; }
+  .city-menu { padding: 8px 16px; align-items: start; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr); }
+  .menu-city { height: 100%; min-height: 260px; }
+  .solo-setup { gap: 8px; padding: 8px; }
+  .solo-setup h1 { font-size: 34px; }
+  .solo-setup h2 { font-size: 26px; }
+  .solo-lede { font-size: 11px; line-height: 1.5; }
+  .solo-hint { display: none; }
+  .modal { width: min(calc(100vw - 24px), 560px); max-height: calc(100svh - 16px); padding: 12px; }
+  .modal--card { width: min(calc(100vw - 32px), 460px); padding: 12px; gap: 10px; }
+  .deck-card--large { aspect-ratio: auto; min-height: 0; }
+  .trade-columns { gap: 8px; }
+  input, select { font-size: 16px; }
 }
 .dice-spotlight {
   position: fixed;
@@ -1087,10 +1107,7 @@ button.deed-chip:hover { filter: brightness(1.1); }
   .dice-tray--cinematic { --die-size: clamp(64px, 20svh, 100px); }
   .dice-result strong { font-size: 56px; }
 }
-@media (max-height: 600px) and (min-width: 701px) {
-  body { overflow-y: auto; }
-  .city-app { min-height: 480px; grid-template-rows: 52px minmax(220px, 1fr) auto; }
-}
+
 .property-feedback {
   position: absolute;
   z-index: 35;

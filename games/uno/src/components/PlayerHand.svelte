@@ -80,8 +80,9 @@
     const g = gesture;
     if (!g) return;
     const played = g.dragging && overDiscard(event.clientX, event.clientY);
+    const tapped = !g.dragging;
     stopDrag(g);
-    if (played) onPlay(g.cardId);
+    if (played || (tapped && isPlayable(g.cardId))) onPlay(g.cardId);
   }
 
   function cancelDrag(): void {
@@ -134,7 +135,7 @@
     {width}
     playable={isPlayable(cardId)}
     dim={canAct && !isPlayable(cardId)}
-    label="Drag to play {cardLabel(cardFromId(cardId))}"
+    label="Tap or drag to play {cardLabel(cardFromId(cardId))}"
   />
 {/snippet}
 

@@ -128,6 +128,15 @@ body {
   outline-offset: 2px;
 }
 
+@media (orientation: landscape) and (max-height: 500px) {
+  .flappy-center { top: 50%; width: min(78%, 320px); padding: 12px 14px; }
+  .flappy-center h1 { font-size: 22px; }
+  .flappy-center p { margin: 4px 0; font-size: 12px; }
+  .flappy-center .keys { font-size: 11px; }
+  .flappy-center button { margin-top: 6px; min-height: 44px; padding: 9px 16px; }
+  .flappy-score { font-size: clamp(28px, 6vw, 40px); }
+}
+
 [hidden] {
   display: none !important;
 }

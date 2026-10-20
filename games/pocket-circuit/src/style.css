@@ -1,7 +1,7 @@
 :root { font:15px system-ui,sans-serif; color:#f3ead0; background:#123b36; color-scheme:dark; }
-* { box-sizing:border-box; } body { margin:0; } #game { min-height:100vh; padding:clamp(16px,3vw,30px); outline:none; display:flex; flex-direction:column; gap:16px; justify-content:center; }
+* { box-sizing:border-box; } html, body { height:100%; } body { margin:0; } #game { min-height:100vh; padding:clamp(16px,3vw,30px); outline:none; display:flex; flex-direction:column; gap:16px; justify-content:center; }
 header { display:flex; align-items:center; justify-content:space-between; gap:16px; } h1,h2,p { margin:0; } h1 { font-size:clamp(24px,4vw,38px); letter-spacing:-1.5px; font-style:italic; } .eyebrow { font:10px monospace; letter-spacing:2px; color:#a8ccbd; margin-bottom:5px; }
-#game:not(.with-party) #menu { display:none; } .race-layout { display:grid; gap:16px; align-items:start; } .with-party .race-layout { grid-template-columns:minmax(0,1fr) 260px; } .race-view { min-width:0; border:1px solid #527566; border-radius:12px; overflow:hidden; background:#21534a; } canvas { display:block; width:100%; aspect-ratio:5/3; } .hud { display:flex; justify-content:space-between; padding:12px 16px; font:700 12px monospace; letter-spacing:1px; background:#163d37; } #status { min-height:48px; padding:12px 16px; font-size:12px; line-height:1.6; background:#163d37; }
+#game:not(.with-party) #menu { display:none; } .race-layout { display:grid; gap:16px; align-items:start; } .with-party .race-layout { grid-template-columns:minmax(0,1fr) 260px; } .race-view { min-width:0; border:1px solid #527566; border-radius:12px; overflow:hidden; background:#21534a; } .race-canvas { display:grid; place-items:center; aspect-ratio:5/3; } .race-canvas canvas { display:block; } .hud { display:flex; justify-content:space-between; padding:12px 16px; font:700 12px monospace; letter-spacing:1px; background:#163d37; } #status { min-height:48px; padding:12px 16px; font-size:12px; line-height:1.6; background:#163d37; }
 button { font:600 12px system-ui; border:1px solid #628575; border-radius:7px; padding:12px 15px; color:#f3ead0; background:#244c42; cursor:pointer; } button:hover:not(:disabled) { border-color:#f3ead0; } button:disabled { opacity:.45; cursor:default; } button:focus-visible { outline:3px solid #f4d784; outline-offset:3px; } [hidden] { display:none!important; }
 .driving-controls,.steering,.actions { display:flex; flex-wrap:wrap; gap:8px; } .driving-controls button { touch-action:none; user-select:none; min-height:44px; } .steering button { min-width:50px; } .gas,#warm { background:#ee775c; color:#1d352f; border-color:#ee775c; } .note { color:#a8ccbd; font-size:11px; line-height:1.6; }
 .multiplayer-menu { display:grid; gap:14px; padding:18px; border:1px solid #527566; background:#163d37; border-radius:12px; } .multiplayer-menu h2 { font-size:20px; letter-spacing:-.5px; } .mode-options { display:grid; gap:8px; } .mode-options button { display:grid; gap:5px; text-align:left; background:transparent; color:inherit; } .mode-options button[aria-pressed="true"] { background:#345c4a; border-color:#f4d784; } .mode-options button:disabled { opacity:1; } .mode-options span { font-size:10px; color:#a8ccbd; } .party-roster { display:grid; gap:8px; list-style:none; margin:0; padding:0; font-size:11px; } .party-roster li { overflow-wrap:anywhere; } .multiplayer-menu [role="status"] { font-size:11px; color:#a8ccbd; line-height:1.5; } .actions button { flex:1 1 auto; }
@@ -20,9 +20,23 @@ button { font:600 12px system-ui; border:1px solid #628575; border-radius:7px; p
   .note { font-size:12px; }
 }
 @media(max-height:500px) and (orientation:landscape) {
-  .with-party .race-layout { grid-template-columns:minmax(0,1fr) 240px; }
-  #game { padding:12px; justify-content:flex-start; }
-  .mode-options { grid-template-columns:1fr; }
+  body { overflow:hidden; }
+  #game { height:100%; min-height:0; padding:0; gap:0; justify-content:flex-start; }
+  header { flex-shrink:0; justify-content:flex-end; padding:4px max(10px,env(safe-area-inset-right)) 4px max(10px,env(safe-area-inset-left)); }
+  .eyebrow, .note { display:none; }
+  h1 { display:none; }
+  header>button { padding:6px 10px; font-size:11px; }
+  .race-layout { flex:1; min-height:0; display:flex; gap:0; align-items:stretch; }
+  .with-party .race-layout { display:grid; grid-template-columns:minmax(0,1fr) 220px; }
+  .race-view { flex:1; min-width:0; display:flex; flex-direction:column; border-radius:0; border-left:0; border-right:0; }
+  .hud { flex-shrink:0; padding:3px 10px; font-size:11px; }
+  .race-canvas { flex:1; min-height:0; aspect-ratio:auto; overflow:hidden; }
+  #status { flex-shrink:0; min-height:0; padding:3px 10px; font-size:11px; line-height:1.4; }
+  .driving-controls { flex-shrink:0; position:static; flex-wrap:nowrap; padding:4px max(8px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); gap:6px; }
+  .driving-controls button { min-height:44px; padding:6px 10px; }
+  #menu { flex-shrink:0; max-height:60%; overflow:auto; }
+  .multiplayer-menu { padding:10px; gap:8px; }
+  .mode-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 
 .with-party.party-waiting .race-layout { grid-template-columns:minmax(0,560px); justify-content:center; }

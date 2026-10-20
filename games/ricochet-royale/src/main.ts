@@ -1,4 +1,4 @@
-import { createGame } from '@playground-exe/game-kit';
+import { createGame, fitCanvas } from '@playground-exe/game-kit';
 import { createMultiplayerMenu, parseMultiplayer } from '@playground-exe/game-kit/multiplayer';
 import { advance, createArena, MAPS, WIDTH, HEIGHT, type ArenaState, type Control } from './simulation';
 import { createMovementPrediction } from './prediction';
@@ -14,6 +14,7 @@ root.innerHTML = `<header><div><span class="eyebrow">Armored arena / three-shot 
 <footer><span class="desktop-help">WASD / arrows to move · Mouse to aim · Hold click / Space to fire</span><span class="mobile-help">Two thumbs. Any direction. Landscape gives you a bigger arena.</span><span>Your own ricochets are lethal.</span></footer>`;
 const canvas = root.querySelector('canvas')!;
 const ctx = canvas.getContext('2d')!;
+const sizing = fitCanvas(canvas, root.querySelector<HTMLElement>('.arena')!, WIDTH, HEIGHT);
 const label = (id: string) => root.querySelector<HTMLElement>(`#${id}`)!;
 function announce(id: string, message: string) { const element = label(id); if (element.textContent !== message) element.textContent = message; }
 const reset = label('reset') as HTMLButtonElement;
@@ -41,7 +42,7 @@ const game = createGame('ricochet-royale', {
   resume() { paused = false; local.lastAt = performance.now(); },
   restart() { if (!session.current.party) restart(); },
   mute(value) { muted = value; },
-  destroy() { cancelAnimationFrame(frame); clearInterval(heartbeat); abort.abort(); partyMenu.destroy(); void audio?.close(); },
+  destroy() { cancelAnimationFrame(frame); clearInterval(heartbeat); abort.abort(); sizing.destroy(); partyMenu.destroy(); void audio?.close(); },
 });
 const session = game.multiplayer<ArenaState, { input: Control }>();
 const partyMenu = createMultiplayerMenu(session, metadata.id, parseMultiplayer(metadata.multiplayer));

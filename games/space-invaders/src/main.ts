@@ -13,6 +13,7 @@ import {
   WORLD_H,
   WORLD_W,
   createInitialState,
+  setWorldSize,
   step,
 } from './engine';
 import './style.css';
@@ -41,7 +42,7 @@ const title = document.createElement('h1');
 const body = document.createElement('p');
 const keys = document.createElement('p');
 keys.className = 'keys';
-keys.textContent = '← → / A D to move · Space to shoot · R to restart';
+keys.textContent = '← → / A D move · Space shoots · Drag to steer and hold to fire · R restarts';
 const action = document.createElement('button');
 action.type = 'button';
 center.append(title, body, keys, action);
@@ -51,6 +52,13 @@ container.append(wrap);
 
 const ctx = canvas.getContext('2d')!;
 const input = createInput(container);
+
+function fitWorld(): void {
+  const portrait = window.innerWidth < window.innerHeight;
+  setWorldSize(portrait ? 480 : 640, portrait ? 640 : 480);
+}
+
+fitWorld();
 const sizing = fitCanvas(canvas, container, WORLD_W, WORLD_H);
 
 const stars = Array.from({ length: 90 }, (_, i) => ({
@@ -113,7 +121,11 @@ function loop(now: number): void {
   const shoot =
     input.isDown('Space') || input.isDown('ArrowUp') || input.isDown('KeyW') || input.pointer.down;
   if (input.pointer.down) {
-    state.playerX += (input.pointer.x * WORLD_W - state.playerX) * Math.min(1, dt * 12);
+    const root = container.getBoundingClientRect();
+    const box = canvas.getBoundingClientRect();
+    const pointerX = root.left + input.pointer.x * root.width;
+    const targetX = ((pointerX - box.left) / (box.width || 1)) * WORLD_W;
+    state.playerX += (targetX - state.playerX) * Math.min(1, dt * 12);
   }
   const events = step(
     state,
@@ -326,7 +338,7 @@ const game = createGame('space-invaders', {
     running = false;
     cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKeyDown);
-    canvas.removeEventListener('pointerdown', onPointerDown as EventListener);
+    container.removeEventListener('pointerdown', onPointerDown as EventListener);
     action.removeEventListener('click', onActionClick);
     input.destroy();
     sizing.destroy();
@@ -337,9 +349,16 @@ const game = createGame('space-invaders', {
 });
 
 window.addEventListener('keydown', onKeyDown);
-canvas.addEventListener('pointerdown', onPointerDown as EventListener);
+container.addEventListener('pointerdown', onPointerDown as EventListener);
 canvas.style.touchAction = 'none';
 action.addEventListener('click', onActionClick);
+
+window.addEventListener('resize', () => {
+  fitWorld();
+  sizing.setWorld(WORLD_W, WORLD_H);
+  state = createInitialState();
+  renderOverlay();
+});
 
 void game.boot().catch((error) => {
   console.error(error);

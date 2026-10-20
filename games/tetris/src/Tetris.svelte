@@ -453,8 +453,8 @@
   const ICON_BTN = 'grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-[11px] border border-edge bg-[rgba(35,32,48,0.6)] p-0 text-muted transition-colors hover:border-[rgba(185,163,247,0.5)] hover:text-fog focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px] [&_svg]:h-[21px] [&_svg]:w-[21px]';
   const VEIL = 'absolute inset-0 z-[8] grid animate-veil place-items-center bg-[rgba(19,17,24,0.6)] p-[16px] backdrop-blur-[4px]';
   const VEIL_DIM = 'absolute inset-0 z-[9] grid animate-veil place-items-center bg-[rgba(19,17,24,0.52)] p-[16px] backdrop-blur-[4px]';
-  const PANEL = 'grid animate-panel justify-items-center gap-[10px] rounded-[20px] border border-edge bg-panel px-[22px] pt-[22px] pb-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,320px)]';
-  const PANEL_SMALL = 'grid animate-panel justify-items-center gap-[10px] rounded-[20px] border border-edge bg-panel p-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,280px)]';
+  const PANEL = 'grid max-h-full animate-panel justify-items-center gap-[10px] overflow-y-auto rounded-[20px] border border-edge bg-panel px-[22px] pt-[22px] pb-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,320px)]';
+  const PANEL_SMALL = 'grid max-h-full animate-panel justify-items-center gap-[10px] overflow-y-auto rounded-[20px] border border-edge bg-panel p-[18px] text-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.95)] w-[min(100%,280px)]';
   const BTN = 'cursor-pointer rounded-[12px] border border-edge bg-[rgba(35,32,48,0.7)] px-[18px] py-[11px] text-[14px] font-semibold text-fog transition-[transform,background-color,border-color] duration-[120ms] hover:bg-[#262336] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px]';
   const BTN_PRIMARY = 'cursor-pointer rounded-[12px] border border-accent bg-accent px-[18px] py-[11px] text-[14px] font-semibold text-accent-ink transition-[transform,background-color,border-color] duration-[120ms] hover:bg-[#c8b5ff] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px]';
   const BTN_QUIET = 'cursor-pointer rounded-[12px] border border-transparent bg-none px-[12px] py-[7px] text-[13px] font-medium text-muted transition-colors hover:bg-[rgba(35,32,48,0.6)] hover:text-fog focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[2px]';
@@ -534,14 +534,18 @@
     </div>
 
     <div class="touch" role="group" aria-label="Touch controls">
-      <button type="button" aria-label="Move left"
-        onpointerdown={() => holdRepeat(pressLeft)} onpointerup={endRepeat} onpointercancel={endRepeat} onpointerleave={endRepeat}>◀</button>
-      <button type="button" aria-label="Move right"
-        onpointerdown={() => holdRepeat(pressRight)} onpointerup={endRepeat} onpointercancel={endRepeat} onpointerleave={endRepeat}>▶</button>
-      <button type="button" aria-label="Soft drop"
-        onpointerdown={() => holdRepeat(pressDown)} onpointerup={endRepeat} onpointercancel={endRepeat} onpointerleave={endRepeat}>▼</button>
-      <button type="button" aria-label="Rotate" onclick={() => rotate(1)}>⟳</button>
-      <button type="button" aria-label="Hard drop" onclick={hardDrop}>⤓</button>
+      <div class="touch-move">
+        <button type="button" aria-label="Move left"
+          onpointerdown={() => holdRepeat(pressLeft)} onpointerup={endRepeat} onpointercancel={endRepeat} onpointerleave={endRepeat}>◀</button>
+        <button type="button" aria-label="Move right"
+          onpointerdown={() => holdRepeat(pressRight)} onpointerup={endRepeat} onpointercancel={endRepeat} onpointerleave={endRepeat}>▶</button>
+        <button type="button" aria-label="Soft drop"
+          onpointerdown={() => holdRepeat(pressDown)} onpointerup={endRepeat} onpointercancel={endRepeat} onpointerleave={endRepeat}>▼</button>
+      </div>
+      <div class="touch-act">
+        <button type="button" aria-label="Rotate" onclick={() => rotate(1)}>⟳</button>
+        <button type="button" aria-label="Hard drop" onclick={hardDrop}>⤓</button>
+      </div>
     </div>
   </div>
 

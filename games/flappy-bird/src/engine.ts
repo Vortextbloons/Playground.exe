@@ -1,16 +1,27 @@
-export const WORLD_W = 480;
-export const WORLD_H = 640;
-export const GROUND_H = 96;
-export const BIRD_X = 140;
+export let WORLD_W = 480;
+export let WORLD_H = 640;
+export let GROUND_H = 96;
+export let BIRD_X = 140;
 export const BIRD_R = 16;
 export const GRAVITY = 1900;
 export const FLAP_VY = -560;
 export const MAX_FALL = 760;
 export const PIPE_W = 78;
-export const PIPE_SPACING = 292;
+export let PIPE_SPACING = 292;
 export const BASE_SPEED = 178;
-export const BASE_GAP = 172;
-export const MIN_GAP = 148;
+export let BASE_GAP = 172;
+export let MIN_GAP = 148;
+
+/** Pick a portrait or landscape world and rescale the layout to match. */
+export function setWorldSize(width: number, height: number): void {
+  WORLD_W = Math.round(width);
+  WORLD_H = Math.round(height);
+  GROUND_H = Math.round(WORLD_H * 0.15);
+  BIRD_X = Math.round(WORLD_W * 0.29);
+  PIPE_SPACING = Math.round(WORLD_W * 0.61);
+  BASE_GAP = Math.round(WORLD_H * 0.27);
+  MIN_GAP = Math.round(WORLD_H * 0.231);
+}
 
 export interface Pipe {
   x: number;
@@ -39,7 +50,7 @@ export function gapFor(score: number): number {
 }
 
 function randomGapY(gap: number, rand: () => number = Math.random): number {
-  const margin = 90;
+  const margin = Math.round(WORLD_H * 0.14);
   const top = margin + gap / 2;
   const bottom = WORLD_H - GROUND_H - margin - gap / 2;
   return top + rand() * Math.max(40, bottom - top);

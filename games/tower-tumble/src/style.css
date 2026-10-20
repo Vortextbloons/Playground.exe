@@ -61,6 +61,23 @@ html, body { margin: 0; height: 100%; overflow: hidden; }
   .hud-interaction { bottom: 120px; }
   .hud-toast { bottom: 250px; }
 }
+@media (orientation: landscape) and (max-height: 620px) {
+  .hud-party { width: min(420px, 70vw); padding: 8px 12px; }
+  .hud-party details[open] > summary { margin-bottom: 8px; }
+  .hud-stats { top: 8px; right: 8px; padding: 5px 9px; font-size: 11px; }
+  .hud-stats strong { font-size: 12px; }
+  .hud-controls { left: 8px; bottom: 8px; gap: 6px; }
+  .hud-controls button { min-height: 44px; padding: 8px 12px; }
+  .hud-controls label { padding: 6px 8px; }
+  .hud-controls select { min-height: 32px; padding: 4px 6px; }
+  .hud-interaction { left: auto; right: 8px; bottom: 8px; transform: none; width: min(300px, 46%); gap: 6px; }
+  .hud-interaction p { padding: 6px 10px; font-size: 12px; }
+  .hud-interaction button { min-height: 44px; padding: 8px 18px; }
+  .hud-toast { bottom: 60px; max-width: 60%; font-size: 12px; padding: 7px 12px; }
+  .hud-result { padding: 12px; gap: 8px; }
+  .hud-result h2 { font-size: clamp(20px, 4vw, 30px); }
+  .hud-result p { font-size: 12px; }
+}
 
 .party-waiting > canvas, .party-waiting .hud > :not(.hud-party) { display:none; }
 .party-waiting .hud-party { inset:0; transform:none; width:100%; border:0; border-radius:0; display:grid; align-content:center; overflow:auto; padding:24px max(20px, calc((100% - 560px) / 2)); background:#11151b; }

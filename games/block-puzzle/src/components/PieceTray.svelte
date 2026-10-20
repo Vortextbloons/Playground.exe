@@ -61,7 +61,7 @@
   {#each tray as piece, index (index)}
     <button
       type="button"
-      class="slot relative grid h-[clamp(76px,23vh,126px)] cursor-pointer place-items-center rounded-[18px] p-0 text-inherit focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[3px]"
+      class="slot relative grid h-[clamp(76px,23dvh,126px)] cursor-pointer place-items-center rounded-[18px] p-0 text-inherit focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[3px]"
       class:picked={selected === index}
       class:taken={hidden === index}
       class:shaking={shake === index}

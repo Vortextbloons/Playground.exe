@@ -198,6 +198,11 @@
     to { transform: rotate(360deg); }
   }
 
+  @media (orientation: landscape) and (max-height: 620px) {
+    .table { gap: clamp(10px, 2vw, 22px); }
+    .ring-wrap { width: clamp(120px, 36vh, 160px); height: clamp(120px, 36vh, 160px); }
+  }
+
   .discard {
     position: relative;
     width: 92px;

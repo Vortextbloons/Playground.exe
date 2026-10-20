@@ -12,9 +12,9 @@
 
 <div class="fixed inset-0 z-50 grid place-items-center p-4">
   <div class="bailout-veil absolute inset-0 backdrop-blur-sm" aria-hidden="true"></div>
-  <div class="panel bailout-panel relative w-[min(100%,430px)] gap-3 p-5" role="dialog" aria-modal="true" aria-label="Emergency bailout offer">
+  <div class="panel bailout-panel relative max-h-full w-[min(100%,430px)] gap-3 overflow-y-auto p-5" role="dialog" aria-modal="true" aria-label="Emergency bailout offer">
     <p class="eyebrow m-0 text-red">The pit boss makes an offer</p>
-    <h2 class="m-0 font-display text-[32px] leading-none tracking-[0.05em] text-gold">Bailout?</h2>
+    <h2 class="m-0 font-display text-[clamp(24px,7vw,32px)] leading-none tracking-[0.05em] text-gold">Bailout?</h2>
     <p class="m-0 text-[14px] leading-relaxed text-muted">
       You're out of chips, but the house will spot you <strong class="text-fog">{money(BAILOUT_CHIPS)} emergency chips</strong> so you can keep playing this run.
     </p>

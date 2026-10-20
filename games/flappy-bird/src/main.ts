@@ -8,6 +8,7 @@ import {
   WORLD_W,
   createInitialState,
   flap,
+  setWorldSize,
   step,
 } from './engine';
 import './style.css';
@@ -46,6 +47,13 @@ container.append(wrap);
 
 const ctx = canvas.getContext('2d')!;
 const input = createInput(container);
+
+function fitWorld(): void {
+  const portrait = window.innerWidth < window.innerHeight;
+  setWorldSize(portrait ? 480 : 640, portrait ? 640 : 480);
+}
+
+fitWorld();
 const sizing = fitCanvas(canvas, container, WORLD_W, WORLD_H);
 
 const clouds = Array.from({ length: 5 }, (_, i) => ({
@@ -366,7 +374,7 @@ const game = createGame('flappy-bird', {
     running = false;
     cancelAnimationFrame(raf);
     window.removeEventListener('keydown', onKeyDown);
-    canvas.removeEventListener('pointerdown', onPointerDown as EventListener);
+    container.removeEventListener('pointerdown', onPointerDown as EventListener);
     action.removeEventListener('click', onActionClick);
     input.destroy();
     sizing.destroy();
@@ -383,10 +391,17 @@ function onActionClick(): void {
 }
 
 window.addEventListener('keydown', onKeyDown);
-// Pointer on canvas: tap anywhere to flap. HUD button stays clickable.
-canvas.addEventListener('pointerdown', onPointerDown as EventListener);
+// Tap anywhere in the frame to flap. HUD button stays clickable.
+container.addEventListener('pointerdown', onPointerDown as EventListener);
 canvas.style.touchAction = 'none';
 action.addEventListener('click', onActionClick);
+
+window.addEventListener('resize', () => {
+  fitWorld();
+  sizing.setWorld(WORLD_W, WORLD_H);
+  state = createInitialState();
+  renderOverlay();
+});
 
 void game.boot().catch((error) => {
   console.error(error);

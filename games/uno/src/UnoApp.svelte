@@ -250,10 +250,12 @@
   });
 
   let windowWidth = $state(1024);
+  let windowHeight = $state(768);
   const handWidth = $derived.by(() => {
     const count = Math.max(7, view?.you !== null && view?.you !== undefined ? view.counts[view.you] ?? 7 : 7);
     const spread = 0.66 * (count - 1) + 1;
-    return Math.max(56, Math.min(92, Math.floor((windowWidth - 48) / spread)));
+    const byHeight = Math.floor((windowHeight * 0.27) / 1.63);
+    return Math.max(56, Math.min(92, Math.floor((windowWidth - 48) / spread), byHeight));
   });
 
   // ------------------------------------------------------------------ confetti
@@ -304,7 +306,7 @@
   }
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} />
+<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 <div class="app" data-speed={speed}>
   {#if !inMatch}
@@ -961,6 +963,8 @@
     transform: translate(-50%, -50%);
     z-index: 30;
     width: min(400px, 92vw);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1097,5 +1101,35 @@
     .banner {
       top: 30%;
     }
+  }
+
+  @media (orientation: landscape) and (max-height: 620px) {
+    .top { padding: 3px 10px; gap: 6px; }
+    .chip { padding: 2px 8px; font-size: 10px; }
+    .logo-chip { font-size: 13px; }
+    .gear { width: 44px; height: 44px; font-size: 18px; }
+    .table-area {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      grid-template-rows: minmax(0, 1fr) auto auto auto;
+      grid-template-areas: 'opponents center' 'status center' 'hand hand' 'actions actions';
+      align-items: center;
+      justify-items: center;
+      gap: 2px 10px;
+      padding: 2px 8px 4px;
+    }
+    .opponents { grid-area: opponents; align-self: start; gap: 6px; }
+    .center { grid-area: center; }
+    .status { grid-area: status; font-size: 13px; }
+    .banner { top: 28%; padding: 5px 14px; font-size: 16px; }
+    :global(.hand) { grid-area: hand; width: 100%; }
+    .actions { grid-area: actions; padding-bottom: 0; }
+    .uno-btn { padding: 8px 20px; font-size: 17px; }
+    .catch-btn, .ghost-btn { padding: 8px 16px; font-size: 14px; }
+    .menu { flex-direction: row; gap: 16px; padding: 10px; overflow: auto; }
+    .logo-plate { padding: 10px 20px 8px; }
+    .logo-uno { font-size: 44px; }
+    .menu-form { gap: 8px; padding: 12px; }
+    .panel { max-height: calc(100dvh - 24px); overflow-y: auto; padding: 12px 16px; gap: 8px; }
   }
 </style>

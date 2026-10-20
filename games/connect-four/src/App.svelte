@@ -604,6 +604,12 @@
   }
 
   .board-frame {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    container-type: size;
+    display: grid;
+    place-items: center;
     padding: clamp(7px, 1.8vw, 14px);
     border-radius: clamp(16px, 3vw, 26px);
     background: linear-gradient(180deg, var(--board-top), var(--board-bottom));
@@ -619,7 +625,8 @@
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: var(--gap);
-    width: min(94vw, 74vh, 620px);
+    width: min(100cqw, calc(100cqh * 7 / 6), 620px);
+    aspect-ratio: 7 / 6;
   }
 
   .column {
@@ -905,5 +912,20 @@
     .turn-chip {
       font-size: 12px;
     }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    .app { padding:4px max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); gap:4px; }
+    .brand { display:none; }
+    .top { flex-shrink:0; gap:8px; }
+    .ghost, .level, .net { font-size:11px; }
+    .ghost { min-height:44px; padding:6px 10px; }
+    .stage { gap:4px; }
+    .seats { gap:6px; }
+    .seat { padding:3px 10px 3px 7px; font-size:11px; }
+    .board-frame { padding:5px; border-radius:10px; }
+    .menu { flex-direction:row; gap:16px; padding:0; overflow:auto; }
+    .wordmark { font-size:32px; }
+    .setup { padding:10px; gap:8px; }
+    .hint { display:none; }
   }
 </style>

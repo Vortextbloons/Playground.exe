@@ -18,6 +18,7 @@
   let activeSrc = $state<string | undefined>(undefined);
   let checkingParty = $state(true);
   let ready = $state(false); let muted = $state(false); let paused = $state(false); let best = $state(0); let error = $state('');
+  let controlsOpen = $state(false);
   function send(type: Command) { frame?.contentWindow?.postMessage({ channel: 'playground-exe', type, muted }, location.origin); }
   function toggleMute() { muted = !muted; writeLocal('muted', muted); send('mute'); }
   function togglePause() { paused = !paused; send(paused ? 'pause' : 'resume'); }
@@ -92,7 +93,7 @@
 </script>
 <svelte:window onmessage={receive}/><svelte:document onvisibilitychange={visibility}/>
 {#if activeSrc}
-<div class="player [border:1px_solid_var(--line)] rounded-[10px] overflow-hidden [background:#111] flex flex-col [&_iframe]:w-full [&_iframe]:[aspect-ratio:16/9] [&_iframe]:border-0 [&_iframe]:block [&_iframe]:flex-1 [&_iframe]:min-h-[0] [&:fullscreen]:rounded-[0]" bind:this={player}><iframe bind:this={frame} src={activeSrc} {title} allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin" referrerpolicy="same-origin"></iframe><div class="player-controls flex items-center justify-between p-[12px_16px] bg-surface gap-[15px] [&>div]:flex [&>div]:gap-[8px] [&>div]:flex-wrap [&_button]:p-[8px_11px] [&_button]:text-[11px] max-[760px]:flex-wrap max-[760px]:[&>div]:gap-[6px] max-[500px]:[&_button]:p-[8px] max-[500px]:[&_button]:text-[10px]"><span class="player-status text-[11px] text-muted"><span class="status-dot inline-block w-[6px] h-[6px] bg-mint rounded-[50%] [vertical-align:middle] mr-[7px]"></span>{!ready ? 'Loading' : paused ? 'Paused' : 'Ready to play'}</span><div><button disabled={!ready} onclick={togglePause}>{paused ? 'Resume' : 'Pause'}</button><button disabled={!ready} onclick={() => { send('restart'); paused = false; }}>↻ Restart</button><button aria-pressed={muted} onclick={toggleMute}>{muted ? 'Unmute' : 'Mute'}</button><button onclick={fullscreen}>⛶ Fullscreen</button></div></div></div>
+<div class="player [border:1px_solid_var(--line)] rounded-[10px] overflow-hidden [background:#111] flex flex-col [&_iframe]:w-full [&_iframe]:[aspect-ratio:16/9] [&_iframe]:border-0 [&_iframe]:block [&_iframe]:flex-1 [&_iframe]:min-h-[0] [&:fullscreen]:rounded-[0]" bind:this={player}><iframe bind:this={frame} src={activeSrc} {title} allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin" referrerpolicy="same-origin"></iframe><button class="player-controls-toggle" type="button" aria-label={controlsOpen ? 'Hide game controls' : 'Show game controls'} aria-expanded={controlsOpen} onclick={() => (controlsOpen = !controlsOpen)}>⋯</button><div class="player-controls {controlsOpen ? 'open' : ''} flex items-center justify-between p-[12px_16px] bg-surface gap-[15px] [&>div]:flex [&>div]:gap-[8px] [&>div]:flex-wrap [&_button]:p-[8px_11px] [&_button]:text-[11px] max-[760px]:flex-wrap max-[760px]:[&>div]:gap-[6px] max-[500px]:[&_button]:p-[8px] max-[500px]:[&_button]:text-[10px]"><span class="player-status text-[11px] text-muted"><span class="status-dot inline-block w-[6px] h-[6px] bg-mint rounded-[50%] [vertical-align:middle] mr-[7px]"></span>{!ready ? 'Loading' : paused ? 'Paused' : 'Ready to play'}</span><div><button disabled={!ready} onclick={togglePause}>{paused ? 'Resume' : 'Pause'}</button><button disabled={!ready} onclick={() => { send('restart'); paused = false; }}>↻ Restart</button><button aria-pressed={muted} onclick={toggleMute}>{muted ? 'Unmute' : 'Mute'}</button><button onclick={fullscreen}>⛶ Fullscreen</button></div></div></div>
 <div class="player-details flex justify-between items-center m-[20px_0] text-[12px] text-muted [&_strong]:text-accent [&_strong]:ml-[10px] max-[500px]:gap-[12px]"><span>Personal best <strong>{best.toLocaleString()}</strong></span><button class="text-link [&:hover]:text-accent text-[12px] font-semibold inline-flex gap-[15px] items-center [background:none] border-0 p-[0]" onclick={() => { ready = false; error = ''; if (frame) frame.src = src; }}>Reload player ↻</button></div>
 {#if error}<p role="status">{error}</p>{/if}
 {:else}
@@ -104,15 +105,25 @@
   .party-gate h2 { font-size:22px; }
   .party-gate p { color:var(--muted); font-size:13px; margin:12px 0 20px; }
   .party-gate a { color:var(--accent); font-size:13px; }
+  .player { flex:1; min-height:0; }
+  .player iframe { height:100%; aspect-ratio:auto; min-width:0; }
+  .player-controls { flex-shrink:0; padding:6px 10px; gap:8px; }
+  .player-details { margin:6px 0 0; flex-shrink:0; }
   @media (max-width:760px) {
-    .player iframe { aspect-ratio:auto; height:75svh; min-height:480px; flex:auto; }
-    .player-controls { gap:12px; }
-    .player-controls>div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
-    .player-controls button { min-height:44px; font-size:12px; }
-    .player-details { flex-wrap:wrap; gap:12px; }
+    .player-status { display:none; }
+    .player-controls>div { width:100%; justify-content:space-between; gap:4px; }
+    .player-controls button { min-height:44px; }
     .player-details button { min-height:44px; }
   }
+  .player-controls-toggle { display:none; }
   @media (max-height:500px) and (orientation:landscape) {
-    .player iframe { height:85svh; min-height:300px; aspect-ratio:auto; }
+    .player { position:relative; }
+    .player-details { display:none; }
+    .player-controls-toggle { display:grid; position:absolute; z-index:3; top:max(6px,env(safe-area-inset-top)); right:max(6px,env(safe-area-inset-right)); place-items:center; width:38px; height:38px; padding:0; border:1px solid var(--line); border-radius:9px; background:#111111d9; color:#efedf5; font-size:17px; line-height:1; }
+    .player-controls { display:none; position:absolute; z-index:2; top:max(50px,calc(env(safe-area-inset-top) + 44px)); right:max(6px,env(safe-area-inset-right)); padding:5px; gap:5px; background:#111111f2; border:1px solid var(--line); border-radius:9px; }
+    .player-controls.open { display:flex; flex-direction:column; align-items:stretch; }
+    .player-controls .player-status { display:none; }
+    .player-controls>div { flex-direction:column; gap:5px; }
+    .player-controls button { padding:6px 10px; font-size:11px; min-height:36px; white-space:nowrap; }
   }
 </style>
